@@ -1,8 +1,8 @@
-Đồ án môn Công Nghệ Phần Mềm
+## Đồ án môn Công Nghệ Phần Mềm
 
-**Tài Khoản Admin**
-admin@foodfast.com
-123456
+**Tài Khoản Admin:**
+- admin@foodfast.com
+- 123456
 
 **Tính năng:**
 - Dự án có hai giao diện: giao diện người dùng và giao diện quản trị.
