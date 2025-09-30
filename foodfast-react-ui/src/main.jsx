@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <CartProvider>
             <FavProvider>
-              <OrderProvider> {/* NEW: quản lý Orders */}
+              <OrderProvider> {/* NEW: quản lý Orders/Session */}
                 <ToastProvider>
                   <App />
                 </ToastProvider>

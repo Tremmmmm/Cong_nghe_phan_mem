@@ -198,7 +198,7 @@
       ],
       "total": 188000,
       "createdAt": 1758039485757,
-      "status": "new"
+      "status": "confirmed"
     },
     {
       "id": "05e9",
@@ -329,6 +329,701 @@
       "couponCode": "FREESHIP",
       "createdAt": 1758552940632,
       "status": "new"
+    },
+    {
+      "id": "p9bs",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "0956888475",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 97000,
+      "discount": 15000,
+      "finalTotal": 82000,
+      "couponCode": "FREESHIP",
+      "payment": "COD",
+      "createdAt": 1758636056451,
+      "status": "new"
+    },
+    {
+      "id": "i8uk",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "0369855247",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 2,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 2,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        }
+      ],
+      "total": 194000,
+      "discount": 15000,
+      "finalTotal": 179000,
+      "couponCode": "FREESHIP",
+      "payment": "COD",
+      "createdAt": 1758636624535,
+      "status": "cancelled"
+    },
+    {
+      "id": "dfhj",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "0369588741",
+      "address": "hn",
+      "items": [
+        {
+          "id": "cb-2",
+          "name": "Combo2 Chicken + Fries",
+          "qty": 1,
+          "price": 69000,
+          "image": "/assets/images/menu/combo2.webp"
+        },
+        {
+          "id": "cb-1",
+          "name": "Combo1 Burger + Coke",
+          "qty": 1,
+          "price": 59000,
+          "image": "/assets/images/menu/combo1.webp"
+        }
+      ],
+      "total": 128000,
+      "discount": 0,
+      "finalTotal": 128000,
+      "couponCode": "SAVE10K",
+      "payment": "COD",
+      "createdAt": 1758637238080,
+      "status": "delivered"
+    },
+    {
+      "id": "30ya",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "0236599885",
+      "address": "NT",
+      "items": [
+        {
+          "id": "sg-5",
+          "name": "Cheese Pizza (slice)",
+          "qty": 1,
+          "price": 39000,
+          "image": "/assets/images/menu/cheesepizza.webp"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        }
+      ],
+      "total": 68000,
+      "discount": 6800,
+      "finalTotal": 61200,
+      "couponCode": "SALE10",
+      "payment": "COD",
+      "createdAt": 1758640176617,
+      "status": "delivered",
+      "processingAt": "2025-09-27T11:41:34.968Z",
+      "deliveryAt": "2025-09-27T11:55:55.130Z",
+      "doneAt": "2025-09-27T11:58:00.802Z"
+    },
+    {
+      "id": "328z",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "0214558796",
+      "address": "PT",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        }
+      ],
+      "total": 97000,
+      "discount": 9700,
+      "finalTotal": 87300,
+      "couponCode": "SALE10",
+      "payment": "COD",
+      "createdAt": 1758645085683,
+      "status": "delivered",
+      "deliveryAt": "2025-09-27T11:41:41.376Z",
+      "doneAt": "2025-09-27T11:43:04.252Z"
+    },
+    {
+      "id": "91di",
+      "sessionId": "986c",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "Nguyễn Văn A",
+      "phone": "0901234567",
+      "address": "TP.HCM",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        }
+      ],
+      "total": 149000,
+      "discount": 14900,
+      "finalTotal": 134100,
+      "couponCode": "SALE10",
+      "payment": "ONLINE",
+      "createdAt": 1758903407246,
+      "status": "done",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-09-28T05:47:50.481Z"
+    },
+    {
+      "id": "gdi8",
+      "sessionId": "986c",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "Lê Văn C",
+      "phone": "0906366489",
+      "address": "TP.HCM",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 97000,
+      "discount": 50000,
+      "finalTotal": 47000,
+      "couponCode": "SAVE50K",
+      "payment": "ONLINE",
+      "createdAt": 1758904524308,
+      "status": "confirmed",
+      "payment_status": "unpaid"
+    },
+    {
+      "id": "z1ph",
+      "sessionId": "fed3",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "LêvanA",
+      "phone": "0123456789",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        },
+        {
+          "id": "sg-5",
+          "name": "Cheese Pizza (slice)",
+          "qty": 1,
+          "price": 39000,
+          "image": "/assets/images/menu/cheesepizza.webp"
+        }
+      ],
+      "total": 68000,
+      "discount": 6800,
+      "finalTotal": 61200,
+      "couponCode": "SALE10",
+      "payment": "ONLINE",
+      "createdAt": 1758954583685,
+      "status": "delivered",
+      "payment_status": "unpaid",
+      "processingAt": "2025-09-27T15:37:22.395Z",
+      "deliveryAt": "2025-09-27T15:37:54.369Z",
+      "doneAt": "2025-09-27T15:37:56.963Z"
+    },
+    {
+      "id": "ng4q",
+      "sessionId": "0310",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "toàn",
+      "phone": "0123456789",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "cb-1",
+          "name": "Combo1 Burger + Coke",
+          "qty": 1,
+          "price": 59000,
+          "image": "/assets/images/menu/combo1.webp"
+        },
+        {
+          "id": "cb-2",
+          "name": "Combo2 Chicken + Fries",
+          "qty": 1,
+          "price": 69000,
+          "image": "/assets/images/menu/combo2.webp"
+        },
+        {
+          "id": "cb-3",
+          "name": "Combo3 Pizza + Coke",
+          "qty": 1,
+          "price": 99000,
+          "image": "/assets/images/menu/combo3.jpg"
+        }
+      ],
+      "total": 227000,
+      "discount": 50000,
+      "finalTotal": 177000,
+      "couponCode": "SAVE50K",
+      "payment": "ONLINE",
+      "createdAt": 1758964867929,
+      "status": "delivered",
+      "payment_status": "unpaid",
+      "processingAt": "2025-09-27T11:24:38.981Z",
+      "deliveryAt": "2025-09-27T11:24:41.060Z",
+      "doneAt": "2025-09-27T11:24:46.498Z"
+    },
+    {
+      "id": "byp1",
+      "sessionId": "5d2b",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "thắng",
+      "phone": "0987654321",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        }
+      ],
+      "total": 178000,
+      "discount": 17800,
+      "finalTotal": 160200,
+      "couponCode": "SALE10",
+      "payment": "COD",
+      "createdAt": 1758964929315,
+      "status": "delivered",
+      "payment_status": "unpaid",
+      "processingAt": "2025-09-27T11:22:24.442Z",
+      "deliveryAt": "2025-09-27T11:22:26.224Z",
+      "doneAt": "2025-09-27T11:22:27.690Z"
+    },
+    {
+      "id": "0i2w",
+      "sessionId": "4870",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "nhi",
+      "phone": "0123789456",
+      "address": "HN",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-6",
+          "name": "Cola",
+          "qty": 1,
+          "price": 15000,
+          "image": "/assets/images/menu/cocacola.jpg"
+        }
+      ],
+      "total": 112000,
+      "discount": 15000,
+      "finalTotal": 97000,
+      "couponCode": "FREESHIP",
+      "payment": "COD",
+      "createdAt": 1758964972923,
+      "status": "delivered",
+      "payment_status": "unpaid",
+      "processingAt": "2025-09-27T09:25:05.849Z",
+      "deliveryAt": "2025-09-27T09:25:13.599Z",
+      "doneAt": "2025-09-27T09:25:19.048Z"
+    },
+    {
+      "id": "j7k1",
+      "sessionId": "a7f7",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "linnh",
+      "phone": "0123698547",
+      "address": "VT",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 2,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        }
+      ],
+      "total": 156000,
+      "discount": 15600,
+      "finalTotal": 140400,
+      "couponCode": "SALE10",
+      "payment": "ONLINE",
+      "createdAt": 1758986696083,
+      "status": "delivered",
+      "payment_status": "unpaid",
+      "processingAt": "2025-09-27T15:25:17.266Z",
+      "deliveryAt": "2025-09-27T15:26:59.497Z",
+      "doneAt": "2025-09-27T15:27:22.019Z"
+    },
+    {
+      "id": "4mlp",
+      "sessionId": "21f0",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "thoa",
+      "phone": "0125896347",
+      "address": "PT",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        },
+        {
+          "id": "sg-5",
+          "name": "Cheese Pizza (slice)",
+          "qty": 1,
+          "price": 39000,
+          "image": "/assets/images/menu/cheesepizza.webp"
+        }
+      ],
+      "total": 120000,
+      "discount": 50000,
+      "finalTotal": 70000,
+      "couponCode": "SAVE50K",
+      "payment": "ONLINE",
+      "createdAt": 1758988095621,
+      "status": "pending",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-09-28T05:47:48.842Z"
+    },
+    {
+      "id": "68qp",
+      "sessionId": "7f75",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "khôi",
+      "phone": "0145879623",
+      "address": "DN",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        }
+      ],
+      "total": 74000,
+      "discount": 15000,
+      "finalTotal": 59000,
+      "couponCode": "FREESHIP",
+      "payment": "COD",
+      "createdAt": 1758988828778,
+      "status": "preparing",
+      "payment_status": "unpaid"
+    },
+    {
+      "id": "putx",
+      "sessionId": "7f75",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "liên",
+      "phone": "0125896347",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 3,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        }
+      ],
+      "total": 164000,
+      "discount": 15000,
+      "finalTotal": 149000,
+      "couponCode": "FREESHIP",
+      "payment": "COD",
+      "createdAt": 1759037529209,
+      "status": "preparing",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-09-28T05:47:47.190Z"
+    },
+    {
+      "id": "76p5",
+      "sessionId": "7f75",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "vinh",
+      "phone": "0125896347",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        }
+      ],
+      "total": 74000,
+      "discount": 15000,
+      "finalTotal": 59000,
+      "couponCode": "FREESHIP",
+      "payment": "COD",
+      "createdAt": 1759038414116,
+      "status": "pending",
+      "payment_status": "unpaid"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "986c",
+      "status": "closed",
+      "startedAt": "2025-09-26T16:16:47.176Z",
+      "endedAt": "2025-09-26T16:47:09.805Z"
+    },
+    {
+      "id": "fed3",
+      "status": "closed",
+      "startedAt": "2025-09-27T06:29:43.643Z",
+      "endedAt": "2025-09-27T06:29:51.827Z"
+    },
+    {
+      "id": "0310",
+      "status": "closed",
+      "startedAt": "2025-09-27T09:21:07.833Z",
+      "endedAt": "2025-09-27T09:21:18.572Z"
+    },
+    {
+      "id": "5d2b",
+      "status": "closed",
+      "startedAt": "2025-09-27T09:22:09.280Z",
+      "endedAt": "2025-09-27T09:22:11.358Z"
+    },
+    {
+      "id": "4870",
+      "status": "closed",
+      "startedAt": "2025-09-27T09:22:52.884Z",
+      "endedAt": "2025-09-27T09:22:54.160Z"
+    },
+    {
+      "id": "a7f7",
+      "status": "closed",
+      "startedAt": "2025-09-27T15:24:56.037Z",
+      "endedAt": "2025-09-27T15:24:59.111Z"
+    },
+    {
+      "id": "21f0",
+      "status": "closed",
+      "startedAt": "2025-09-27T15:48:15.581Z",
+      "endedAt": "2025-09-27T15:49:10.412Z"
+    },
+    {
+      "id": "7f75",
+      "status": "closed",
+      "startedAt": "2025-09-27T16:00:28.723Z",
+      "endedAt": "2025-09-28T05:47:28.064Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "1f07",
+      "orderId": "91di",
+      "amount": 134100,
+      "method": "CARD",
+      "provider": "mock",
+      "status": "captured",
+      "createdAt": "2025-09-26T16:16:47.275Z",
+      "updatedAt": "2025-09-26T16:16:47.298Z"
+    },
+    {
+      "id": "3e78",
+      "orderId": "gdi8",
+      "amount": 47000,
+      "method": "CARD",
+      "provider": "mock",
+      "status": "captured",
+      "createdAt": "2025-09-26T16:35:24.348Z",
+      "updatedAt": "2025-09-26T16:35:24.389Z"
+    },
+    {
+      "id": "a827",
+      "orderId": "z1ph",
+      "amount": 61200,
+      "method": "CARD",
+      "provider": "mock",
+      "status": "captured",
+      "createdAt": "2025-09-27T06:29:43.706Z",
+      "updatedAt": "2025-09-27T06:29:43.731Z"
+    },
+    {
+      "id": "d3b9",
+      "orderId": "ng4q",
+      "amount": 177000,
+      "method": "CARD",
+      "provider": "mock",
+      "status": "captured",
+      "createdAt": "2025-09-27T09:21:07.950Z",
+      "updatedAt": "2025-09-27T09:21:07.975Z"
+    },
+    {
+      "id": "44af",
+      "orderId": "j7k1",
+      "amount": 140400,
+      "method": "CARD",
+      "provider": "mock",
+      "status": "captured",
+      "createdAt": "2025-09-27T15:24:56.103Z",
+      "updatedAt": "2025-09-27T15:24:56.135Z"
+    },
+    {
+      "id": "0456",
+      "orderId": "4mlp",
+      "amount": 70000,
+      "method": "CARD",
+      "provider": "mock",
+      "status": "captured",
+      "createdAt": "2025-09-27T15:48:15.672Z",
+      "updatedAt": "2025-09-27T15:48:15.722Z"
     }
   ]
 }

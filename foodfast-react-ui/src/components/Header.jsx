@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
@@ -21,6 +20,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const ddRef = useRef(null);
 
+  // đóng dropdown khi click ra ngoài / nhấn Esc
   useEffect(() => {
     const onClick = (e) => {
       if (ddRef.current && !ddRef.current.contains(e.target)) setOpen(false);
@@ -34,7 +34,6 @@ export default function Header() {
     };
   }, []);
 
-  // ✅ useMemo phải nhận 1 function
   const styles = useMemo(() => `
     .ff-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #eee}
     .ff-h-wrap{max-width:1140px;margin:0 auto;padding:10px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
@@ -51,6 +50,7 @@ export default function Header() {
     .search input{border:none;outline:none;padding:0 12px;width:260px;background:#fff}
     .search button{border:none;background:#f4f4f6;height:36px;width:40px;cursor:pointer}
 
+    /* icon + badge */
     .icon-box{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:12px;
       background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.08), inset 0 0 0 1px #eee;color:#333;text-decoration:none}
     .icon-box .ico{font-size:18px;line-height:1}
@@ -59,14 +59,16 @@ export default function Header() {
       font-size:11px;font-weight:700;background:#ffe8e0;color:#d24c1f;border:1px solid #ffb199;box-shadow:0 2px 6px rgba(0,0,0,.15)
     }
 
+    /* user */
     .user{position:relative}
     .user-btn{display:flex;align-items:center;gap:8px;border:1px solid #eee;background:#fafafa;border-radius:99px;padding:6px 12px;cursor:pointer}
     .avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#ff6b35;color:#fff;font-weight:800}
     .uname{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 
+    /* dropdown */
     .dropdown{
       position:absolute;right:0;top:calc(100% + 8px);
-      min-width:200px;background:#fff;border:1px solid #eee;border-radius:16px;
+      min-width:220px;background:#fff;border:1px solid #eee;border-radius:16px;
       box-shadow:0 12px 32px rgba(0,0,0,.12);
       overflow:hidden;padding:6px 0;
     }
@@ -82,6 +84,7 @@ export default function Header() {
 
     @media (max-width:940px){ .nav{display:none} .search input{width:160px} }
 
+    /* dark (nếu có theme) */
     .dark .ff-header{background:#111;border-color:#333}
     .dark .nav a{color:#ddd}.dark .nav a.active{color:#ffb199}
     .dark .search{border-color:#333}.dark .search input{background:transparent;color:#ddd}
@@ -120,13 +123,12 @@ export default function Header() {
           <img src={logo} alt="FoodFast Logo" />
         </Link>
 
-        {/* Nav center */}
+        {/* Nav center (bỏ Orders để tránh trùng với avatar menu) */}
         <nav className="nav">
           <ul>
             <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Home</NavLink></li>
             <li><NavLink to="/menu" className={({isActive})=>isActive?"active":""}>Menu</NavLink></li>
             <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Favorites</NavLink></li>
-            <li><NavLink to="/orders" className={({isActive})=>isActive?"active":""}>Orders</NavLink></li>
             <li><NavLink to="/admin" className={({isActive})=>isActive?"active":""}>Admin</NavLink></li>
           </ul>
         </nav>
@@ -161,17 +163,19 @@ export default function Header() {
               >
                 <span className="avatar">{first}</span>
                 <span className="uname">{user.name || user.email}</span>
-                <span>▾</span>
+                <span aria-hidden>▾</span>
               </button>
               {open && (
-                <div className="dropdown" role="menu">
-                  {/* ✅ My Orders vào /orders */}
+                <div className="dropdown" role="menu" aria-label="User menu">
                   <NavLink to="/orders" onClick={()=>setOpen(false)}>My Orders</NavLink>
+                  <NavLink to="/history" onClick={()=>setOpen(false)}>Order History</NavLink>
                   <NavLink to="/profile" onClick={()=>setOpen(false)}>Settings</NavLink>
                   {user?.isAdmin && (
-                    <NavLink to="/admin/orders" onClick={()=>setOpen(false)}>Admin Panel</NavLink>
+                    <NavLink to="/admin" onClick={()=>setOpen(false)}>Admin Panel</NavLink>
                   )}
-                  <button onClick={()=>{ signOut(); setOpen(false); navigate("/signin"); }}>Sign Out</button>
+                  <button onClick={()=>{ signOut(); setOpen(false); navigate("/signin"); }}>
+                    Sign Out
+                  </button>
                 </div>
               )}
             </div>

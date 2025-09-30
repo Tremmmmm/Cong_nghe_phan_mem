@@ -1,7 +1,6 @@
-// src/utils/api.js
 import axios from 'axios'
 
-// API json-server (menu, orders)
+// API json-server (menu, orders, sessions, payments)
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5176',
   withCredentials: false,
@@ -12,28 +11,29 @@ export const api = axios.create({
   }
 })
 
-// ====== MENU & ORDERS ======
+// ====== MENU ======
 export const getMenu = (params = {}) =>
   api.get('/menu', { params }).then(r => r.data)
 
-// Tạo đơn: gửi thẳng lên server
+// ====== SESSIONS (PoC) ======
+export const createSession = async () => {
+  const payload = { status: 'open', startedAt: new Date().toISOString() }
+  const { data } = await api.post('/sessions', payload)
+  return data
+}
+
+export const closeSession = async (sessionId) => {
+  const payload = { status: 'closed', endedAt: new Date().toISOString() }
+  const { data } = await api.patch(`/sessions/${sessionId}`, payload)
+  return data
+}
+
+// ====== ORDERS ======
 export const createOrder = (payload) =>
   api.post('/orders', payload).then(r => r.data)
 
-// Alias để Checkout gọi
 export const placeOrder = createOrder
 
-/**
- * Đọc orders với phân trang/lọc/tìm kiếm theo chuẩn json-server
- * @param {Object} opts
- * @param {number} opts.page  - trang hiện tại (>=1)
- * @param {number} opts.limit - số dòng/trang
- * @param {string} opts.status - 'all' | 'pending' | 'confirmed' | ...
- * @param {string} opts.q - từ khoá tìm (id/phone/name)
- * @param {string} opts.sort - field sort (mặc định 'createdAt')
- * @param {'asc'|'desc'} opts.order - thứ tự sort
- * @returns {Promise<{rows: any[], total: number, pageCount: number}>}
- */
 export const myOrders = async ({
   page = 1,
   limit = 10,
@@ -47,10 +47,8 @@ export const myOrders = async ({
     _limit: limit,
     _sort: sort,
     _order: order,
-    _ : Date.now(), // cache-buster
+    _: Date.now(), // cache-buster
   }
-
-  // Map 'pending' UI -> 'new' trong db.json
   if (status && status !== 'all') {
     params.status = (status === 'pending') ? 'new' : status
   }
@@ -63,6 +61,44 @@ export const myOrders = async ({
   return { rows, total, pageCount }
 }
 
-// Cập nhật trạng thái
-export const updateOrderStatus = (id, status) =>
-  api.patch(`/orders/${id}`, { status }).then(r => r.data)
+/**
+ * Update order status (flexible):
+ * - updateOrderStatus(id, 'delivered')
+ * - updateOrderStatus(id, { status:'delivered', doneAt: '...' })
+ */
+export const updateOrderStatus = (id, patch) => {
+  const data = (typeof patch === 'string') ? { status: patch } : patch
+  return api.patch(`/orders/${id}`, data).then(r => r.data)
+}
+
+export const getOrder = (id) =>
+  api.get(`/orders/${id}?_=${Date.now()}`).then(r => r.data)
+
+export const getAllOrders = async () => {
+  const res = await api.get('/orders', {
+    params: {
+      _sort: 'createdAt',
+      _order: 'desc',
+      _limit: 10000,
+      _: Date.now(),
+    },
+  })
+  return res.data || []
+}
+
+// ====== PAYMENT (PoC mock) ======
+export const createPayment = async ({ orderId, amount, method = 'CARD' }) => {
+  const payload = {
+    orderId, amount, method, provider: 'mock',
+    status: 'pending', createdAt: new Date().toISOString()
+  }
+  const { data } = await api.post('/payments', payload)
+  return data
+}
+
+export const capturePayment = async (paymentId) => {
+  const { data } = await api.patch(`/payments/${paymentId}`, {
+    status: 'captured', updatedAt: new Date().toISOString()
+  })
+  return data
+}

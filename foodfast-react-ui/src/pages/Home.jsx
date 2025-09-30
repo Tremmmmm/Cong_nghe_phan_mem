@@ -23,7 +23,6 @@ export default function Home() {
     .figure{max-width:520px;margin:0 0 0 auto}
     .shot{aspect-ratio:1.2/1;overflow:hidden;border-radius:50% / 38%;box-shadow:0 30px 60px rgba(0,0,0,.25),0 10px 18px rgba(0,0,0,.12);background:#111}
     .shot img{width:100%;height:100%;object-fit:cover;display:block}
-    /* Caption in vào nền: không có box trắng, chỉ có text */
     .cap{margin:16px 6% 0 6%}
     .cap h4{margin:0 0 6px;font-size:18px;color:#1e2537;font-weight:800}
     .cap p{margin:0;color:#555;font-size:13.8px;line-height:1.55}
@@ -37,7 +36,8 @@ export default function Home() {
     const id = "home-hero-style";
     if (!document.getElementById(id)) {
       const s = document.createElement("style");
-      s.id = id; s.textContent = styles;
+      s.id = id;
+      s.textContent = styles;
       document.head.appendChild(s);
     }
   }, [styles]);
@@ -60,12 +60,15 @@ export default function Home() {
             <img
               src="/assets/images/main-b.jpg"
               alt="Orange Mojito"
+              loading="lazy"
+              decoding="async"
+              sizes="(max-width: 980px) 100vw, 520px"
               onError={(e)=>{ e.currentTarget.src="/assets/images/main-b.png"; }}
             />
           </div>
           <figcaption className="cap">
             <h4>Orange Mojito</h4>
-            <p>this is Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+            <p>This is Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
           </figcaption>
         </figure>
       </div>

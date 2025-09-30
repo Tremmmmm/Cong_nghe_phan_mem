@@ -13,7 +13,8 @@ import Cart from './pages/Cart.jsx'
 import SearchResults from './pages/SearchResults.jsx'
 import Confirmation from './pages/Confirmation.jsx'
 import DetailsHistory from './pages/DetailsHistory.jsx'
-import Profile from './pages/Profile.jsx'            // Settings/Profile (user)
+import Profile from './pages/Profile.jsx'
+import ConfirmCloseSession from './pages/ConfirmCloseSession.jsx'
 
 // Auth pages
 import SignIn from './pages/SignIn.jsx'
@@ -21,16 +22,23 @@ import SignUp from './pages/SignUp.jsx'
 
 // Feature pages
 import Checkout from './pages/Checkout.jsx'
-import Orders from './pages/Orders.jsx'              // My Orders (user)
+import Orders from './pages/Orders.jsx'
 
-// Admin pages
+// Admin pages (nội dung)
 import AdminOrders from './pages/AdminOrders.jsx'
-import AdminSignIn from './pages/AdminSignIn.jsx'    // nếu bạn có trang này
+import AdminSignIn from './pages/AdminSignIn.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx'
+
+// Admin shell layout (sidebar)
+import AdminLayout from './admin/AdminLayout.jsx'
+
+// Restaurant (Kitchen)
+import RestaurantOrders from './pages/RestaurantOrders.jsx'
 
 // Guards
 import { RequireAuth, RequireAdmin } from './context/AuthContext.jsx'
 
-// Simple layout to keep Header/Footer persistent
+// layout giữ Header/Footer cố định
 function AppLayout() {
   return (
     <>
@@ -44,7 +52,6 @@ function AppLayout() {
 export default function App() {
   return (
     <Routes>
-      {/* Wrap everything with a layout that shows Header/Footer once */}
       <Route element={<AppLayout />}>
         {/* Public */}
         <Route path="/" element={<Home />} />
@@ -55,11 +62,18 @@ export default function App() {
         <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/history" element={<DetailsHistory />} />
         <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/checkout/confirm"
+          element={
+            <RequireAuth>
+              <ConfirmCloseSession />
+            </RequireAuth>
+          }
+        />
 
         {/* Auth (user) */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-
         <Route
           path="/checkout"
           element={
@@ -69,7 +83,7 @@ export default function App() {
           }
         />
         <Route
-          path="/orders"   // <-- My Orders (dropdown)
+          path="/orders"
           element={
             <RequireAuth>
               <Orders />
@@ -77,19 +91,29 @@ export default function App() {
           }
         />
 
-        {/* Admin */}
+        {/* Admin login (nếu có) */}
         <Route path="/admin/login" element={<AdminSignIn />} />
+
+        {/* Admin Panel (nested dưới AdminLayout) */}
         <Route
-          path="/admin/orders"
+          path="/admin"
           element={
             <RequireAdmin>
-              <AdminOrders />
+              <AdminLayout />
             </RequireAdmin>
           }
-        />
-        <Route path="/admin" element={<Navigate to="/admin/orders" replace />} />
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="orders" element={<AdminOrders />} />
+          {/* NEW: Kitchen / Restaurant nằm trong Admin */}
+          <Route path="restaurant" element={<RestaurantOrders />} />
+        </Route>
 
-        {/* Fallback */}
+        {/* Fallback: /admin -> /admin/dashboard */}
+        <Route path="/admin*" element={<Navigate to="/admin/dashboard" replace />} />
+
+        {/* Fallback chung */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
