@@ -77,7 +77,7 @@
       ],
       "total": 436000,
       "createdAt": 1758034669555,
-      "status": "confirmed"
+      "status": "delivered"
     },
     {
       "id": "865b",
@@ -123,7 +123,7 @@
       ],
       "total": 198000,
       "createdAt": 1758036847213,
-      "status": "new"
+      "status": "confirmed"
     },
     {
       "id": "e7c6",
@@ -198,7 +198,7 @@
       ],
       "total": 188000,
       "createdAt": 1758039485757,
-      "status": "new"
+      "status": "cancelled"
     },
     {
       "id": "05e9",
@@ -328,6 +328,29 @@
       "finalTotal": 261000,
       "couponCode": "FREESHIP",
       "createdAt": 1758552940632,
+      "status": "new"
+    },
+    {
+      "id": "4bl3",
+      "userId": 0,
+      "userEmail": "admin@foodfast.com",
+      "customerName": "Duc Ân",
+      "phone": "0909120222",
+      "address": "1",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        }
+      ],
+      "total": 52000,
+      "discount": 0,
+      "finalTotal": 52000,
+      "couponCode": "1",
+      "createdAt": 1758968559865,
       "status": "new"
     }
   ]
