@@ -527,9 +527,9 @@
       "couponCode": "SALE10",
       "payment": "ONLINE",
       "createdAt": 1758903407246,
-      "status": "done",
+      "status": "preparing",
       "payment_status": "unpaid",
-      "updatedAt": "2025-09-28T05:47:50.481Z"
+      "updatedAt": "2025-09-30T03:21:48.857Z"
     },
     {
       "id": "gdi8",
@@ -843,8 +843,9 @@
       "couponCode": "FREESHIP",
       "payment": "COD",
       "createdAt": 1758988828778,
-      "status": "preparing",
-      "payment_status": "unpaid"
+      "status": "done",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-09-30T03:21:50.171Z"
     },
     {
       "id": "putx",
@@ -876,9 +877,9 @@
       "couponCode": "FREESHIP",
       "payment": "COD",
       "createdAt": 1759037529209,
-      "status": "preparing",
+      "status": "done",
       "payment_status": "unpaid",
-      "updatedAt": "2025-09-28T05:47:47.190Z"
+      "updatedAt": "2025-09-30T03:20:00.493Z"
     },
     {
       "id": "76p5",
@@ -910,6 +911,58 @@
       "couponCode": "FREESHIP",
       "payment": "COD",
       "createdAt": 1759038414116,
+      "status": "delivered",
+      "payment_status": "unpaid"
+    },
+    {
+      "id": "1rmq",
+      "sessionId": "1d68",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "01298989811",
+      "address": "1",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 45000,
+      "discount": 0,
+      "finalTotal": 45000,
+      "couponCode": "10",
+      "payment": "COD",
+      "createdAt": 1759202106298,
+      "status": "delivered",
+      "payment_status": "unpaid"
+    },
+    {
+      "id": "qasx",
+      "sessionId": "4bf5",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "0123456789",
+      "address": "1",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 45000,
+      "discount": 0,
+      "finalTotal": 45000,
+      "couponCode": "",
+      "payment": "ONLINE",
+      "createdAt": 1759203702877,
       "status": "pending",
       "payment_status": "unpaid"
     }
@@ -962,6 +1015,17 @@
       "status": "closed",
       "startedAt": "2025-09-27T16:00:28.723Z",
       "endedAt": "2025-09-28T05:47:28.064Z"
+    },
+    {
+      "id": "1d68",
+      "status": "closed",
+      "startedAt": "2025-09-30T03:15:06.259Z",
+      "endedAt": "2025-09-30T03:16:33.445Z"
+    },
+    {
+      "id": "4bf5",
+      "status": "open",
+      "startedAt": "2025-09-30T03:41:42.827Z"
     }
   ],
   "payments": [
@@ -1024,6 +1088,16 @@
       "status": "captured",
       "createdAt": "2025-09-27T15:48:15.672Z",
       "updatedAt": "2025-09-27T15:48:15.722Z"
+    },
+    {
+      "id": "e70b",
+      "orderId": "qasx",
+      "amount": 45000,
+      "method": "CARD",
+      "provider": "mock",
+      "status": "captured",
+      "createdAt": "2025-09-30T03:41:42.891Z",
+      "updatedAt": "2025-09-30T03:41:42.904Z"
     }
   ]
 }
