@@ -1,5 +1,5 @@
+// src/pages/Menu.jsx
 import { useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import MENU_ALL, { SINGLES, COMBOS } from "../data/menuData";
 import { useCart } from "../context/CartContext.jsx";
 import { useFav } from "../context/FavContext.jsx";
@@ -79,18 +79,18 @@ export default function Menu() {
           <div className="name">{item.name}</div>
           <div className="desc">{item.desc}</div>
           <div className="row">
-            <div className="price">{item.price.toLocaleString()}₫</div>
+            <div className="price">{(item.price || 0).toLocaleString("vi-VN")}₫</div>
             <div className="row" style={{ gap: 8 }}>
               <button className="btn ghost" onClick={() => handleAddCart(item)}>
-                Add to cart
+                Thêm vào giỏ
               </button>
               <button
                 className={`heart ${isFav ? "active" : ""}`}
                 onClick={() => handleToggleFav(item)}
-                title={isFav ? "Unsave" : "Save to favorites"}
+                title={isFav ? "Bỏ lưu" : "Lưu vào yêu thích"}
               >
                 <span role="img" aria-label="heart">❤️</span>
-                {isFav ? "Saved" : "Save"}
+                {isFav ? "Đã lưu" : "Lưu"}
               </button>
             </div>
           </div>
@@ -102,26 +102,20 @@ export default function Menu() {
   return (
     <div className="menu-wrap">
       <div className="menu-head">
-        <h2>Menu</h2>
-        <span style={{ color: "#999" }}>— {MENU_ALL.length} items</span>
+        <h2>Thực đơn</h2>
+        <span style={{ color: "#999" }}>— {MENU_ALL.length} món</span>
       </div>
       <div className="menu-sub">Món lẻ hiển thị trước, sau đó là các combo.</div>
 
       <section className="section">
-        <h3 style={{ margin: "0 0 10px 2px" }}>Singles</h3>
+        <h3 style={{ margin: "0 0 10px 2px" }}>Món lẻ</h3>
         <div className="grid">{SINGLES.map(Card)}</div>
       </section>
 
       <section className="section">
-        <h3 style={{ margin: "20px 0 10px 2px" }}>Combos</h3>
+        <h3 style={{ margin: "20px 0 10px 2px" }}>Combo</h3>
         <div className="grid">{COMBOS.map(Card)}</div>
       </section>
-
-      <div style={{ marginTop: 18 }}>
-        <Link to="/favorites" className="heart active">
-          <span role="img" aria-label="heart">❤️</span> Xem Favorites
-        </Link>
-      </div>
     </div>
   );
 }

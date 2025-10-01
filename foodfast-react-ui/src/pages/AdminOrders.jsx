@@ -1,13 +1,10 @@
-// src/pages/AdminOrders.jsx
 import { useEffect, useMemo, useState } from 'react'
 import { myOrders, updateOrderStatus } from '../utils/api'
 import { exportCsv } from '../utils/exportCsv'
 
-// Trạng thái chuẩn hoá cho UI
 const UI_STATUSES = ['order','processing','delivery','done','cancelled'];
 const UI_SUMMARY  = ['order','processing','delivery','done'];
 
-// Map từ DB -> UI
 function normalizeStatus(db) {
   const s = (db || '').toLowerCase()
   if (!s) return 'order'
@@ -18,8 +15,6 @@ function normalizeStatus(db) {
   if (s === 'cancelled') return 'cancelled'
   return 'order'
 }
-
-// Map từ UI -> DB (khi lưu)
 function denormalizeStatus(ui) {
   const s = (ui || '').toLowerCase()
   if (s === 'order') return 'confirmed'
@@ -29,7 +24,6 @@ function denormalizeStatus(ui) {
   if (s === 'cancelled') return 'cancelled'
   return 'confirmed'
 }
-
 const VND = (n)=> (n ?? 0).toLocaleString('vi-VN') + '₫'
 
 export default function AdminOrders({ variant }) {
@@ -45,10 +39,6 @@ export default function AdminOrders({ variant }) {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [pageCount, setPageCount] = useState(1)
-
-  // Auto refresh: admin 5s, restaurant 3s
-  const [auto, setAuto] = useState(true)
-  const autoMs = isRestaurant ? 3000 : 5000
 
   const fetchData = async () => {
     try {
@@ -106,13 +96,20 @@ export default function AdminOrders({ variant }) {
     }
   }
 
-  useEffect(()=>{ fetchData() }, [page, limit, filter, q])
+  // tải lần đầu + khi điều kiện lọc/sort/trang thay đổi
+  useEffect(()=>{ fetchData() }, [page, limit, filter, q, isRestaurant])
 
+  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus
   useEffect(() => {
-    if (!auto) return
-    const t = setInterval(fetchData, autoMs)
-    return () => clearInterval(t)
-  }, [auto, autoMs, page, limit, filter, q])
+    const onFocus = () => fetchData()
+    const onVis = () => { if (document.visibilityState === 'visible') fetchData() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [page, limit, filter, q, isRestaurant])
 
   // Transitions tuần tự
   const canToProcessing = (ui) => ui === 'order'
@@ -133,7 +130,6 @@ export default function AdminOrders({ variant }) {
   const onExportPage = () => exportCsv(`orders_page_${page}_${ts()}.csv`, rows)
   const onExportAll  = () => exportCsv(`orders_all_filtered_${ts()}.csv`, filtered)
 
-  // Summary (trên trang hiện tại)
   const summary = useMemo(() => {
     const today = new Date(); today.setHours(0,0,0,0)
     let revenue = 0, todayCount = 0
@@ -181,13 +177,6 @@ export default function AdminOrders({ variant }) {
         <h2>{isRestaurant ? 'Restaurant Orders' : 'Quản trị đơn hàng'}</h2>
         <div className="grid-actions">
           <button className="ff-btn" onClick={fetchData}>Refresh</button>
-          <label style={{display:'flex', alignItems:'center', gap:6}}>
-            <input
-              type="checkbox"
-              checked={auto}
-              onChange={e=>setAuto(e.target.checked)}
-            /> Auto refresh ({autoMs/1000}s)
-          </label>
 
           <input
             type="text"
@@ -282,23 +271,22 @@ export default function AdminOrders({ variant }) {
                       )}
                     </div>
 
-                    {/* Nút hành động theo flow tuần tự */}
                     <div className="act">
                       <button
                         className="btn"
-                        disabled={!canToProcessing(ui)}
+                        disabled={ui !== 'order'}
                         onClick={()=>changeStatus(o.id, 'processing')}
                       >Start processing</button>
 
                       <button
                         className="btn"
-                        disabled={!canToDelivery(ui)}
+                        disabled={ui !== 'processing'}
                         onClick={()=>changeStatus(o.id, 'delivery')}
                       >Start delivery</button>
 
                       <button
                         className="btn primary"
-                        disabled={!canToDone(ui)}
+                        disabled={ui !== 'delivery'}
                         onClick={()=>changeStatus(o.id, 'done')}
                       >Mark done</button>
                     </div>
@@ -308,7 +296,6 @@ export default function AdminOrders({ variant }) {
             })}
           </div>
 
-          {/* Phân trang */}
           <div className="pager">
             <button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1, p-1))}>‹ Trước</button>
             <span>Trang {page} / {pageCount}</span>

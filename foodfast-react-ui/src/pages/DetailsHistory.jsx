@@ -44,7 +44,6 @@ export default function DetailsHistory(){
   const [menu, setMenu] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [auto, setAuto] = useState(true)
   const [open, setOpen] = useState({})
 
   const load = async () => {
@@ -68,11 +67,18 @@ export default function DetailsHistory(){
   }
 
   useEffect(()=>{ load() }, [])
-  useEffect(()=>{
-    if (!auto) return
-    const t = setInterval(load, 10000)
-    return () => clearInterval(t)
-  }, [auto])
+
+  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus (thay cho auto polling)
+  useEffect(() => {
+    const onFocus = () => load()
+    const onVis = () => { if (document.visibilityState === 'visible') load() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [])
 
   const menuMap = useMemo(() => {
     const m = {}
@@ -125,12 +131,9 @@ export default function DetailsHistory(){
 
       <div className="top">
         <button className="ff-btn" onClick={load}>Refresh</button>
-        <label style={{display:'flex',alignItems:'center',gap:6}}>
-          <input type="checkbox" checked={auto} onChange={e=>setAuto(e.target.checked)} /> Auto (10s)
-        </label>
       </div>
 
-      <h2 className="title">My Orders</h2>
+      <h2 className="title">Lịch sử đơn hàng</h2>
       {error && <div className="err">{error}</div>}
 
       {/* user block */}

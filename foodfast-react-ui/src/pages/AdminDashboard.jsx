@@ -2,9 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { getAllOrders } from '../utils/api'
 
 const VND = (n) => (n ?? 0).toLocaleString('vi-VN') + '₫'
-const uiStatus = (s) => (s === 'new' || !s ? 'pending' : s)
 
-// mini skeleton cục bộ (không cần component riêng)
+// Chuẩn hoá DB → UI status
+function normalizeStatus(db) {
+  const s = (db || '').toLowerCase()
+  if (!s) return 'order'
+  if (['new','pending','confirmed'].includes(s)) return 'order'
+  if (s === 'preparing')  return 'processing'
+  if (s === 'delivering') return 'delivery'
+  if (s === 'delivered')  return 'done'
+  return 'order'
+}
+
 function Sk({ h=16, w='100%', style={} }){
   return (
     <div style={{
@@ -27,7 +36,6 @@ export default function AdminDashboard(){
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [auto, setAuto] = useState(true)
 
   const load = async () => {
     try {
@@ -43,13 +51,18 @@ export default function AdminDashboard(){
   }
 
   useEffect(()=>{ load() },[])
-  useEffect(()=>{
-    if (!auto) return
-    const t = setInterval(load, 10000) // 10s
-    return ()=>clearInterval(t)
-  },[auto])
 
-  // ======== TÍNH TOÁN TỔNG HỢP ========
+  useEffect(() => {
+    const onFocus = () => load()
+    const onVis = () => { if (document.visibilityState === 'visible') load() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [])
+
   const summary = useMemo(() => {
     const startOfToday = new Date(); startOfToday.setHours(0,0,0,0)
     const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
@@ -57,10 +70,10 @@ export default function AdminDashboard(){
     let revenueToday = 0
     let revenueMonth = 0
 
-    const byStatus = { pending:0, confirmed:0, preparing:0, delivering:0, delivered:0, cancelled:0 }
+    const byStatus = { order:0, processing:0, delivery:0, done:0 }
     for (const o of orders) {
       const total = o.finalTotal ?? o.total ?? 0
-      const s = uiStatus(o.status)
+      const s = normalizeStatus(o.status)
       if (byStatus[s] != null) byStatus[s]++
       const d = o.createdAt ? new Date(o.createdAt) : null
       if (d) {
@@ -69,7 +82,7 @@ export default function AdminDashboard(){
       }
     }
 
-    // nhóm doanh thu theo ngày (7 ngày gần nhất)
+    // nhóm doanh thu 7 ngày
     const days = []
     const fmt = (d) => d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' })
     for (let i = 6; i >= 0; i--) {
@@ -104,12 +117,10 @@ export default function AdminDashboard(){
     .muted{opacity:.75}
     .row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#f7f7f7;border:1px solid #e8e8e8;text-transform:capitalize}
-    .badge.pending{background:#fff0e9;border-color:#ffd8c6;color:#c24a26}
-    .badge.confirmed{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
-    .badge.preparing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
-    .badge.delivering{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
-    .badge.delivered{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
-    .badge.cancelled{background:#fde8e8;border-color:#f9c7c7;color:#b80d0d}
+    .badge.order{background:#fff0e9;border-color:#ffd8c6;color:#c24a26}
+    .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
+    .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
+    .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
     .bars{display:flex;gap:8px;align-items:flex-end;height:120px;margin-top:8px}
     .bar{flex:1;background:#ffe8e0;border:1px solid #ffb199;border-radius:6px 6px 0 0;display:flex;align-items:flex-end;justify-content:center}
     .bar > span{font-size:11px;margin-bottom:4px;opacity:.9}
@@ -124,12 +135,9 @@ export default function AdminDashboard(){
       <style>{styles}</style>
 
       <div className="topbar">
-        <h2 style={{margin:0}}>Admin Dashboard</h2>
+        <h2 style={{margin:0}}>Bảng điều khiển</h2>
         <div className="tools">
-          <button className="btn" onClick={load}>Refresh</button>
-          <label style={{display:'flex',alignItems:'center',gap:6}}>
-            <input type="checkbox" checked={auto} onChange={e=>setAuto(e.target.checked)} /> Auto 10s
-          </label>
+          <button className="btn" onClick={load}>Làm mới</button>
         </div>
       </div>
 
@@ -161,14 +169,14 @@ export default function AdminDashboard(){
               <div className="val">{summary.totalOrders}</div>
             </div>
             <div className="card">
-              <div className="title">Đang chờ (pending)</div>
-              <div className="val">{summary.byStatus.pending}</div>
+              <div className="title">Đơn chờ (order)</div>
+              <div className="val">{summary.byStatus.order}</div>
             </div>
           </div>
 
-          {/* Status breakdown */}
+          {/* Status breakdown (không có cancelled) */}
           <div className="grid">
-            {['confirmed','preparing','delivering','delivered','cancelled'].map(s=>(
+            {['order','processing','delivery','done'].map(s=>(
               <div className="card" key={s}>
                 <div className="row">
                   <span className={`badge ${s}`}>{s}</span>

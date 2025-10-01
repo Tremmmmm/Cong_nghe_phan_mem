@@ -19,7 +19,6 @@ export default function Orders() {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [auto, setAuto] = useState(true);
   const [error, setError] = useState("");
   const [highlightId, setHighlightId] = useState(null);
   const [justClosed, setJustClosed] = useState(closedFlag);
@@ -49,11 +48,18 @@ export default function Orders() {
   };
 
   useEffect(() => { fetchOrders(); }, []);
+
+  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus
   useEffect(() => {
-    if (!auto) return;
-    const t = setInterval(fetchOrders, 5000);
-    return () => clearInterval(t);
-  }, [auto]);
+    const onFocus = () => fetchOrders();
+    const onVis = () => { if (document.visibilityState === "visible") fetchOrders(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
 
   // Scroll + highlight đơn được focus
   useEffect(() => {
@@ -136,9 +142,6 @@ export default function Orders() {
       <div className="top">
         <h2 className="title">Đơn hàng của bạn</h2>
         <button className="ff-btn" onClick={fetchOrders}>Refresh</button>
-        <label style={{display:'flex',alignItems:'center',gap:6}}>
-          <input type="checkbox" checked={auto} onChange={e=>setAuto(e.target.checked)} /> Auto (5s)
-        </label>
       </div>
 
       {justClosed && (

@@ -115,12 +115,12 @@ export default function SignIn() {
   return (
     <section className="auth-hero">
       <div className="auth-card">
-        <h1 className="auth-title">Sign In</h1>
+        <h1 className="auth-title">Đăng Nhập</h1>
         <div className="zigzag" />
         <form className="form" onSubmit={submit}>
           <input className="input" placeholder="Enter your Email ID" value={email} onChange={e=>setEmail(e.target.value)} />
           <input className="input" type="password" placeholder="Password" value={pass} onChange={e=>setPass(e.target.value)} />
-          <button className="btn" type="submit" disabled={loading}>{loading ? "Signing In..." : "Sign In"}</button>
+          <button className="btn" type="submit" disabled={loading}>{loading ? "Signing In..." : "Đăng nhập"}</button>
         </form>
 
         <div className="links">

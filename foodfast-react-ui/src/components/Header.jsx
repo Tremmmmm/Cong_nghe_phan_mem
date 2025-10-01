@@ -84,7 +84,7 @@ export default function Header() {
 
     @media (max-width:940px){ .nav{display:none} .search input{width:160px} }
 
-    /* dark (nếu có theme) */
+    /* dark */
     .dark .ff-header{background:#111;border-color:#333}
     .dark .nav a{color:#ddd}.dark .nav a.active{color:#ffb199}
     .dark .search{border-color:#333}.dark .search input{background:transparent;color:#ddd}
@@ -123,35 +123,34 @@ export default function Header() {
           <img src={logo} alt="FoodFast Logo" />
         </Link>
 
-        {/* Nav center (bỏ Orders để tránh trùng với avatar menu) */}
+        {/* Nav center (đÃ bỏ Admin khỏi navbar chính) */}
         <nav className="nav">
           <ul>
-            <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Home</NavLink></li>
-            <li><NavLink to="/menu" className={({isActive})=>isActive?"active":""}>Menu</NavLink></li>
-            <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Favorites</NavLink></li>
-            <li><NavLink to="/admin" className={({isActive})=>isActive?"active":""}>Admin</NavLink></li>
+            <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Trang chủ</NavLink></li>
+            <li><NavLink to="/menu" className={({isActive})=>isActive?"active":""}>Thực đơn</NavLink></li>
+            <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Yêu thích</NavLink></li>
           </ul>
         </nav>
 
         {/* Right */}
         <div className="right">
           <form className="search" onSubmit={onSearch}>
-            <input placeholder="Search Here..." value={q} onChange={(e)=>setQ(e.target.value)} />
-            <button type="submit" title="Search">🔍</button>
+            <input placeholder="Tìm món ăn..." value={q} onChange={(e)=>setQ(e.target.value)} />
+            <button type="submit" title="Tìm kiếm">🔍</button>
           </form>
 
-          <NavLink to="/favorites" className="icon-box" title="Favorites">
+          <NavLink to="/favorites" className="icon-box" title="Yêu thích">
             <span className="ico" role="img" aria-label="heart">❤️</span>
             {favCount > 0 && <span className="badge">{favCount}</span>}
           </NavLink>
 
-          <NavLink to="/cart" className="icon-box" title="Cart">
+          <NavLink to="/cart" className="icon-box" title="Giỏ hàng">
             <span className="ico" role="img" aria-label="cart">🛒</span>
             {cartCount > 0 && <span className="badge">{cartCount}</span>}
           </NavLink>
 
           {!user ? (
-            <NavLink to="/signin" className={({isActive})=>isActive?"active":""}>Sign In</NavLink>
+            <NavLink to="/signin" className={({isActive})=>isActive?"active":""}>Đăng nhập</NavLink>
           ) : (
             <div className="user" ref={ddRef}>
               <button
@@ -167,14 +166,14 @@ export default function Header() {
               </button>
               {open && (
                 <div className="dropdown" role="menu" aria-label="User menu">
-                  <NavLink to="/orders" onClick={()=>setOpen(false)}>My Orders</NavLink>
-                  <NavLink to="/history" onClick={()=>setOpen(false)}>Order History</NavLink>
-                  <NavLink to="/profile" onClick={()=>setOpen(false)}>Settings</NavLink>
+                  <NavLink to="/orders" onClick={()=>setOpen(false)}>Đơn của tôi</NavLink>
+                  <NavLink to="/history" onClick={()=>setOpen(false)}>Lịch sử đơn</NavLink>
+                  <NavLink to="/profile" onClick={()=>setOpen(false)}>Cài đặt</NavLink>
                   {user?.isAdmin && (
-                    <NavLink to="/admin" onClick={()=>setOpen(false)}>Admin Panel</NavLink>
+                    <NavLink to="/admin" onClick={()=>setOpen(false)}>Trang quản trị</NavLink>
                   )}
                   <button onClick={()=>{ signOut(); setOpen(false); navigate("/signin"); }}>
-                    Sign Out
+                    Đăng xuất
                   </button>
                 </div>
               )}

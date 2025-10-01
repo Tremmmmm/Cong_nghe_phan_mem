@@ -1,4 +1,3 @@
-// src/admin/AdminLayout.jsx
 import { NavLink, Outlet } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 
@@ -35,17 +34,17 @@ export default function AdminLayout(){
   return (
     <div className="admin-layout">
       <aside className="aside">
-        <div className="a-title">Admin Panel</div>
+        <div className="a-title">Trang quản trị</div>
         <nav className="a-nav">
           <NavLink to="/admin/dashboard" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Dashboard
+            Bảng điều khiển
           </NavLink>
           <NavLink to="/admin/orders" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Orders
+            Đơn hàng
           </NavLink>
           {/* Kitchen / Restaurant nằm trong Admin */}
           <NavLink to="/admin/restaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Kitchen / Restaurant (PoC)
+            Khu nhà hàng (PoC)
           </NavLink>
         </nav>
       </aside>
