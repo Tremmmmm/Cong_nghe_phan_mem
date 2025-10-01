@@ -44,7 +44,7 @@ export default function ConfirmCloseSession() {
 
   return (
     <div className="container" style={{ maxWidth: 720, margin: "40px auto", padding: "0 16px" }}>
-      <h2>Thanh toán thành công 🎉</h2>
+      <h2>Đặt hàng thành công 🎉</h2>
       <p>
         Nhấn <b>Xác nhận hoàn tất</b> để đóng phiên đặt hàng (session) của bạn.
       </p>

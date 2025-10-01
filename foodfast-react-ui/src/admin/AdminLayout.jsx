@@ -36,8 +36,13 @@ export default function AdminLayout(){
       <aside className="aside">
         <div className="a-title">Trang quản trị</div>
         <nav className="a-nav">
+          {/* NEW: Người dùng */}
+          <NavLink to="/admin/users" className={({isActive})=>`a-link ${isActive?'active':''}`}>
+            Người dùng
+          </NavLink>
+
           <NavLink to="/admin/dashboard" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Bảng điều khiển
+            Dashboard
           </NavLink>
           <NavLink to="/admin/orders" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Đơn hàng

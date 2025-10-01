@@ -28,6 +28,8 @@ import Orders from './pages/Orders.jsx'
 import AdminOrders from './pages/AdminOrders.jsx'
 import AdminSignIn from './pages/AdminSignIn.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
+// NEW
+import AdminUsers from './admin/AdminUsers.jsx'
 
 // Admin shell layout (sidebar)
 import AdminLayout from './admin/AdminLayout.jsx'
@@ -103,6 +105,9 @@ export default function App() {
             </RequireAdmin>
           }
         >
+          {/* NEW: Users */}
+          <Route path="users" element={<AdminUsers />} />
+
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="orders" element={<AdminOrders />} />

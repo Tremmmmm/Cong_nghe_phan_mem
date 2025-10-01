@@ -965,6 +965,32 @@
       "createdAt": 1759203702877,
       "status": "pending",
       "payment_status": "unpaid"
+    },
+    {
+      "id": "3g04",
+      "sessionId": "0e9b",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lin",
+      "phone": "0256988741",
+      "address": "TPHCM",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 45000,
+      "discount": 4500,
+      "finalTotal": 40500,
+      "couponCode": "FF10",
+      "payment": "COD",
+      "createdAt": 1759328476157,
+      "status": "pending",
+      "payment_status": "unpaid"
     }
   ],
   "sessions": [
@@ -1026,6 +1052,12 @@
       "id": "4bf5",
       "status": "open",
       "startedAt": "2025-09-30T03:41:42.827Z"
+    },
+    {
+      "id": "0e9b",
+      "status": "closed",
+      "startedAt": "2025-10-01T14:21:16.106Z",
+      "endedAt": "2025-10-01T14:21:57.172Z"
     }
   ],
   "payments": [

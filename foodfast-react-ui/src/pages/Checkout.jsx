@@ -1,22 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import { placeOrder, createPayment, capturePayment } from '../utils/api'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useOrderCtx } from '../context/OrderContext.jsx'
+import { calcDiscount, normalizeCode, coupons, CODE_PATTERN } from '../utils/coupons'
 
 function VND(n){ return (n||0).toLocaleString('vi-VN') + '₫' }
-const PHONE_VN = /^0\d{9,10}$/  // 0 + 9–10 số
-
-function calcDiscount(subtotal, code){
-  const c = (code||'').trim().toUpperCase()
-  if (!c) return 0
-  if (c === 'SAVE50K') return Math.min(50000, subtotal)
-  if (c === 'SALE10')  return Math.min(Math.round(subtotal*0.10), 100000)
-  if (c === 'FREESHIP') return Math.min(15000, subtotal)
-  return 0
-}
+const PHONE_VN = /^0\d{9,10}$/
 
 export default function Checkout(){
   const { user } = useAuth()
@@ -34,13 +26,33 @@ export default function Checkout(){
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [couponCode, setCouponCode] = useState('')
+  const [appliedCode, setAppliedCode] = useState('')
+  const [discount, setDiscount] = useState(0)
   const [payment, setPayment] = useState('COD')
+
+  // dropdown gợi ý
+  const [suggOpen, setSuggOpen] = useState(false)
+  const [suggIndex, setSuggIndex] = useState(-1)
 
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
-  const [state, setState] = useState('idle') // idle | success | error
+  const [state, setState] = useState('idle')
 
-  const discount = useMemo(() => calcDiscount(subtotal, couponCode), [subtotal, couponCode])
+  // auto hủy mã khi sửa input khác mã đang áp
+  useEffect(() => {
+    const code = normalizeCode(couponCode)
+    if (appliedCode && code !== appliedCode) {
+      setAppliedCode('')
+      setDiscount(0)
+    }
+  }, [couponCode, appliedCode])
+
+  // tính lại giảm khi subtotal / mã áp đổi
+  useEffect(() => {
+    if (!appliedCode) { setDiscount(0); return; }
+    setDiscount(calcDiscount(appliedCode, subtotal))
+  }, [subtotal, appliedCode])
+
   const finalTotal = Math.max(0, subtotal - discount)
 
   const validate = () => {
@@ -53,9 +65,32 @@ export default function Checkout(){
     return Object.keys(e).length === 0
   }
 
+  // áp mã (có thể truyền codeOverride khi chọn gợi ý)
+  const onApplyCoupon = (codeOverride) => {
+    const raw = codeOverride ?? couponCode
+    const code = normalizeCode(raw)
+    if (!code) { show('Vui lòng nhập mã khuyến mãi.', 'info'); return }
+    if (!CODE_PATTERN.test(code)) { show('Mã không đúng định dạng (chỉ chữ & số).', 'error'); return }
+    if (!Object.prototype.hasOwnProperty.call(coupons, code)) { show('Mã không tồn tại.', 'error'); return }
+
+    const off = calcDiscount(code, subtotal)
+    if (off <= 0) {
+      const c = coupons[code]
+      if (c && subtotal < (c.min || 0)) show(`Đơn tối thiểu ${VND(c.min)} để dùng mã này.`, 'info')
+      else show('Mã không còn hiệu lực hoặc không áp dụng.', 'error')
+      return
+    }
+
+    setAppliedCode(code)
+    setCouponCode(code)  // đồng bộ input
+    setDiscount(off)
+    setSuggOpen(false)
+    show(`Áp dụng mã ${code} thành công. Giảm ${VND(off)}.`, 'success')
+  }
+
   const submit = async (e) => {
     e.preventDefault()
-    if (loading) return;
+    if (loading) return
     if (!items.length) return show('Giỏ hàng trống', 'error')
     if (!validate())   return show('Vui lòng kiểm tra lại các trường!', 'error')
 
@@ -63,7 +98,6 @@ export default function Checkout(){
       setLoading(true)
       setState('idle')
 
-      // đảm bảo có session mở (PoC) — để trong try cho an toàn
       const session = await ensureSession()
 
       const order = {
@@ -84,7 +118,7 @@ export default function Checkout(){
         total: subtotal,
         discount,
         finalTotal,
-        couponCode: (couponCode || '').trim().toUpperCase(),
+        couponCode: appliedCode, // chỉ lưu mã đã áp
         payment,
         createdAt: Date.now(),
         status: 'pending',
@@ -98,15 +132,12 @@ export default function Checkout(){
       try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
       markOrderAsCurrent(oid)
 
-      // Payment mock: ONLINE → capture giả
       if (payment === 'ONLINE') {
         const p = await createPayment({ orderId: oid, amount: finalTotal, method: 'CARD' })
         await capturePayment(p.id)
       }
 
       show(`Đặt hàng thành công! Mã đơn: ${oid}`, 'success')
-
-      // ✅ Điều hướng: lịch sử đơn + nhắc đóng session
       nav(`/orders?focus=${encodeURIComponent(oid)}&promptClose=1`, { replace: true })
     } catch (err) {
       console.error(err)
@@ -134,7 +165,67 @@ export default function Checkout(){
     .dark .card{background:#151515;border-color:#333}
     .dark .inp,.dark .sel{background:#111;color:#eee;border-color:#333}
     @media (max-width:860px){ .co-grid{grid-template-columns:1fr;}}
+    .coupon-row{position:relative;display:flex;gap:8px;align-items:center}
+    .btn-primary{height:40px;border-radius:10px;border:none;background:#ff7a59;color:#fff;padding:0 12px;cursor:pointer}
+    .btn-primary[disabled]{opacity:.6;cursor:not-allowed}
+    .sugg{position:absolute;left:0;right:120px;top:44px;z-index:10;background:#fff;border:1px solid #eee;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+    .sugg-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;cursor:pointer}
+    .sugg-item:hover,.sugg-item.active{background:#ffefe9}
+    .sugg-code{font-weight:800}
+    .sugg-meta{font-size:12px;opacity:.8}
+    .sugg-min{font-size:12px;opacity:.7}
+    .dark .sugg{background:#151515;border-color:#333}
+    .dark .sugg-item:hover,.dark .sugg-item.active{background:#2a1c17}
   `
+
+  // điều kiện enable nút Áp dụng cho code đang gõ
+  const codeNormalized = normalizeCode(couponCode)
+  const formatOK = !!codeNormalized && CODE_PATTERN.test(codeNormalized)
+  const exists = formatOK && Object.prototype.hasOwnProperty.call(coupons, codeNormalized)
+  const minOk = exists ? (subtotal >= (coupons[codeNormalized].min || 0)) : false
+  const canApply = !appliedCode && formatOK && exists && minOk
+
+  // ==== GỢI Ý: chỉ hiện các mã ĐỦ min; lọc theo code HOẶC label; bỏ ký tự lạ ====
+  const all = Object.entries(coupons).map(([code, info]) => ({ code, ...info }))
+  const qRaw = normalizeCode(couponCode)
+  const q = qRaw.replace(/[^A-Z0-9]/g, '') // chỉ chữ & số; "VD: ..." => rỗng
+
+  const eligible = all.filter(x => (subtotal >= (x.min || 0)))
+  const suggestions = eligible
+    .filter(x => {
+      if (!q) return true
+      const inCode = x.code.includes(q)
+      const inLabel = (x.label || '').toUpperCase().includes(q)
+      return inCode || inLabel
+    })
+    .sort((a,b)=> (a.min||0) - (b.min||0))
+
+  // sự kiện bàn phím trong ô input mã
+  const onCouponKeyDown = (e) => {
+    if (!suggOpen || !suggestions.length) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSuggIndex(i => (i + 1) % suggestions.length)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSuggIndex(i => (i - 1 + suggestions.length) % suggestions.length)
+    } else if (e.key === 'Enter') {
+      if (suggIndex >= 0) {
+        e.preventDefault()
+        const pick = suggestions[suggIndex]
+        setCouponCode(pick.code)
+        onApplyCoupon(pick.code)
+      }
+    } else if (e.key === 'Escape') {
+      setSuggOpen(false)
+    }
+  }
+
+  // click chọn gợi ý
+  const onPickSuggestion = (code) => {
+    setCouponCode(code)
+    onApplyCoupon(code)
+  }
 
   return (
     <section className="co-wrap">
@@ -175,12 +266,57 @@ export default function Checkout(){
 
           <div className="field">
             <label>Mã khuyến mãi</label>
-            <input
-              className="inp"
-              placeholder="VD: SAVE50K / SALE10 / FREESHIP"
-              value={couponCode}
-              onChange={e=>setCouponCode(e.target.value)}
-            />
+            <div className="coupon-row">
+              <input
+                className="inp"
+                placeholder="VD: FF10 / SAVE50K / FREESHIP"
+                value={couponCode}
+                onFocus={()=>{ setSuggOpen(true); setSuggIndex(-1); }}
+                onBlur={()=> setTimeout(()=>setSuggOpen(false), 120)}  // trễ chút để kịp click
+                onChange={e=>{ setCouponCode(e.target.value); setSuggOpen(true); setSuggIndex(-1); }}
+                onKeyDown={onCouponKeyDown}
+                style={{flex:1}}
+              />
+
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={()=>onApplyCoupon()}
+                disabled={!canApply}
+                title={
+                  !normalizeCode(couponCode) ? 'Nhập/Chọn một mã để áp dụng'
+                  : (!formatOK ? 'Mã chỉ gồm chữ và số'
+                  : (!exists ? 'Mã không tồn tại'
+                  : (!minOk ? `Đơn tối thiểu ${VND(coupons[codeNormalized].min)} để dùng mã này` : '')))}
+              >
+                Áp dụng
+              </button>
+
+              {suggOpen && suggestions.length > 0 && (
+                <div className="sugg">
+                  {suggestions.slice(0, 6).map((s, idx) => (
+                    <div
+                      key={s.code}
+                      className={`sugg-item ${idx===suggIndex ? 'active':''}`}
+                      onMouseEnter={()=>setSuggIndex(idx)}
+                      onMouseDown={(e)=>{ e.preventDefault(); onPickSuggestion(s.code); }}
+                      title={s.label}
+                    >
+                      <div>
+                        <div className="sugg-code">{s.code}</div>
+                        <div className="sugg-meta">{s.label}</div>
+                      </div>
+                      <div className="sugg-min">{s.min ? `≥ ${VND(s.min)}` : 'Không yêu cầu tối thiểu'}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* gợi ý lỗi nhanh khi CHƯA áp mã */}
+            {!appliedCode && codeNormalized && !formatOK && <span className="err">Mã chỉ gồm chữ và số.</span>}
+            {!appliedCode && formatOK && !exists && <span className="err">Mã không tồn tại.</span>}
+            {!appliedCode && exists && !minOk && <span className="err">Đơn tối thiểu {VND(coupons[codeNormalized].min)} để dùng mã này.</span>}
           </div>
 
           <button className="btn" type="submit" disabled={loading || !items.length}>
@@ -191,7 +327,7 @@ export default function Checkout(){
         <div className="card">
           <h3>Tóm tắt đơn</h3>
           <div className="row"><span>Tạm tính</span><span>{VND(subtotal)}</span></div>
-          <div className="row"><span>Khuyến mãi</span><span>-{VND(discount)}</span></div>
+          <div className="row"><span>Khuyến mãi {appliedCode ? `(${appliedCode})` : ''}</span><span>-{VND(discount)}</span></div>
           <div className="row sum"><span>Thanh toán</span><span>{VND(finalTotal)}</span></div>
           <hr/>
           {items.map((i)=>(

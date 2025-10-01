@@ -57,7 +57,7 @@ export default function Favorites() {
     encodeURIComponent(
       `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'>
         <rect width='100%' height='100%' fill='#f1f1f1'/>
-        <text x='50%' y='50%' text-anchor='middle' fill='#bbb' font-size='20' font-family='Arial'>Food Image</text>
+        <text x='50%' y='50%' text-anchor='middle' fill='#bbb' font-size='20' font-family='Arial'>Hình món</text>
       </svg>`
     );
 
@@ -92,7 +92,7 @@ export default function Favorites() {
               Thêm tất cả vào giỏ
             </button>
             <button className="btn danger" onClick={handleClearAllFav}>
-              Xoá hết favorites
+              Xoá hết yêu thích
             </button>
           </div>
 
@@ -121,11 +121,16 @@ export default function Favorites() {
                         className="heart"
                         onClick={() => {
                           toggle(it.id);
-                          toast.show(isFav ? `Đã bỏ lưu ${it.name}` : `Đã lưu ${it.name}`, "info");
+                          toast.show(
+                            isFav
+                              ? `Đã bỏ khỏi yêu thích ${it.name}`
+                              : `Đã thêm vào yêu thích ${it.name}`,
+                            "info"
+                          );
                         }}
                         title={isFav ? "Bỏ lưu" : "Lưu"}
                       >
-                        <span role="img" aria-label="heart">❤️</span> {isFav ? "Saved" : "Save"}
+                        <span role="img" aria-label="trái tim">❤️</span> {isFav ? "Bỏ lưu" : "Lưu"}
                       </button>
                     </div>
                   </div>

@@ -135,7 +135,7 @@ export default function AdminDashboard(){
       <style>{styles}</style>
 
       <div className="topbar">
-        <h2 style={{margin:0}}>Bảng điều khiển</h2>
+        <h2 style={{margin:0}}>Dashboard</h2>
         <div className="tools">
           <button className="btn" onClick={load}>Làm mới</button>
         </div>
