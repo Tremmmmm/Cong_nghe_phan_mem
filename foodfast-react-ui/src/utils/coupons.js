@@ -1,7 +1,7 @@
 export const coupons = {
   FF10:     { type: 'percent', value: 10,    min: 0,      label: '-10% hoá đơn' },
   SAVE50K:  { type: 'amount',  value: 50000, min: 300000, label: '-50.000đ (đơn ≥ 300.000đ)' },
-  FREESHIP: { type: 'amount',  value: 15000, min: 150000, label: 'Giảm 15.000đ' },
+  FREESHIP: { type: 'freeship', min: 150000, label: 'Miễn phí vận chuyển' }
 };
 
 export function normalizeCode(input = '') {

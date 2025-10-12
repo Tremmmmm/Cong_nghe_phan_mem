@@ -1,7 +1,8 @@
-// src/pages/DetailsHistory.jsx
 import { useEffect, useMemo, useState } from 'react'
 import { myOrders, getMenu } from '../utils/api'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useCart } from '../context/CartContext.jsx'            // ← NEW
+import { useNavigate } from 'react-router-dom'                  // ← NEW
 import MENU_ALL from '../data/menuData.js'
 
 const FALLBACK = '/assets/images/Delivery.png'
@@ -40,6 +41,9 @@ function StatusBadge({ s }) {
 
 export default function DetailsHistory(){
   const { user } = useAuth()
+  const cartCtx = useCart?.() || {}                              // ← NEW
+  const navigate = useNavigate()                                 // ← NEW
+
   const [orders, setOrders] = useState([])
   const [menu, setMenu] = useState([])
   const [loading, setLoading] = useState(true)
@@ -68,7 +72,7 @@ export default function DetailsHistory(){
 
   useEffect(()=>{ load() }, [])
 
-  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus (thay cho auto polling)
+  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus
   useEffect(() => {
     const onFocus = () => load()
     const onVis = () => { if (document.visibilityState === 'visible') load() }
@@ -125,6 +129,31 @@ export default function DetailsHistory(){
   const getItemImage = (it) => it.image || menuMap[it.id]?.image || FALLBACK
   const toggle = (id) => setOpen(v => ({ ...v, [id]: !v[id] }))
 
+  // ← NEW: thêm lại đơn vào giỏ & chuyển qua /cart
+  const reorder = (order) => {
+    const { add, addItem, addToCart } = cartCtx
+    const tryAdd = (p, q) => {
+      if (typeof add === 'function')      return add(p, q)
+      if (typeof addItem === 'function')  return addItem(p, q)
+      if (typeof addToCart === 'function')return addToCart(p, q)
+      return false
+    }
+
+    let usedContext = false
+    for (const it of (order.items || [])) {
+      const payload = { id: it.id, name: it.name, price: it.price, image: getItemImage(it), qty: it.qty }
+      const r = tryAdd(payload, it.qty || 1)
+      if (r !== false) usedContext = true
+    }
+
+    // fallback: nếu CartContext không có hàm add*, đệm qua sessionStorage
+    if (!usedContext) {
+      try { sessionStorage.setItem('ff_reorder_buffer', JSON.stringify(order.items || [])) } catch {}
+    }
+
+    navigate('/cart')
+  }
+
   return (
     <section className="dh-wrap">
       <style>{css}</style>
@@ -180,6 +209,12 @@ export default function DetailsHistory(){
                   <button className="btn" onClick={()=>toggle(o.id)}>
                     {open[o.id] ? 'Ẩn món' : `Xem món (${items.length})`}
                   </button>
+                  {/* NEW: nút Đặt lại */}
+                  {items.length > 0 && (
+                    <button className="btn primary" onClick={()=>reorder(o)}>
+                      Đặt lại
+                    </button>
+                  )}
                 </div>
 
                 {open[o.id] && (

@@ -1,37 +1,38 @@
-//src/pages/SearchResults.jsx
-import { useEffect, useMemo, useState } from 'react'
-import { useLocation, Link, useNavigate } from 'react-router-dom'
-import { useCart } from '../context/CartContext.jsx'
-import menuData from '../data/menuData.js'
+// src/pages/SearchResults.jsx
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext.jsx';
+import menuData from '../data/menuData.js';
+import { formatVND } from '../utils/format';
 
 function useQuery() {
-  const { search } = useLocation()
-  return useMemo(() => new URLSearchParams(search), [search])
+  const { search } = useLocation();
+  return useMemo(() => new URLSearchParams(search), [search]);
 }
 
 export default function SearchResults() {
-  const q = (useQuery().get('q') || '').trim().toLowerCase()
-  const nav = useNavigate()
+  const q = (useQuery().get('q') || '').trim().toLowerCase();
+  const nav = useNavigate();
 
-  const { items = [], add } = useCart()
-  const [list, setList] = useState([])
-  const [qtyMap, setQtyMap] = useState({})
+  const { items = [], add } = useCart();
+  const [list, setList] = useState([]);
+  const [qtyMap, setQtyMap] = useState({});
 
   const setQty = (id, v) =>
-    setQtyMap(s => ({ ...s, [id]: Math.max(1, parseInt(v || 1, 10)) }))
+    setQtyMap(s => ({ ...s, [id]: Math.max(1, parseInt(v || 1, 10)) }));
 
-  const inCart = (id) => items.some(c => String(c.id) === String(id))
+  const inCart = (id) => items.some(c => String(c.id) === String(id));
 
   useEffect(() => {
     const res = (menuData || []).filter(x => {
-      const name = (x.name || '').toLowerCase()
-      const cat  = (x.category || '').toLowerCase()
-      return q ? (name.includes(q) || cat.includes(q)) : true
-    })
-    setList(res)
-  }, [q])
+      const name = (x.name || '').toLowerCase();
+      const cat  = (x.category || '').toLowerCase();
+      return q ? (name.includes(q) || cat.includes(q)) : true;
+    });
+    setList(res);
+  }, [q]);
 
-  const css = useMemo(()=>`
+  const css = useMemo(() => `
     .sr-wrap{max-width:1100px;margin:24px auto;padding:0 16px}
     .sr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
     .card{
@@ -58,7 +59,7 @@ export default function SearchResults() {
     .to-cart{flex:1;height:36px;border:none;border-radius:18px;background:#ff7a59;color:#fff;font-weight:800;cursor:pointer}
     .dark .card{background:#151515;border-color:#333}
     .dark .btn,.dark .qty{background:#111;color:#eee;border-color:#333}
-  `,[])
+  `, []);
 
   return (
     <section className="sr-wrap">
@@ -70,8 +71,8 @@ export default function SearchResults() {
       ) : (
         <div className="sr-grid">
           {list.map(it => {
-            const has = inCart(it.id)
-            const qty = qtyMap[it.id] || 1
+            const has = inCart(it.id);
+            const qty = qtyMap[it.id] || 1;
             return (
               <article className="card" key={it.id}>
                 <img
@@ -85,7 +86,7 @@ export default function SearchResults() {
                 />
                 <div className="card-body">
                   <div className="name">{it.name}</div>
-                  <div className="price">{(it.price||0).toLocaleString('vi-VN')}₫</div>
+                  <div className="price">{formatVND(it.price || 0)}</div>
 
                   {has ? (
                     <div className="act">
@@ -97,8 +98,8 @@ export default function SearchResults() {
                     <form
                       className="act"
                       onSubmit={(e)=>{
-                        e.preventDefault()
-                        add({ id: it.id, name: it.name, price: it.price, image: it.image, qty })
+                        e.preventDefault();
+                        add({ id: it.id, name: it.name, price: it.price, image: it.image, qty });
                       }}
                     >
                       <input
@@ -113,10 +114,10 @@ export default function SearchResults() {
                   )}
                 </div>
               </article>
-            )
+            );
           })}
         </div>
       )}
     </section>
-  )
+  );
 }

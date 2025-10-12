@@ -991,6 +991,145 @@
       "createdAt": 1759328476157,
       "status": "pending",
       "payment_status": "unpaid"
+    },
+    {
+      "id": "btdb",
+      "sessionId": "14f7",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "0936455952",
+      "address": "HCM",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "cb-3",
+          "name": "Combo3 Pizza + Coke",
+          "qty": 1,
+          "price": 99000,
+          "image": "/assets/images/menu/combo3.jpg"
+        }
+      ],
+      "total": 144000,
+      "discount": 0,
+      "finalTotal": 144000,
+      "couponCode": "",
+      "payment": "COD",
+      "createdAt": 1760281308518,
+      "status": "pending",
+      "payment_status": "unpaid"
+    },
+    {
+      "id": "sejp",
+      "sessionId": "14f7",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "chi",
+      "phone": "0965988542",
+      "address": "hcm",
+      "deliveryMode": "DRIVER",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        }
+      ],
+      "total": 104000,
+      "discount": 10400,
+      "finalTotal": 93600,
+      "couponCode": "FF10",
+      "payment": "COD",
+      "createdAt": 1760285849138,
+      "status": "pending",
+      "payment_status": "unpaid"
+    },
+    {
+      "id": "wbr8",
+      "sessionId": "ba32",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchi",
+      "phone": "0935687742",
+      "address": "vt",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 45000,
+      "discount": 4500,
+      "finalTotal": 40500,
+      "couponCode": "FF10",
+      "payment": "COD",
+      "createdAt": 1760286657105,
+      "status": "preparing",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-10-12T17:55:45.129Z"
+    },
+    {
+      "id": "w6hv",
+      "sessionId": "ba32",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lien",
+      "phone": "0965877447",
+      "address": "baria",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 3,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "cb-3",
+          "name": "Combo3 Pizza + Coke",
+          "qty": 1,
+          "price": 99000,
+          "image": "/assets/images/menu/combo3.jpg"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        }
+      ],
+      "total": 286000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 20000,
+      "finalTotal": 286000,
+      "couponCode": "FREESHIP",
+      "payment": "COD",
+      "createdAt": 1760291687720,
+      "status": "done",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-10-12T17:55:48.291Z"
     }
   ],
   "sessions": [
@@ -1058,6 +1197,17 @@
       "status": "closed",
       "startedAt": "2025-10-01T14:21:16.106Z",
       "endedAt": "2025-10-01T14:21:57.172Z"
+    },
+    {
+      "id": "14f7",
+      "status": "closed",
+      "startedAt": "2025-10-12T15:01:48.448Z",
+      "endedAt": "2025-10-12T16:23:00.361Z"
+    },
+    {
+      "id": "ba32",
+      "status": "open",
+      "startedAt": "2025-10-12T16:30:57.075Z"
     }
   ],
   "payments": [

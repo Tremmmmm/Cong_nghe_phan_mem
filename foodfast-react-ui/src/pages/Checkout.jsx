@@ -1,3 +1,4 @@
+// src/pages/Checkout.jsx
 import { useMemo, useState, useEffect } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
@@ -26,12 +27,13 @@ export default function Checkout(){
   const [name, setName] = useState(user?.name || '')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
-  const [deliveryMode, setDeliveryMode] = useState('DRIVER') // NEW: DRIVER | DRONE
+  const [deliveryMode, setDeliveryMode] = useState('DRIVER') // DRIVER | DRONE
   const [couponCode, setCouponCode] = useState('')
   const [appliedCode, setAppliedCode] = useState('')
   const [discount, setDiscount] = useState(0)
   const [payment, setPayment] = useState('COD')
 
+  // dropdown gợi ý
   const [suggOpen, setSuggOpen] = useState(false)
   const [suggIndex, setSuggIndex] = useState(-1)
 
@@ -39,6 +41,19 @@ export default function Checkout(){
   const [loading, setLoading] = useState(false)
   const [state, setState] = useState('idle')
 
+  // === Shipping fee theo mode
+  const shippingFee = useMemo(() => (
+    deliveryMode === 'DRONE' ? 20000 : 10000
+  ), [deliveryMode])
+
+  // === Miễn phí ship khi dùng FREESHIP
+  const isFreeShip = appliedCode === 'FREESHIP'
+  const shippingDiscount = isFreeShip ? shippingFee : 0
+
+  // === Tổng thanh toán: (tạm tính - giảm giá) + ship - freeship
+  const finalTotal = Math.max(0, subtotal - discount + shippingFee - shippingDiscount)
+
+  // auto hủy mã khi sửa input khác mã đang áp
   useEffect(() => {
     const code = normalizeCode(couponCode)
     if (appliedCode && code !== appliedCode) {
@@ -47,12 +62,13 @@ export default function Checkout(){
     }
   }, [couponCode, appliedCode])
 
+  // tính lại giảm khi subtotal / mã áp đổi
   useEffect(() => {
-    if (!appliedCode) { setDiscount(0); return; }
+    if (!appliedCode) { setDiscount(0); return }
+    // nếu FREESHIP vẫn đang là amount trong coupons → không trừ vào subtotal để tránh double
+    if (appliedCode === 'FREESHIP') { setDiscount(0); return }
     setDiscount(calcDiscount(appliedCode, subtotal))
   }, [subtotal, appliedCode])
-
-  const finalTotal = Math.max(0, subtotal - discount)
 
   const validate = () => {
     const e = {}
@@ -65,24 +81,29 @@ export default function Checkout(){
     return Object.keys(e).length === 0
   }
 
+  // áp mã (có thể truyền codeOverride khi chọn gợi ý)
   const onApplyCoupon = (codeOverride) => {
     const raw = codeOverride ?? couponCode
     const code = normalizeCode(raw)
     if (!code) { show('Vui lòng nhập mã khuyến mãi.', 'info'); return }
     if (!CODE_PATTERN.test(code)) { show('Mã chỉ đúng chữ & số.', 'error'); return }
     if (!Object.prototype.hasOwnProperty.call(coupons, code)) { show('Mã không tồn tại.', 'error'); return }
-    const off = calcDiscount(code, subtotal)
-    if (off <= 0) {
+
+    // FREESHIP không giảm subtotal, chỉ miễn phí ship
+    const off = (code === 'FREESHIP') ? 0 : calcDiscount(code, subtotal)
+    if (off <= 0 && code !== 'FREESHIP') {
       const c = coupons[code]
       if (c && subtotal < (c.min || 0)) show(`Đơn tối thiểu ${VND(c.min)} để dùng mã này.`, 'info')
       else show('Mã không còn hiệu lực hoặc không áp dụng.', 'error')
       return
     }
+
     setAppliedCode(code)
     setCouponCode(code)
-    setDiscount(off)
+    setDiscount(off) // FREESHIP => 0
     setSuggOpen(false)
-    show(`Áp dụng mã ${code} thành công. Giảm ${VND(off)}.`, 'success')
+    if (code === 'FREESHIP') show('Áp dụng FREESHIP: miễn phí vận chuyển.', 'success')
+    else show(`Áp dụng mã ${code} thành công. Giảm ${VND(off)}.`, 'success')
   }
 
   const submit = async (e) => {
@@ -105,7 +126,7 @@ export default function Checkout(){
         customerName: name.trim(),
         phone: String(phone).trim(),
         address: address.trim(),
-        deliveryMode, // NEW
+        deliveryMode, // DRIVER | DRONE
         items: items.map(i => ({
           id: i.id,
           name: i.name,
@@ -115,7 +136,9 @@ export default function Checkout(){
         })),
         total: subtotal,
         discount,
-        finalTotal,
+        shippingFee,              // NEW
+        shippingDiscount,         // NEW (0 hoặc = shippingFee)
+        finalTotal,               // đã gồm ship - freeship
         couponCode: appliedCode,
         payment,
         createdAt: Date.now(),
@@ -128,9 +151,7 @@ export default function Checkout(){
       setState('success')
       const oid = created?.id || order.id
       try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
-      // có thể lưu kèm mode để trang confirm đọc nhanh
       try { sessionStorage.setItem('lastDeliveryMode', deliveryMode) } catch {}
-      // mark current
       markOrderAsCurrent(oid)
 
       if (payment === 'ONLINE') {
@@ -139,7 +160,7 @@ export default function Checkout(){
       }
 
       show(`Đặt hàng thành công! Mã đơn: ${oid}`, 'success')
-      nav(`/orders?focus=${encodeURIComponent(oid)}&promptClose=1`, { replace: true })
+      nav(`/confirmation?id=${encodeURIComponent(oid)}`, { replace: true })
     } catch (err) {
       console.error(err)
       setState('error')
@@ -301,11 +322,12 @@ export default function Checkout(){
                 placeholder="VD: FF10 / SAVE50K / FREESHIP"
                 value={couponCode}
                 onFocus={()=>{ setSuggOpen(true); setSuggIndex(-1); }}
-                onBlur={()=> setTimeout(()=>setSuggOpen(false), 120)}
+                onBlur={()=> setTimeout(()=>setSuggOpen(false), 120)}  // trễ chút để kịp click
                 onChange={e=>{ setCouponCode(e.target.value); setSuggOpen(true); setSuggIndex(-1); }}
                 onKeyDown={onCouponKeyDown}
                 style={{flex:1}}
               />
+
               <button
                 type="button"
                 className="btn-primary"
@@ -341,6 +363,7 @@ export default function Checkout(){
               )}
             </div>
 
+            {/* gợi ý lỗi nhanh khi CHƯA áp mã */}
             {!appliedCode && codeNormalized && !formatOK && <span className="err">Mã chỉ gồm chữ và số.</span>}
             {!appliedCode && formatOK && !exists && <span className="err">Mã không tồn tại.</span>}
             {!appliedCode && exists && !minOk && <span className="err">Đơn tối thiểu {VND(coupons[codeNormalized].min)} để dùng mã này.</span>}
@@ -356,6 +379,19 @@ export default function Checkout(){
           <div className="row"><span>Tạm tính</span><span>{VND(subtotal)}</span></div>
           <div className="row"><span>Khuyến mãi {appliedCode ? `(${appliedCode})` : ''}</span><span>-{VND(discount)}</span></div>
           <div className="row"><span>Giao hàng</span><span>{deliveryMode === 'DRONE' ? 'Drone (nhanh)' : 'Tài xế'}</span></div>
+
+          {/* Phí ship + FREESHIP */}
+          <div className="row">
+            <span>Phí vận chuyển</span>
+            <span>{isFreeShip ? <s>{VND(shippingFee)}</s> : VND(shippingFee)}</span>
+          </div>
+          {isFreeShip && (
+            <div className="row">
+              <span>Miễn phí vận chuyển</span>
+              <span>-{VND(shippingDiscount)}</span>
+            </div>
+          )}
+
           <div className="row sum"><span>Thanh toán</span><span>{VND(finalTotal)}</span></div>
           <hr/>
           {items.map((i)=>(

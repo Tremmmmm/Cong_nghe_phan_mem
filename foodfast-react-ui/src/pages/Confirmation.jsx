@@ -16,13 +16,14 @@ function useQuery() {
 export default function Confirmation() {
   const q = useQuery();
   const paramId = (q.get("id") || "").trim();
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-    // ETA state
-  const [eta, setEta] = useState(null);            // {minutes, windowMin, windowMax, arriveTs}
-  const [countdown, setCountdown] = useState('');
+  // ETA state
+  const [eta, setEta] = useState(null);  // {minutes, windowMin, windowMax, arriveTs}
+  const [countdown, setCountdown] = useState("");
 
   useEffect(() => {
     const run = async () => {
@@ -41,11 +42,12 @@ export default function Confirmation() {
 
       try {
         const data = await getOrder(id);
-        if (!data || !data.id) setErr("Đơn hàng không tồn tại hoặc đã bị xoá.");
-        else {
+        if (!data || !data.id) {
+          setErr("Đơn hàng không tồn tại hoặc đã bị xoá.");
+        } else {
           setOrder(data);
-      const e = estimateETA({
-            deliveryMode: data.deliveryMode || 'DRIVER',
+          const e = estimateETA({
+            deliveryMode: data.deliveryMode || "DRIVER",
             itemCount: data.items?.length || 1,
             createdAt: data.createdAt
           });
@@ -61,7 +63,8 @@ export default function Confirmation() {
     run();
   }, [paramId]);
 
-    useEffect(() => {
+  // countdown ETA
+  useEffect(() => {
     if (!eta?.arriveTs) return;
     const tick = () => setCountdown(formatCountdown(eta.arriveTs - Date.now()));
     tick();
@@ -89,6 +92,7 @@ export default function Confirmation() {
     .sum{font-weight:900}
     .center{text-align:center}
     .muted{opacity:.75}
+    .eta{margin:8px 0 12px; padding:10px; border-radius:10px; font-weight:700; background:#f4f8ff; border:1px solid #d6e7ff}
     .sk{height:14px;background:linear-gradient(90deg,#eee,#f7f7f7,#eee);background-size:200% 100%;animation:sh 1s linear infinite;border-radius:8px}
     @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
     .dark .card{background:#151515;border-color:#333}
@@ -122,18 +126,18 @@ export default function Confirmation() {
                 Mã đơn: <b>#{order.id}</b><br/>
                 Thời gian: {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}<br/>
                 Trạng thái: <b>{order.status || "new"}</b><br/>
-                Thanh toán: <b>{order.payment === 'ONLINE' ? 'Online (mock)' : 'COD'}</b>
+                Thanh toán: <b>{order.payment === 'ONLINE' ? 'Online (mock)' : 'COD'}</b><br/>
                 Giao bằng: <b>{order.deliveryMode === 'DRONE' ? 'Drone' : 'Tài xế'}</b>
               </p>
 
-               {/* NEW: ETA box */}
+              {/* ETA box */}
               {eta && (
                 <div className="eta">
-                  ⏱️ Dự kiến giao: <b>{formatArrivalClock(eta.arriveTs)}</b> &nbsp;
+                  ⏱️ Dự kiến giao: <b>{formatArrivalClock(eta.arriveTs)}</b>&nbsp;
                   ({etaWindowLabel(eta)}) — Còn lại: <b>{countdown}</b>
                 </div>
               )}
-              
+
               <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
                 <Link className="btn" to="/history">Xem lịch sử đơn</Link>
                 <Link className="btn alt" to="/menu">Tiếp tục đặt món</Link>
@@ -173,6 +177,27 @@ export default function Confirmation() {
               <h3 style={{marginTop:0}}>Tóm tắt thanh toán</h3>
               <div className="row"><span>Tạm tính</span><span>{VND(order.total)}</span></div>
               <div className="row"><span>Giảm giá</span><span>-{VND(order.discount || 0)}</span></div>
+
+              {/* Ship & Freeship */}
+              <div className="row">
+                <span>Giao hàng</span>
+                <span>{order.deliveryMode === 'DRONE' ? 'Drone (nhanh)' : 'Tài xế'}</span>
+              </div>
+              <div className="row">
+                <span>Phí vận chuyển</span>
+                <span>
+                  {(order.shippingDiscount || 0) > 0
+                    ? <s>{VND(order.shippingFee || 0)}</s>
+                    : VND(order.shippingFee || 0)}
+                </span>
+              </div>
+              {(order.shippingDiscount || 0) > 0 && (
+                <div className="row">
+                  <span>Miễn phí vận chuyển</span>
+                  <span>-{VND(order.shippingDiscount)}</span>
+                </div>
+              )}
+
               <div className="row sum"><span>Phải trả</span><span>{VND(order.finalTotal ?? order.total ?? 0)}</span></div>
               {order.couponCode && (
                 <div className="row"><span>Mã áp dụng</span><span><b>{order.couponCode}</b></span></div>
