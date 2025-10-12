@@ -4,19 +4,19 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import MENU_ALL from "../data/menuData.js";
-import { formatVND } from "../utils/format";
+import { estimateETA, etaWindowLabel, formatCountdown } from "../utils/eta"; // ★ NEW
 
-const VND = (n) => formatVND(n);
+function VND(n){ return (n||0).toLocaleString('vi-VN') + '₫' }
 const FALLBACK = "/assets/images/Delivery.png";
 
 export default function Orders() {
   const { user } = useAuth();
-  const { add, addItem, addToCart } = useCart?.() || {}; // hỗ trợ nhiều tên hàm
+  // const { add, addItem, addToCart } = useCart?.() || {}; // ⛔️ bỏ dùng reorder
   const navigate = useNavigate();
   const [sp] = useSearchParams();
   const focusId = sp.get("focus");
   const closedFlag = sp.get("closed") === "1";
-  const promptClose = sp.get("promptClose") === "1"; // NEW
+  const promptClose = sp.get("promptClose") === "1";
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,6 @@ export default function Orders() {
 
   useEffect(() => { fetchOrders(); }, []);
 
-  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus
   useEffect(() => {
     const onFocus = () => fetchOrders();
     const onVis = () => { if (document.visibilityState === "visible") fetchOrders(); };
@@ -62,7 +61,6 @@ export default function Orders() {
     };
   }, []);
 
-  // Scroll + highlight đơn được focus
   useEffect(() => {
     if (!focusId) return;
     const el = document.getElementById(`ord-${focusId}`);
@@ -74,7 +72,6 @@ export default function Orders() {
     }
   }, [focusId, orders]);
 
-  // Tự ẩn banner "session closed" sau 4 giây
   useEffect(() => {
     if (!justClosed) return;
     const t = setTimeout(() => setJustClosed(false), 4000);
@@ -101,12 +98,12 @@ export default function Orders() {
     .meta{flex:1}
     .meta b{display:block}
     .sum-row{display:flex;justify-content:flex-end;gap:20px;margin-top:12px}
-    .ff-btn{height:32px;border:none;border-radius:16px;background:#ff7a59;color:#fff;padding:0 12px;cursor:pointer}
     .banner-ok{margin:8px 0 14px; padding:10px 12px; border-radius:10px; font-weight:700;
                background:#eaf7ea; border:1px solid #cce9cc; color:#2a7e2a}
     .banner-warn{margin:8px 0 14px; padding:10px 12px; border-radius:10px; font-weight:700;
                  background:#fff3e2; border:1px solid #ffc9a6; color:#c24a26}
-    .act-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+    .muted{opacity:.75}
+    .eta-line{opacity:.9}
     .dark .card{background:#151515;border-color:#333}
     .dark .label{color:#aaa}
   `;
@@ -114,27 +111,31 @@ export default function Orders() {
   const getItemImage = (it) =>
     it.image || menuMap[it.id]?.image || FALLBACK;
 
-  // Re-order: cố gắng gọi đúng hàm add* trong CartContext; nếu không có, fallback lưu tạm và điều hướng
-  const bulkAddToCart = (items=[]) => {
-    const tryAdd = (p, q) => {
-      if (typeof add === "function") return add(p, q);
-      if (typeof addItem === "function") return addItem(p, q);
-      if (typeof addToCart === "function") return addToCart(p, q);
-      return false;
-    };
-    let usedContext = false;
-    for (const it of items) {
-      const payload = { id: it.id, name: it.name, price: it.price, qty: it.qty, image: it.image };
-      const r = tryAdd(payload, it.qty || 1);
-      if (r !== false) usedContext = true;
-    }
-    if (!usedContext) {
-      try {
-        sessionStorage.setItem("ff_reorder_buffer", JSON.stringify(items || []));
-      } catch {}
-    }
-    navigate("/cart");
-  };
+  // ★ NEW: component ETA có countdown (dùng riêng cho từng đơn)
+  function EtaBadge({ order }) {
+    const st = String(order.status || '').toLowerCase();
+    if (['done','delivered','cancelled'].includes(st)) return null;
+
+    const eta = useMemo(() => estimateETA({
+      deliveryMode: order.deliveryMode || 'DRIVER',
+      itemCount: order.items?.length || 1,
+      createdAt: order.createdAt
+    }), [order.deliveryMode, order.items?.length, order.createdAt]);
+
+    const [cd, setCd] = useState('');
+    useEffect(() => {
+      const tick = () => setCd(formatCountdown(eta.arriveTs - Date.now()));
+      tick();
+      const t = setInterval(tick, 1000);
+      return () => clearInterval(t);
+    }, [eta.arriveTs]);
+
+    return (
+      <div className="eta-line">
+        ETA: <b>{etaWindowLabel(eta)}</b> — Còn lại: <b>{cd}</b>
+      </div>
+    );
+  }
 
   return (
     <div className="od-wrap">
@@ -149,7 +150,6 @@ export default function Orders() {
         <div className="banner-ok">✅ Phiên đặt hàng (session) đã được đóng. Cảm ơn bạn!</div>
       )}
 
-      {/* NEW: nhắc đóng phiên ngay sau khi đặt xong */}
       {promptClose && (
         <div className="banner-warn">
           🔒 Bạn vừa đặt xong đơn.
@@ -183,6 +183,9 @@ export default function Orders() {
               <div className="label">Người nhận:</div>
               <div><strong>{o.customerName}</strong> • {o.phone}</div>
               <div>{o.address}</div>
+              <div className="muted">Giao bằng: {o.deliveryMode === 'DRONE' ? 'Drone' : 'Tài xế'}</div>
+              {/* ★ NEW: ETA + countdown */}
+              <div className="muted"><EtaBadge order={o} /></div>
             </div>
 
             <div className="items">
@@ -203,11 +206,7 @@ export default function Orders() {
               <div>Phải trả: <strong>{VND(o.finalTotal ?? o.total ?? 0)}</strong></div>
             </div>
 
-            <div className="act-row" style={{marginTop:10}}>
-              <button className="ff-btn" onClick={() => bulkAddToCart(o.items || [])}>
-                Đặt lại
-              </button>
-            </div>
+            {/* ⛔️ ĐÃ BỎ NÚT ĐẶT LẠI */}
           </div>
         ))
       )}
