@@ -4,6 +4,7 @@ import MENU_ALL, { SINGLES, COMBOS } from "../data/menuData";
 import { useCart } from "../context/CartContext.jsx";
 import { useFav } from "../context/FavContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
+import { formatVND } from "../utils/format";
 
 export default function Menu() {
   const styles = useMemo(
@@ -79,7 +80,7 @@ export default function Menu() {
           <div className="name">{item.name}</div>
           <div className="desc">{item.desc}</div>
           <div className="row">
-            <div className="price">{(item.price || 0).toLocaleString("vi-VN")}₫</div>
+            <div className="price">{formatVND(item.price || 0)}</div>
             <div className="row" style={{ gap: 8 }}>
               <button className="btn ghost" onClick={() => handleAddCart(item)}>
                 Thêm vào giỏ

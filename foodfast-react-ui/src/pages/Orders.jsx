@@ -4,8 +4,9 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import MENU_ALL from "../data/menuData.js";
+import { formatVND } from "../utils/format";
 
-function VND(n){ return (n||0).toLocaleString('vi-VN') + '₫' }
+const VND = (n) => formatVND(n);
 const FALLBACK = "/assets/images/Delivery.png";
 
 export default function Orders() {

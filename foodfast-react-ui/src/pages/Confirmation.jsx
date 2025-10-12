@@ -2,9 +2,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getOrder } from "../utils/api";
+import { formatVND } from "../utils/format";
 
 const FALLBACK = "/assets/images/Delivery.png";
-const VND = (n) => (n || 0).toLocaleString("vi-VN") + "₫";
+const VND = (n) => formatVND(n);
 
 function useQuery() {
   const { search } = useLocation();

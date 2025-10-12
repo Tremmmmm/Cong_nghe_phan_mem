@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../utils/api";
+import { formatVND } from "../utils/format";
 
 const STATUS_FLOW = ["pending", "preparing", "done"];
-const VND = (n) => (n || 0).toLocaleString("vi-VN") + "₫";
+const VND = (n) => formatVND(n);
 
 function OrderCard({ order, onMove }) {
   const idx = STATUS_FLOW.indexOf(order.status);
