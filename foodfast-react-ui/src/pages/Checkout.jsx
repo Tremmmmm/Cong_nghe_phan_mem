@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useNavigate } from 'react-router-dom'
-import { placeOrder, createPayment, capturePayment } from '../utils/api'
+import { placeOrder } from '../utils/api'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useOrderCtx } from '../context/OrderContext.jsx'
 import { calcDiscount, normalizeCode, coupons, CODE_PATTERN } from '../utils/coupons'
@@ -12,8 +12,15 @@ import { isPhoneVN } from '../utils/validators'
 
 function VND(n){ return formatVND(n) }
 
+// cố định mode giao & thanh toán
+const DELIVERY_MODE = 'DRONE'
+const PAYMENT_METHOD = 'COD'
+
+// key lưu địa chỉ gần đây
+const REC_ADDR_KEY = 'ff_recent_addresses'
+
 export default function Checkout(){
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const { items, clear } = useCart()
   const { show } = useToast()
   const nav = useNavigate()
@@ -24,14 +31,29 @@ export default function Checkout(){
     [items]
   )
 
-  const [name, setName] = useState(user?.name || '')
-  const [phone, setPhone] = useState('')
-  const [address, setAddress] = useState('')
-  const [deliveryMode, setDeliveryMode] = useState('DRIVER') // DRIVER | DRONE
+  // Prefill từ user hoặc localStorage
+  const [name, setName] = useState(user?.name ?? localStorage.getItem('lastName') ?? '')
+  const [phone, setPhone] = useState(user?.phone ?? localStorage.getItem('lastPhone') ?? '')
+  const [address, setAddress] = useState(user?.address ?? localStorage.getItem('lastAddress') ?? '')
   const [couponCode, setCouponCode] = useState('')
   const [appliedCode, setAppliedCode] = useState('')
   const [discount, setDiscount] = useState(0)
-  const [payment, setPayment] = useState('COD')
+  const [saveAsDefault, setSaveAsDefault] = useState(true)
+
+  // địa chỉ gần đây
+  const [recentAddr, setRecentAddr] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(REC_ADDR_KEY) || '[]') || [] }
+    catch { return [] }
+  })
+
+  // nếu user cập nhật sau, mà ô đang trống thì tự điền
+  useEffect(() => {
+    if (!user) return
+    if (!name && user.name) setName(user.name)
+    if (!phone && user.phone) setPhone(user.phone)
+    if (!address && user.address) setAddress(user.address)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   // dropdown gợi ý
   const [suggOpen, setSuggOpen] = useState(false)
@@ -41,16 +63,14 @@ export default function Checkout(){
   const [loading, setLoading] = useState(false)
   const [state, setState] = useState('idle')
 
-  // === Shipping fee theo mode
-  const shippingFee = useMemo(() => (
-    deliveryMode === 'DRONE' ? 20000 : 10000
-  ), [deliveryMode])
+  // === Phí ship cố định cho Drone
+  const shippingFee = useMemo(() => 20000, [])
 
   // === Miễn phí ship khi dùng FREESHIP
   const isFreeShip = appliedCode === 'FREESHIP'
   const shippingDiscount = isFreeShip ? shippingFee : 0
 
-  // === Tổng thanh toán: (tạm tính - giảm giá) + ship - freeship
+  // === Tổng thanh toán
   const finalTotal = Math.max(0, subtotal - discount + shippingFee - shippingDiscount)
 
   // auto hủy mã khi sửa input khác mã đang áp
@@ -65,7 +85,6 @@ export default function Checkout(){
   // tính lại giảm khi subtotal / mã áp đổi
   useEffect(() => {
     if (!appliedCode) { setDiscount(0); return }
-    // nếu FREESHIP vẫn đang là amount trong coupons → không trừ vào subtotal để tránh double
     if (appliedCode === 'FREESHIP') { setDiscount(0); return }
     setDiscount(calcDiscount(appliedCode, subtotal))
   }, [subtotal, appliedCode])
@@ -75,8 +94,6 @@ export default function Checkout(){
     if (!name.trim()) e.name = 'Vui lòng nhập họ tên'
     if (!isPhoneVN((phone||'').trim())) e.phone = 'Số điện thoại không hợp lệ (VN)'
     if (!address.trim()) e.address = 'Vui lòng nhập địa chỉ'
-    if (!['COD','ONLINE'].includes(payment)) e.payment = 'Chọn phương thức thanh toán'
-    if (!['DRONE','DRIVER'].includes(deliveryMode)) e.deliveryMode = 'Chọn phương thức giao hàng'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -89,7 +106,6 @@ export default function Checkout(){
     if (!CODE_PATTERN.test(code)) { show('Mã chỉ đúng chữ & số.', 'error'); return }
     if (!Object.prototype.hasOwnProperty.call(coupons, code)) { show('Mã không tồn tại.', 'error'); return }
 
-    // FREESHIP không giảm subtotal, chỉ miễn phí ship
     const off = (code === 'FREESHIP') ? 0 : calcDiscount(code, subtotal)
     if (off <= 0 && code !== 'FREESHIP') {
       const c = coupons[code]
@@ -100,7 +116,7 @@ export default function Checkout(){
 
     setAppliedCode(code)
     setCouponCode(code)
-    setDiscount(off) // FREESHIP => 0
+    setDiscount(off)
     setSuggOpen(false)
     if (code === 'FREESHIP') show('Áp dụng FREESHIP: miễn phí vận chuyển.', 'success')
     else show(`Áp dụng mã ${code} thành công. Giảm ${VND(off)}.`, 'success')
@@ -126,7 +142,7 @@ export default function Checkout(){
         customerName: name.trim(),
         phone: String(phone).trim(),
         address: address.trim(),
-        deliveryMode, // DRIVER | DRONE
+        deliveryMode: DELIVERY_MODE,
         items: items.map(i => ({
           id: i.id,
           name: i.name,
@@ -136,11 +152,11 @@ export default function Checkout(){
         })),
         total: subtotal,
         discount,
-        shippingFee,              // NEW
-        shippingDiscount,         // NEW (0 hoặc = shippingFee)
-        finalTotal,               // đã gồm ship - freeship
+        shippingFee,
+        shippingDiscount,
+        finalTotal,
         couponCode: appliedCode,
-        payment,
+        payment: PAYMENT_METHOD,
         createdAt: Date.now(),
         status: 'pending',
         payment_status: 'unpaid'
@@ -151,14 +167,29 @@ export default function Checkout(){
       setState('success')
       const oid = created?.id || order.id
       try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
-      try { sessionStorage.setItem('lastDeliveryMode', deliveryMode) } catch {}
-      markOrderAsCurrent(oid)
+      try { sessionStorage.setItem('lastDeliveryMode', DELIVERY_MODE) } catch {}
+      // nhớ thông tin người nhận cho lần sau
+      try {
+        localStorage.setItem('lastName', name.trim())
+        localStorage.setItem('lastPhone', String(phone).trim())
+        localStorage.setItem('lastAddress', address.trim())
+      } catch {}
 
-      if (payment === 'ONLINE') {
-        const p = await createPayment({ orderId: oid, amount: finalTotal, method: 'CARD' })
-        await capturePayment(p.id)
+      // cập nhật hồ sơ nếu tick lưu
+      if (user && saveAsDefault && typeof updateUser === 'function') {
+        updateUser({ name: name.trim(), phone: String(phone).trim(), address: address.trim() })
       }
 
+      // cập nhật "địa chỉ gần đây"
+      try {
+        const cur = JSON.parse(localStorage.getItem(REC_ADDR_KEY) || '[]') || []
+        const norm = address.trim()
+        const next = [norm, ...cur.filter(x => x && x !== norm)].slice(0, 3)
+        localStorage.setItem(REC_ADDR_KEY, JSON.stringify(next))
+        setRecentAddr(next)
+      } catch {}
+
+      markOrderAsCurrent(oid)
       show(`Đặt hàng thành công! Mã đơn: ${oid}`, 'success')
       nav(`/confirmation?id=${encodeURIComponent(oid)}`, { replace: true })
     } catch (err) {
@@ -187,28 +218,42 @@ export default function Checkout(){
     .dark .card{background:#151515;border-color:#333}
     .dark .inp,.dark .sel{background:#111;color:#eee;border-color:#333}
     @media (max-width:860px){ .co-grid{grid-template-columns:1fr;}}
+
+    /* Coupon suggestions */
     .coupon-row{position:relative;display:flex;gap:8px;align-items:center}
     .btn-primary{height:40px;border-radius:10px;border:none;background:#ff7a59;color:#fff;padding:0 12px;cursor:pointer}
     .btn-primary[disabled]{opacity:.6;cursor:not-allowed}
     .sugg{position:absolute;left:0;right:120px;top:44px;z-index:10;background:#fff;border:1px solid #eee;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.08)}
-    .sugg-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;cursor:pointer}
+    .sugg-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;cursor:pointer;color:#222}
     .sugg-item:hover,.sugg-item.active{background:#ffefe9}
+    /* ép nền sáng kể cả dark mode (tránh đen thui) */
+    .dark .sugg{background:#fff;border-color:#eee}
+    .dark .sugg-item:hover,.dark .sugg-item.active{background:#ffefe9}
+
     .sugg-code{font-weight:800}
     .sugg-meta{font-size:12px;opacity:.8}
     .sugg-min{font-size:12px;opacity:.7}
-    .dark .sugg{background:#151515;border-color:#333}
-    .dark .sugg-item:hover,.dark .sugg-item.active{background:#2a1c17}
+
     .radio-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
     .chip{display:inline-flex;gap:8px;align-items:center;border:1px solid #e6e6ea;padding:8px 12px;border-radius:999px;cursor:pointer}
     .chip input{accent-color:#ff7a59}
     .muted{opacity:.75}
+
+    /* địa chỉ gần đây */
+    .addr-recent{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+    .chip-sm{padding:4px 10px;border-radius:999px}
+    .addr-chip{background:#fafafa;border:1px solid #e6e6ea}
+    .addr-chip:hover{background:#ffefe9}
+    .dark .addr-chip{background:#222;border-color:#444;color:#eee}
   `
 
   const codeNormalized = normalizeCode(couponCode)
   const formatOK = !!codeNormalized && CODE_PATTERN.test(codeNormalized)
   const exists = formatOK && Object.prototype.hasOwnProperty.call(coupons, codeNormalized)
   const minOk = exists ? (subtotal >= (coupons[codeNormalized].min || 0)) : false
-  const canApply = !appliedCode && formatOK && exists && minOk
+
+  // Bật nút khi mã hợp lệ & tồn tại (không cần đủ min ở bước này)
+  const canApply = !appliedCode && formatOK && exists
 
   const all = Object.entries(coupons).map(([code, info]) => ({ code, ...info }))
   const qRaw = normalizeCode(couponCode)
@@ -233,10 +278,12 @@ export default function Checkout(){
       setSuggIndex(i => (i - 1 + suggestions.length) % suggestions.length)
     } else if (e.key === 'Enter') {
       if (suggIndex >= 0) {
+        // Chọn gợi ý -> chỉ gán vào input, không auto-apply
         e.preventDefault()
         const pick = suggestions[suggIndex]
         setCouponCode(pick.code)
-        onApplyCoupon(pick.code)
+        setSuggOpen(false)
+        setSuggIndex(-1)
       }
     } else if (e.key === 'Escape') {
       setSuggOpen(false)
@@ -244,9 +291,14 @@ export default function Checkout(){
   }
 
   const onPickSuggestion = (code) => {
+    // Chỉ điền mã + đóng dropdown, để người dùng bấm "Áp dụng"
     setCouponCode(code)
-    onApplyCoupon(code)
+    setSuggOpen(false)
+    setSuggIndex(-1)
   }
+
+  // hiển thị “Khuyến mãi” chỉ khi mã giảm tiền (không phải FREESHIP)
+  const showDiscountLine = appliedCode && appliedCode !== 'FREESHIP' && discount > 0
 
   return (
     <section className="co-wrap">
@@ -260,58 +312,62 @@ export default function Checkout(){
         <form className="card" onSubmit={submit} noValidate>
           <div className="field">
             <label>Họ tên</label>
-            <input className="inp" value={name} onChange={e=>setName(e.target.value)} />
+            <input className="inp" autoComplete="name" value={name} onChange={e=>setName(e.target.value)} />
             {errors.name && <span className="err">{errors.name}</span>}
           </div>
 
           <div className="field">
             <label>Số điện thoại</label>
-            <input className="inp" placeholder="0xxxxxxxxx" value={phone} onChange={e=>setPhone(e.target.value)} />
+            <input className="inp" type="tel" autoComplete="tel" placeholder="0xxxxxxxxx" value={phone} onChange={e=>setPhone(e.target.value)} />
             {errors.phone && <span className="err">{errors.phone}</span>}
           </div>
 
           <div className="field">
             <label>Địa chỉ</label>
-            <input className="inp" value={address} onChange={e=>setAddress(e.target.value)} />
+            <input className="inp" autoComplete="street-address" value={address} onChange={e=>setAddress(e.target.value)} />
             {errors.address && <span className="err">{errors.address}</span>}
+
+            {/* địa chỉ gần đây */}
+            {recentAddr.length > 0 && (
+              <div className="addr-recent">
+                <span className="muted" style={{marginRight:6}}>Gần đây:</span>
+                {recentAddr.map((a, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="chip chip-sm addr-chip"
+                    onClick={()=>setAddress(a)}
+                    title={a}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Checkbox lưu mặc định */}
+            <label style={{display:'flex',gap:8,alignItems:'center',marginTop:6,fontSize:13,opacity:.9}}>
+              <input type="checkbox" checked={saveAsDefault} onChange={e=>setSaveAsDefault(e.target.checked)} />
+              Lưu thông tin nhận hàng (tên, SĐT, địa chỉ)
+            </label>
           </div>
 
+          {/* Phương thức giao hàng (cố định: Drone) */}
           <div className="field">
             <label>Phương thức giao hàng</label>
-            <div className="radio-row">
-              <label className="chip" title="Giao bởi tài xế">
-                <input
-                  type="radio"
-                  name="deliveryMode"
-                  value="DRIVER"
-                  checked={deliveryMode === 'DRIVER'}
-                  onChange={()=>setDeliveryMode('DRIVER')}
-                />
-                Tài xế
-                <span className="muted">~45–60′</span>
-              </label>
-              <label className="chip" title="Giao nhanh bằng drone (mock)">
-                <input
-                  type="radio"
-                  name="deliveryMode"
-                  value="DRONE"
-                  checked={deliveryMode === 'DRONE'}
-                  onChange={()=>setDeliveryMode('DRONE')}
-                />
-                Drone
-                <span className="muted">~20–30′</span>
-              </label>
+            <div className="chip" title="Giao nhanh bằng drone (cố định)">
+              <input type="radio" checked readOnly />
+              Drone <span className="muted">~20–30′</span>
             </div>
-            {errors.deliveryMode && <span className="err">{errors.deliveryMode}</span>}
           </div>
 
+          {/* Phương thức thanh toán (cố định: COD) */}
           <div className="field">
             <label>Phương thức thanh toán</label>
-            <select className="sel" value={payment} onChange={e=>setPayment(e.target.value)}>
-              <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-              <option value="ONLINE">Online (mock)</option>
-            </select>
-            {errors.payment && <span className="err">{errors.payment}</span>}
+            <div className="chip" title="Thanh toán khi nhận hàng (cố định)">
+              <input type="radio" checked readOnly />
+              Thanh toán khi nhận hàng (COD)
+            </div>
           </div>
 
           <div className="field">
@@ -322,7 +378,7 @@ export default function Checkout(){
                 placeholder="VD: FF10 / SAVE50K / FREESHIP"
                 value={couponCode}
                 onFocus={()=>{ setSuggOpen(true); setSuggIndex(-1); }}
-                onBlur={()=> setTimeout(()=>setSuggOpen(false), 120)}  // trễ chút để kịp click
+                onBlur={()=> setTimeout(()=>setSuggOpen(false), 120)}
                 onChange={e=>{ setCouponCode(e.target.value); setSuggOpen(true); setSuggIndex(-1); }}
                 onKeyDown={onCouponKeyDown}
                 style={{flex:1}}
@@ -335,9 +391,8 @@ export default function Checkout(){
                 disabled={!canApply}
                 title={
                   !codeNormalized ? 'Nhập/Chọn một mã để áp dụng'
-                  : (!formatOK ? 'Mã chỉ gồm chữ và số'
-                  : (!exists ? 'Mã không tồn tại'
-                  : (!minOk ? `Đơn tối thiểu ${VND(coupons[codeNormalized].min)} để dùng mã này` : '')))}
+                  : (!formatOK ? 'Mã chỉ gồm chữ & số'
+                  : (!exists ? 'Mã không tồn tại' : ''))}
               >
                 Áp dụng
               </button>
@@ -377,20 +432,36 @@ export default function Checkout(){
         <div className="card">
           <h3>Tóm tắt đơn</h3>
           <div className="row"><span>Tạm tính</span><span>{VND(subtotal)}</span></div>
-          <div className="row"><span>Khuyến mãi {appliedCode ? `(${appliedCode})` : ''}</span><span>-{VND(discount)}</span></div>
-          <div className="row"><span>Giao hàng</span><span>{deliveryMode === 'DRONE' ? 'Drone (nhanh)' : 'Tài xế'}</span></div>
 
-          {/* Phí ship + FREESHIP */}
-          <div className="row">
-            <span>Phí vận chuyển</span>
-            <span>{isFreeShip ? <s>{VND(shippingFee)}</s> : VND(shippingFee)}</span>
-          </div>
-          {isFreeShip && (
+          {/* Khuyến mãi chỉ hiện khi không phải FREESHIP */}
+          {appliedCode && appliedCode !== 'FREESHIP' && discount > 0 && (
             <div className="row">
-              <span>Miễn phí vận chuyển</span>
-              <span>-{VND(shippingDiscount)}</span>
+              <span>Khuyến mãi ({appliedCode})</span>
+              <span>-{VND(discount)}</span>
             </div>
           )}
+
+          <div className="row"><span>Giao hàng</span><span>Drone (nhanh)</span></div>
+
+          <div className="row">
+            <span>
+              Vận chuyển
+              {isFreeShip && (
+                <span className="badge" style={{
+                  fontSize:12,padding:'2px 8px',borderRadius:999,marginLeft:8,
+                  background:'#ffefe9',fontWeight:800
+                }}>FREESHIP</span>
+              )}
+            </span>
+            <span>
+              {isFreeShip ? (
+                <>
+                  <span style={{marginRight:8}}><s>{VND(shippingFee)}</s></span>
+                  <strong>{VND(0)}</strong>
+                </>
+              ) : VND(shippingFee)}
+            </span>
+          </div>
 
           <div className="row sum"><span>Thanh toán</span><span>{VND(finalTotal)}</span></div>
           <hr/>

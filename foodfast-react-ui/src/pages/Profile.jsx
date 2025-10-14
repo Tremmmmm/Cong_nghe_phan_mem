@@ -1,77 +1,50 @@
-// src/pages/Profile.jsx
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { isPhoneVN } from '../utils/validators';
 
-const LS_PROFILE = 'ff_profile_v1'; // lưu theo email
+const LS_PROFILE = 'ff_profile_v1';     // lưu theo email (cục bộ)
+const LS_ACC_IDX = 'ff_account_idx_v1'; // index usernameLower -> email
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { show } = useToast();
+
+  // form tổng hợp
+  const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+
+  // đổi mật khẩu (demo)
   const [oldPw, setOldPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
+
   const [errors, setErrors] = useState({});
 
+  // Prefill: ưu tiên LS_PROFILE, fallback user context
   useEffect(() => {
-    if (!user?.email) return;
+    const uEmail = user?.email || '';
+    if (!uEmail) return;
     try {
-      const all = JSON.parse(localStorage.getItem(LS_PROFILE)) || {};
-      const pf = all[user.email] || {};
-      setAddress(pf.address || '');
-      setPhone(pf.phone || '');
-    } catch {}
-  }, [user?.email]);
-
-  const savePart = (part) => {
-    if (!user?.email) return;
-    const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}');
-    const cur = all[user.email] || {};
-    const next = { ...cur, ...part };
-    all[user.email] = next;
-    localStorage.setItem(LS_PROFILE, JSON.stringify(all));
-  };
-
-  const updateAddress = () => {
-    if (!address.trim()) return show('Vui lòng nhập địa chỉ', 'error');
-    savePart({ address });
-    show('Đã cập nhật địa chỉ');
-  };
-
-  const updatePhone = () => {
-    const s = String(phone || '').trim();
-    if (!isPhoneVN(s)) {
-      setErrors(e => ({ ...e, phone: 'Số điện thoại không hợp lệ (VN)' }));
-      return show('Số điện thoại không hợp lệ (VN)', 'error');
+      const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}');
+      const pf = all[uEmail] || {};
+      setName(pf.name ?? user?.name ?? '');
+      setAddress(pf.address ?? user?.address ?? '');
+      setEmail(uEmail);
+      setPhone(pf.phone ?? user?.phone ?? '');
+    } catch {
+      setName(user?.name ?? '');
+      setAddress(user?.address ?? '');
+      setEmail(uEmail);
+      setPhone(user?.phone ?? '');
     }
-    setErrors(e => ({ ...e, phone: null }));
-    savePart({ phone: s });
-    show('Đã cập nhật số điện thoại');
-  };
-
-  const updatePassword = () => {
-    if (!newPw || newPw.length < 6) return show('Mật khẩu mới tối thiểu 6 ký tự', 'error');
-    if (newPw !== confirmPw) return show('Mật khẩu nhập lại chưa khớp', 'error');
-    // demo: không có backend, chỉ mock OK
-    show('Đổi mật khẩu thành công');
-    setOldPw(''); setNewPw(''); setConfirmPw('');
-  };
-
-  const clearProfile = () => {
-    if (!user?.email) return;
-    const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}');
-    delete all[user.email];
-    localStorage.setItem(LS_PROFILE, JSON.stringify(all));
-    setAddress(''); setPhone('');
-    show('Đã xoá dữ liệu hồ sơ cục bộ');
-  };
+  }, [user?.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const css = useMemo(() => `
     .pf-wrap{max-width:1080px;margin:24px auto;padding:0 16px; box-sizing:border-box}
-    .pf-grid{display:grid;grid-template-columns:repeat(3, minmax(280px,1fr));gap:16px;align-items:start}
+    .pf-grid{display:grid;grid-template-columns:repeat(2, minmax(300px,1fr));gap:16px;align-items:start}
     .pf-card{background:#fff;border:1px solid #eee;border-radius:14px;padding:16px;overflow:hidden; box-sizing:border-box}
     .pf-title{font-size:18px;font-weight:900;margin:0 0 10px}
     .pf-input{width:100%;height:40px;border:1px solid #e6e6ea;border-radius:10px;padding:0 12px;outline:none;margin-bottom:6px; box-sizing:border-box}
@@ -82,46 +55,115 @@ export default function Profile() {
     .dark .pf-card{background:#151515;border-color:#333}
     .dark .pf-input{background:#111;color:#eee;border-color:#333}
     .dark .pf-btn.ghost{background:#111;color:#eee;border-color:#333}
-    @media (max-width:980px){ .pf-grid{grid-template-columns:repeat(2, minmax(260px,1fr));} }
-    @media (max-width:640px){ .pf-grid{grid-template-columns:1fr;} }
+    @media (max-width:980px){ .pf-grid{grid-template-columns:1fr;} }
   `, []);
+
+  // validate email cơ bản
+  const isEmail = (s) => /\S+@\S+\.\S+/.test(String(s||'').trim());
+
+  const onSaveProfile = () => {
+    const es = {};
+    if (!name.trim()) es.name = 'Vui lòng nhập họ và tên';
+    if (!email.trim()) es.email = 'Vui lòng nhập email';
+    else if (!isEmail(email)) es.email = 'Email không hợp lệ';
+    if (phone && !isPhoneVN(phone)) es.phone = 'Số điện thoại không hợp lệ (VN)';
+    if (!address.trim()) es.address = 'Vui lòng nhập địa chỉ';
+    setErrors(es);
+    if (Object.keys(es).length) return;
+
+    // cập nhật vào AuthContext (để toàn app phản ánh ngay)
+    if (typeof updateUser === 'function') {
+      updateUser({ name: name.trim(), email: email.trim(), phone: String(phone || '').trim(), address: address.trim() });
+    }
+
+    // lưu bản cục bộ theo email, migrate key nếu đổi email
+    try {
+      const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}');
+      const oldKey = user?.email || email.trim();
+      if (oldKey && all[oldKey] && oldKey !== email.trim()) delete all[oldKey];
+      all[email.trim()] = { name: name.trim(), address: address.trim(), phone: String(phone || '').trim() };
+      localStorage.setItem(LS_PROFILE, JSON.stringify(all));
+    } catch {}
+
+    // ✅ cập nhật index username→email để đăng nhập bằng tên
+    try {
+      const idx = JSON.parse(localStorage.getItem(LS_ACC_IDX) || '{}');
+      // xoá các key cũ đang trỏ tới email này (nếu có)
+      Object.keys(idx).forEach(k => { if (idx[k] === email.trim()) delete idx[k] })
+      idx[name.trim().toLowerCase()] = email.trim()
+      localStorage.setItem(LS_ACC_IDX, JSON.stringify(idx))
+    } catch {}
+
+    show('Đã cập nhật thông tin');
+  };
+
+  const updatePassword = () => {
+    if (!newPw || newPw.length < 6) return show('Mật khẩu mới tối thiểu 6 ký tự', 'error');
+    if (newPw !== confirmPw) return show('Mật khẩu nhập lại chưa khớp', 'error');
+    // demo: không có backend, chỉ mock OK
+    show('Đổi mật khẩu thành công');
+    setOldPw(''); setNewPw(''); setConfirmPw('');
+  };
 
   return (
     <section className="pf-wrap">
       <style>{css}</style>
-      <h2 style={{margin:'0 0 14px'}}>Cài đặt tài khoản</h2>
+      <h2 style={{margin:'0 0 14px'}}>Thông tin cá nhân</h2>
 
       <div className="pf-grid">
-        {/* Địa chỉ */}
+        {/* Cập nhật thông tin */}
         <div className="pf-card">
-          <div className="pf-title">Cập nhật địa chỉ</div>
+          <div className="pf-title">Cập nhật thông tin</div>
+
+          <input
+            className="pf-input"
+            value={name}
+            onChange={e=>setName(e.target.value)}
+            placeholder="Họ và tên"
+            autoComplete="name"
+          />
+          {errors.name && <div className="pf-err">{errors.name}</div>}
+
           <input
             className="pf-input"
             value={address}
             onChange={e=>setAddress(e.target.value)}
-            placeholder="Nhập địa chỉ mới của bạn"
+            placeholder="Địa chỉ"
+            autoComplete="street-address"
           />
-          <div className="pf-actions">
-            <button className="pf-btn" onClick={updateAddress}>Lưu địa chỉ</button>
-            <button className="pf-btn ghost" onClick={()=>setAddress('')}>Xoá ô</button>
-          </div>
-        </div>
+          {errors.address && <div className="pf-err">{errors.address}</div>}
 
-        {/* Liên hệ */}
-        <div className="pf-card">
-          <div className="pf-title">Thông tin liên hệ</div>
+          <input
+            className="pf-input"
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+            placeholder="Email"
+            type="email"
+            autoComplete="email"
+          />
+          {errors.email && <div className="pf-err">{errors.email}</div>}
+
           <input
             className="pf-input"
             value={phone}
             onChange={e=>setPhone(e.target.value)}
-            onBlur={(e)=> setErrors(er=>({ ...er, phone: isPhoneVN(e.target.value) ? null : 'Số điện thoại không hợp lệ (VN)' }))}
-            placeholder="Nhập số điện thoại mới"
+            onBlur={(e)=> setErrors(er=>({ ...er, phone: (!e.target.value || isPhoneVN(e.target.value)) ? null : 'Số điện thoại không hợp lệ (VN)' })) }
+            placeholder="Số điện thoại"
             inputMode="tel"
+            autoComplete="tel"
           />
           {errors.phone && <div className="pf-err">{errors.phone}</div>}
-          <div className="pf-actions">
-            <button className="pf-btn" onClick={updatePhone}>Lưu số điện thoại</button>
-            <button className="pf-btn ghost" onClick={()=>{ setPhone(''); setErrors(e=>({ ...e, phone:null })); }}>Xoá ô</button>
+
+          <div className="pf-actions" style={{marginTop:6}}>
+            <button className="pf-btn" onClick={onSaveProfile}>Cập nhật</button>
+            <button className="pf-btn ghost" onClick={()=>{
+              // reset về dữ liệu từ user (re-prefill)
+              setName(user?.name ?? '');
+              setAddress(user?.address ?? '');
+              setEmail(user?.email ?? '');
+              setPhone(user?.phone ?? '');
+              setErrors({});
+            }}>Hoàn tác</button>
           </div>
         </div>
 
@@ -136,11 +178,6 @@ export default function Profile() {
             <button className="pf-btn ghost" onClick={()=>{ setOldPw(''); setNewPw(''); setConfirmPw(''); }}>Xoá ô</button>
           </div>
         </div>
-      </div>
-
-      {/* Hành động phụ trợ */}
-      <div style={{marginTop:12, display:'flex', gap:8, flexWrap:'wrap'}}>
-        <button className="pf-btn ghost" onClick={clearProfile}>Xoá dữ liệu hồ sơ (cục bộ)</button>
       </div>
     </section>
   );

@@ -206,7 +206,6 @@ export default function Orders() {
               <div>Phải trả: <strong>{VND(o.finalTotal ?? o.total ?? 0)}</strong></div>
             </div>
 
-            {/* ⛔️ ĐÃ BỎ NÚT ĐẶT LẠI */}
           </div>
         ))
       )}

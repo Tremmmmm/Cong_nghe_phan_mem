@@ -160,7 +160,7 @@ export default function Menu() {
           <h2>Thực đơn</h2>
           <span style={{ color: "#999" }}>— {MENU_ALL.length} món</span>
         </div>
-        <div className="menu-sub">Món lẻ hiển thị trước, sau đó là các combo.</div>
+        <div className="menu-sub"></div>
 
         <section className="section">
           <h3 style={{ margin: "0 0 10px 2px" }}>Món lẻ</h3>
