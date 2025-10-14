@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo } from "react";
-
+// trang này sẽ cần chỉnh sửa nhé
 export default function Home() {
   const styles = useMemo(() => `
     .hero{position:relative;overflow:hidden;padding:46px 0 34px;background:#f4f4f6;
@@ -16,8 +16,8 @@ export default function Home() {
     }
     .hero .wrap{max-width:1140px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center}
     .eyebrow{font-size:18px;color:#2a3345;margin:0 0 6px}
-    .h1{margin:0;font-size:52px;line-height:1.1;font-weight:900;color:#1a2233;font-family:ui-serif, Georgia, 'Times New Roman', serif}
-    .h1 .accent{color:#ff6b35;display:block}
+    .h1{margin:0;font-size:57px;line-height:1.1;font-weight:900;color:#ff6b35;font-family: 'Times New Roman', Times, serif;}
+    .accent{margin:0.5;color:#1a2233;display:block}
     .sub{margin:12px 0 22px;color:#444;font-size:15.5px;max-width:560px}
     .cta{display:inline-block;background:#ff7a59;color:#fff;text-decoration:none;padding:12px 22px;border-radius:30px;font-weight:700;box-shadow:0 6px 18px rgba(255,122,89,.35)}
     .figure{max-width:520px;margin:0 0 0 auto}
@@ -45,32 +45,30 @@ export default function Home() {
   return (
     <section className="hero">
       <div className="wrap">
-        <div>
-          <div className="eyebrow">Welcome To</div>
-          <h1 className="h1">Our Restaurant <span className="accent">Hungry To Eat</span></h1>
-          <p className="sub">
-            Wake up your taste buds. You’ll wonder how you ever lived without us. So long as you have food in your mouth,
-            you have solved all the problems for the time being.
-          </p>
-          <Link to="/menu" className="cta">Order Now</Link>
-        </div>
 
         <figure className="figure">
           <div className="shot">
             <img
-              src="/assets/images/main-b.jpg"
-              alt="Orange Mojito"
-              loading="lazy"
-              decoding="async"
-              sizes="(max-width: 980px) 100vw, 520px"
-              onError={(e)=>{ e.currentTarget.src="/assets/images/main-b.png"; }}
-            />
+            src="/assets/images/menu/cheeseburger.webp"
+            alt="Cheese Burger"
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 980px) 100vw, 520px"
+            onError={(e)=>{ e.currentTarget.src="/assets/images/menu/cheeseburger.webp"; }}
+          />
           </div>
           <figcaption className="cap">
-            <h4>Orange Mojito</h4>
-            <p>This is Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
+            <h4 >Cheese Burger</h4>
+            <p>Burger bò phô mai béo ngậy cùng với bí quyết sốt độc quyền của chúng tôi tạo nên hương vị mới lạ</p>
           </figcaption>
         </figure>
+        <div>
+          <div className="eyebrow">Chào mừng bạn đến với</div>
+          <h1 className="h1">Cửa hàng của</h1>
+          <h1 className="h1">chúng tôi</h1> 
+          <span className="accent">Chúng tôi cung cấp cho các bạn những món ăn nhanh và đầy đủ dưỡng chất cho một ngày tuyệt vời. </span>
+           
+        </div>
       </div>
     </section>
   );
