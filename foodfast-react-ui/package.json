@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"npm:api\"",
-    "api": "json-server --watch api/db.json --port 5176",
+    "dev": "concurrently -k -n web,api \"vite --port 5174 --open\" \"npm:api\"",
+    "api": "json-server --watch api/db.json --port 5181",
     "build": "vite build",
     "preview": "vite preview"
   },

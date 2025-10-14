@@ -125,13 +125,13 @@ export default function SignIn() {
 
         <div className="links">
           New Registration <Link to="/signup">Click Here</Link>
-          <br />
-          Admin Login <Link to="/admin">Click Here</Link>
-        </div>
+          <br /></div>
+          {/* Admin Login <Link to="/admin">Click Here</Link>
+        </div> */}
 
-        <div className="footer-mini">
+        {/* <div className="footer-mini">
           Open Hours: Mon–Thu 9:00–22:00 • Fri–Sun 11:00–22:00
-        </div>
+        </div> */}
       </div>
     </section>
   );
