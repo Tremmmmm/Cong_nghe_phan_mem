@@ -1,48 +1,49 @@
-import { useEffect, useMemo, useState } from 'react'
-import { myOrders, updateOrderStatus } from '../utils/api'
-import { exportCsv } from '../utils/exportCsv'
+import { useEffect, useMemo, useState } from 'react';
+import { myOrders, updateOrderStatus } from '../utils/api';
+import { exportCsv } from '../utils/exportCsv';
+import { formatVND } from '../utils/format';
 
 const UI_STATUSES = ['order','processing','delivery','done','cancelled'];
 const UI_SUMMARY  = ['order','processing','delivery','done'];
 
 function normalizeStatus(db) {
-  const s = (db || '').toLowerCase()
-  if (!s) return 'order'
-  if (['new','pending','confirmed'].includes(s)) return 'order'
-  if (s === 'preparing') return 'processing'
-  if (s === 'delivering') return 'delivery'
-  if (s === 'delivered') return 'done'
-  if (s === 'cancelled') return 'cancelled'
-  return 'order'
+  const s = (db || '').toLowerCase();
+  if (!s) return 'order';
+  if (['new','pending','confirmed'].includes(s)) return 'order';
+  if (s === 'preparing') return 'processing';
+  if (s === 'delivering') return 'delivery';
+  if (s === 'delivered') return 'done';
+  if (s === 'cancelled') return 'cancelled';
+  return 'order';
 }
 function denormalizeStatus(ui) {
-  const s = (ui || '').toLowerCase()
-  if (s === 'order') return 'confirmed'
-  if (s === 'processing') return 'preparing'
-  if (s === 'delivery') return 'delivering'
-  if (s === 'done') return 'delivered'
-  if (s === 'cancelled') return 'cancelled'
-  return 'confirmed'
+  const s = (ui || '').toLowerCase();
+  if (s === 'order') return 'confirmed';
+  if (s === 'processing') return 'preparing';
+  if (s === 'delivery') return 'delivering';
+  if (s === 'done') return 'delivered';
+  if (s === 'cancelled') return 'cancelled';
+  return 'confirmed';
 }
-const VND = (n)=> (n ?? 0).toLocaleString('vi-VN') + '₫'
+const VND = (n) => formatVND(n);
 
 export default function AdminOrders({ variant }) {
-  const isRestaurant = variant === 'restaurant'
+  const isRestaurant = variant === 'restaurant';
 
-  const [rows, setRows] = useState([])
-  const [filtered, setFiltered] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [rows, setRows] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // filter/search/sort/pagination
-  const [filter, setFilter] = useState('all')
-  const [q, setQ] = useState('')
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
-  const [pageCount, setPageCount] = useState(1)
+  const [filter, setFilter] = useState('all');
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [pageCount, setPageCount] = useState(1);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
 
       // Luôn lấy full rồi FE filter
       const res = await myOrders({
@@ -52,13 +53,13 @@ export default function AdminOrders({ variant }) {
         q: '',
         sort: 'createdAt',
         order: 'desc'
-      })
+      });
 
-      const arr = Array.isArray(res) ? res : (res?.rows || res?.data || [])
-      let list = (arr || []).map(o => ({ ...o, _uiStatus: normalizeStatus(o.status) }))
+      const arr = Array.isArray(res) ? res : (res?.rows || res?.data || []);
+      let list = (arr || []).map(o => ({ ...o, _uiStatus: normalizeStatus(o.status) }));
 
       // search
-      const t = (q || '').trim().toLowerCase()
+      const t = (q || '').trim().toLowerCase();
       if (t) {
         list = list.filter(o =>
           String(o.id).toLowerCase().includes(t) ||
@@ -66,82 +67,82 @@ export default function AdminOrders({ variant }) {
           (o.phone || '').toLowerCase().includes(t) ||
           (o.address || '').toLowerCase().includes(t) ||
           (o.couponCode || '').toLowerCase().includes(t)
-        )
+        );
       }
 
       // filter theo UI status
       if (filter !== 'all') {
-        list = list.filter(o => o._uiStatus === filter)
+        list = list.filter(o => o._uiStatus === filter);
       } else if (isRestaurant) {
         // Restaurant: mặc định ẩn cancelled khi filter = all
-        list = list.filter(o => o._uiStatus !== 'cancelled')
+        list = list.filter(o => o._uiStatus !== 'cancelled');
       }
 
       // sort createdAt desc
-      list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0))
+      list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-      setFiltered(list)
+      setFiltered(list);
 
       // pagination
-      const pc = Math.max(1, Math.ceil(list.length / limit))
-      const safePage = Math.min(page, pc)
-      const start = (safePage - 1) * limit
-      const end = start + limit
+      const pc = Math.max(1, Math.ceil(list.length / limit));
+      const safePage = Math.min(page, pc);
+      const start = (safePage - 1) * limit;
+      const end = start + limit;
 
-      setRows(list.slice(start, end))
-      setPageCount(pc)
-      if (safePage !== page) setPage(safePage)
+      setRows(list.slice(start, end));
+      setPageCount(pc);
+      if (safePage !== page) setPage(safePage);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // tải lần đầu + khi điều kiện lọc/sort/trang thay đổi
-  useEffect(()=>{ fetchData() }, [page, limit, filter, q, isRestaurant])
+  useEffect(()=>{ fetchData(); }, [page, limit, filter, q, isRestaurant]);
 
   // ✅ Revalidate khi cửa sổ/Tab lấy lại focus
   useEffect(() => {
-    const onFocus = () => fetchData()
-    const onVis = () => { if (document.visibilityState === 'visible') fetchData() }
-    window.addEventListener('focus', onFocus)
-    document.addEventListener('visibilitychange', onVis)
+    const onFocus = () => fetchData();
+    const onVis = () => { if (document.visibilityState === 'visible') fetchData(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
     return () => {
-      window.removeEventListener('focus', onFocus)
-      document.removeEventListener('visibilitychange', onVis)
-    }
-  }, [page, limit, filter, q, isRestaurant])
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [page, limit, filter, q, isRestaurant]);
 
   // Transitions tuần tự
-  const canToProcessing = (ui) => ui === 'order'
-  const canToDelivery   = (ui) => ui === 'processing'
-  const canToDone       = (ui) => ui === 'delivery'
+  const canToProcessing = (ui) => ui === 'order';
+  const canToDelivery   = (ui) => ui === 'processing';
+  const canToDone       = (ui) => ui === 'delivery';
 
   const changeStatus = async (id, targetUi) => {
-    const serverStatus = denormalizeStatus(targetUi)
-    const updated = await updateOrderStatus(id, serverStatus)
+    const serverStatus = denormalizeStatus(targetUi);
+    const updated = await updateOrderStatus(id, serverStatus);
     const apply = (o)=> o.id === id
       ? { ...o, ...(updated || {}), status: serverStatus, _uiStatus: targetUi }
-      : o
-    setRows(prev => prev.map(apply))
-    setFiltered(prev => prev.map(apply))
-  }
+      : o;
+    setRows(prev => prev.map(apply));
+    setFiltered(prev => prev.map(apply));
+  };
 
-  const ts = () => new Date().toISOString().replace(/[:.]/g,'-')
-  const onExportPage = () => exportCsv(`orders_page_${page}_${ts()}.csv`, rows)
-  const onExportAll  = () => exportCsv(`orders_all_filtered_${ts()}.csv`, filtered)
+  const ts = () => new Date().toISOString().replace(/[:.]/g,'-');
+  const onExportPage = () => exportCsv(`orders_page_${page}_${ts()}.csv`, rows);
+  const onExportAll  = () => exportCsv(`orders_all_filtered_${ts()}.csv`, filtered);
 
   const summary = useMemo(() => {
-    const today = new Date(); today.setHours(0,0,0,0)
-    let revenue = 0, todayCount = 0
-    const byStatus = Object.fromEntries(UI_SUMMARY.map(s=>[s,0]))
+    const today = new Date(); today.setHours(0,0,0,0);
+    let revenue = 0, todayCount = 0;
+    const byStatus = Object.fromEntries(UI_SUMMARY.map(s=>[s,0]));
     for (const o of rows) {
-      if (o._uiStatus !== 'cancelled') revenue += (o.finalTotal ?? o.total ?? 0)
-      if (byStatus[o._uiStatus] != null) byStatus[o._uiStatus]++
-      const d = o.createdAt ? new Date(o.createdAt) : null
-      if (d && d >= today) todayCount++
+      if (o._uiStatus !== 'cancelled') revenue += (o.finalTotal ?? o.total ?? 0);
+      if (byStatus[o._uiStatus] != null) byStatus[o._uiStatus]++;
+      const d = o.createdAt ? new Date(o.createdAt) : null;
+      if (d && d >= today) todayCount++;
     }
-    return { revenue, todayCount, byStatus, total: rows.length }
-  }, [rows])
+    return { revenue, todayCount, byStatus, total: rows.length };
+  }, [rows]);
 
   const styles = `
     .adm-wrap{padding:24px 0}
@@ -167,7 +168,7 @@ export default function AdminOrders({ variant }) {
     .btn{height:32px;border:none;border-radius:16px;padding:0 12px;background:#f4f4f6;cursor:pointer}
     .btn.primary{background:#ff7a59;color:#fff}
     .btn:disabled{opacity:.5;cursor:not-allowed}
-  `
+  `;
 
   return (
     <section className="ff-container adm-wrap">
@@ -236,7 +237,7 @@ export default function AdminOrders({ variant }) {
         <>
           <div className="orders">
             {rows.map(o => {
-              const ui = o._uiStatus
+              const ui = o._uiStatus;
               return (
                 <article key={o.id} className="order-card">
                   <header className="order-head">
@@ -274,25 +275,25 @@ export default function AdminOrders({ variant }) {
                     <div className="act">
                       <button
                         className="btn"
-                        disabled={ui !== 'order'}
+                        disabled={!canToProcessing(ui)}
                         onClick={()=>changeStatus(o.id, 'processing')}
                       >Start processing</button>
 
                       <button
                         className="btn"
-                        disabled={ui !== 'processing'}
+                        disabled={!canToDelivery(ui)}
                         onClick={()=>changeStatus(o.id, 'delivery')}
                       >Start delivery</button>
 
                       <button
                         className="btn primary"
-                        disabled={ui !== 'delivery'}
+                        disabled={!canToDone(ui)}
                         onClick={()=>changeStatus(o.id, 'done')}
                       >Mark done</button>
                     </div>
                   </footer>
                 </article>
-              )
+              );
             })}
           </div>
 
@@ -304,5 +305,5 @@ export default function AdminOrders({ variant }) {
         </>
       ))}
     </section>
-  )
+  );
 }

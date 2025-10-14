@@ -1,17 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { getAllOrders } from '../utils/api'
+import { useEffect, useMemo, useState } from 'react';
+import { getAllOrders } from '../utils/api';
+import { formatVND } from '../utils/format';
 
-const VND = (n) => (n ?? 0).toLocaleString('vi-VN') + '₫'
+const VND = (n) => formatVND(n);
 
 // Chuẩn hoá DB → UI status
 function normalizeStatus(db) {
-  const s = (db || '').toLowerCase()
-  if (!s) return 'order'
-  if (['new','pending','confirmed'].includes(s)) return 'order'
-  if (s === 'preparing')  return 'processing'
-  if (s === 'delivering') return 'delivery'
-  if (s === 'delivered')  return 'done'
-  return 'order'
+  const s = (db || '').toLowerCase();
+  if (!s) return 'order';
+  if (['new','pending','confirmed'].includes(s)) return 'order';
+  if (s === 'preparing')  return 'processing';
+  if (s === 'delivering') return 'delivery';
+  if (s === 'delivered')  return 'done';
+  return 'order';
 }
 
 function Sk({ h=16, w='100%', style={} }){
@@ -23,80 +24,80 @@ function Sk({ h=16, w='100%', style={} }){
       animation: 'adb-sk 1s linear infinite',
       ...style
     }}/>
-  )
+  );
 }
 if (!document.getElementById('adb-sk-style')) {
-  const s = document.createElement('style')
-  s.id = 'adb-sk-style'
-  s.innerHTML = `@keyframes adb-sk{0%{background-position:200% 0}100%{background-position:-200% 0}}`
-  document.head.appendChild(s)
+  const s = document.createElement('style');
+  s.id = 'adb-sk-style';
+  s.innerHTML = `@keyframes adb-sk{0%{background-position:200% 0}100%{background-position:-200% 0}}`;
+  document.head.appendChild(s);
 }
 
 export default function AdminDashboard(){
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const load = async () => {
     try {
-      setLoading(true); setError('')
-      const data = await getAllOrders()
-      setOrders(Array.isArray(data) ? data : [])
+      setLoading(true); setError('');
+      const data = await getAllOrders();
+      setOrders(Array.isArray(data) ? data : []);
     } catch (e) {
-      console.error(e)
-      setError('Không tải được dữ liệu. Vui lòng kiểm tra kết nối.')
+      console.error(e);
+      setError('Không tải được dữ liệu. Vui lòng kiểm tra kết nối.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(()=>{ load() },[])
+  useEffect(()=>{ load(); },[]);
 
   useEffect(() => {
-    const onFocus = () => load()
-    const onVis = () => { if (document.visibilityState === 'visible') load() }
-    window.addEventListener('focus', onFocus)
-    document.addEventListener('visibilitychange', onVis)
+    const onFocus = () => load();
+    const onVis = () => { if (document.visibilityState === 'visible') load(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
     return () => {
-      window.removeEventListener('focus', onFocus)
-      document.removeEventListener('visibilitychange', onVis)
-    }
-  }, [])
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
 
   const summary = useMemo(() => {
-    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0)
-    const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0)
+    const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+    const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0);
 
-    let revenueToday = 0
-    let revenueMonth = 0
+    let revenueToday = 0;
+    let revenueMonth = 0;
 
-    const byStatus = { order:0, processing:0, delivery:0, done:0 }
+    const byStatus = { order:0, processing:0, delivery:0, done:0 };
     for (const o of orders) {
-      const total = o.finalTotal ?? o.total ?? 0
-      const s = normalizeStatus(o.status)
-      if (byStatus[s] != null) byStatus[s]++
-      const d = o.createdAt ? new Date(o.createdAt) : null
+      const total = o.finalTotal ?? o.total ?? 0;
+      const s = normalizeStatus(o.status);
+      if (byStatus[s] != null) byStatus[s]++;
+      const d = o.createdAt ? new Date(o.createdAt) : null;
       if (d) {
-        if (d >= startOfToday) revenueToday += total
-        if (d >= startOfMonth) revenueMonth += total
+        if (d >= startOfToday) revenueToday += total;
+        if (d >= startOfMonth) revenueMonth += total;
       }
     }
 
     // nhóm doanh thu 7 ngày
-    const days = []
-    const fmt = (d) => d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' })
+    const days = [];
+    const fmt = (d) => d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' });
     for (let i = 6; i >= 0; i--) {
-      const day = new Date(); day.setHours(0,0,0,0); day.setDate(day.getDate()-i)
-      const next = new Date(day); next.setDate(day.getDate()+1)
+      const day = new Date(); day.setHours(0,0,0,0); day.setDate(day.getDate()-i);
+      const next = new Date(day); next.setDate(day.getDate()+1);
       const sum = orders.reduce((s, o) => {
-        const t = o.createdAt ? new Date(o.createdAt) : null
-        if (t && t >= day && t < next) s += (o.finalTotal ?? o.total ?? 0)
-        return s
-      }, 0)
-      days.push({ label: fmt(day), value: sum })
+        const t = o.createdAt ? new Date(o.createdAt) : null;
+        if (t && t >= day && t < next) s += (o.finalTotal ?? o.total ?? 0);
+        return s;
+      }, 0);
+      days.push({ label: fmt(day), value: sum });
     }
 
-    const maxVal = Math.max(...days.map(d=>d.value), 1)
+    const maxVal = Math.max(...days.map(d=>d.value), 1);
     return {
       totalOrders: orders.length,
       revenueToday,
@@ -104,8 +105,8 @@ export default function AdminDashboard(){
       byStatus,
       days,
       maxVal
-    }
-  }, [orders])
+    };
+  }, [orders]);
 
   const styles = `
     .adb-wrap{padding:24px 0}
@@ -128,7 +129,7 @@ export default function AdminDashboard(){
     .tools{display:flex;gap:8px;align-items:center}
     .btn{height:34px;border:none;border-radius:8px;background:#ff7a59;color:#fff;padding:0 12px;cursor:pointer}
     .dark .card{background:#151515;border-color:#333}
-  `
+  `;
 
   return (
     <section className="ff-container adb-wrap">
@@ -192,12 +193,12 @@ export default function AdminDashboard(){
             <div className="title">Doanh thu 7 ngày</div>
             <div className="bars">
               {summary.days.map(d => {
-                const h = summary.maxVal ? Math.round(100 * d.value / summary.maxVal) : 0
+                const h = summary.maxVal ? Math.round(100 * d.value / summary.maxVal) : 0;
                 return (
                   <div key={d.label} className="bar" style={{height: Math.max(8, h) + '%'}}>
                     <span>{d.value ? VND(d.value) : ''}</span>
                   </div>
-                )
+                );
               })}
             </div>
             <div className="xaxis">
@@ -207,5 +208,5 @@ export default function AdminDashboard(){
         </>
       )}
     </section>
-  )
+  );
 }

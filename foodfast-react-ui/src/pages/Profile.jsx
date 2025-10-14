@@ -1,75 +1,81 @@
 // src/pages/Profile.jsx
-import { useEffect, useMemo, useState } from 'react'
-import { useAuth } from '../context/AuthContext.jsx'
-import { useToast } from '../context/ToastContext.jsx'
+import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from '../context/ToastContext.jsx';
+import { isPhoneVN } from '../utils/validators';
 
-const LS_PROFILE = 'ff_profile_v1' // lưu theo email
-const PHONE_VN = /^0\d{9,10}$/;
+const LS_PROFILE = 'ff_profile_v1'; // lưu theo email
 
 export default function Profile() {
-  const { user } = useAuth()
-  const { show } = useToast()
-  const [address, setAddress] = useState('')
-  const [phone, setPhone] = useState('')
-  const [oldPw, setOldPw] = useState('')
-  const [newPw, setNewPw] = useState('')
-  const [confirmPw, setConfirmPw] = useState('')
+  const { user } = useAuth();
+  const { show } = useToast();
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [oldPw, setOldPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (!user?.email) return
+    if (!user?.email) return;
     try {
-      const all = JSON.parse(localStorage.getItem(LS_PROFILE)) || {}
-      const pf = all[user.email] || {}
-      setAddress(pf.address || '')
-      setPhone(pf.phone || '')
+      const all = JSON.parse(localStorage.getItem(LS_PROFILE)) || {};
+      const pf = all[user.email] || {};
+      setAddress(pf.address || '');
+      setPhone(pf.phone || '');
     } catch {}
-  }, [user?.email])
+  }, [user?.email]);
 
   const savePart = (part) => {
-    if (!user?.email) return
-    const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}')
-    const cur = all[user.email] || {}
-    const next = { ...cur, ...part }
-    all[user.email] = next
-    localStorage.setItem(LS_PROFILE, JSON.stringify(all))
-  }
+    if (!user?.email) return;
+    const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}');
+    const cur = all[user.email] || {};
+    const next = { ...cur, ...part };
+    all[user.email] = next;
+    localStorage.setItem(LS_PROFILE, JSON.stringify(all));
+  };
 
   const updateAddress = () => {
-    if (!address.trim()) return show('Vui lòng nhập địa chỉ', 'error')
-    savePart({ address })
-    show('Đã cập nhật địa chỉ')
-  }
+    if (!address.trim()) return show('Vui lòng nhập địa chỉ', 'error');
+    savePart({ address });
+    show('Đã cập nhật địa chỉ');
+  };
 
   const updatePhone = () => {
-    const s = (phone || '').trim()
-    if (!PHONE_VN.test(s)) return show('Số điện thoại không hợp lệ (bắt đầu bằng 0, 10–11 số)', 'error')
-    savePart({ phone: s })
-    show('Đã cập nhật số điện thoại')
-  }
+    const s = String(phone || '').trim();
+    if (!isPhoneVN(s)) {
+      setErrors(e => ({ ...e, phone: 'Số điện thoại không hợp lệ (VN)' }));
+      return show('Số điện thoại không hợp lệ (VN)', 'error');
+    }
+    setErrors(e => ({ ...e, phone: null }));
+    savePart({ phone: s });
+    show('Đã cập nhật số điện thoại');
+  };
 
   const updatePassword = () => {
-    if (!newPw || newPw.length < 6) return show('Mật khẩu mới tối thiểu 6 ký tự', 'error')
-    if (newPw !== confirmPw) return show('Mật khẩu nhập lại chưa khớp', 'error')
+    if (!newPw || newPw.length < 6) return show('Mật khẩu mới tối thiểu 6 ký tự', 'error');
+    if (newPw !== confirmPw) return show('Mật khẩu nhập lại chưa khớp', 'error');
     // demo: không có backend, chỉ mock OK
-    show('Đổi mật khẩu thành công')
-    setOldPw(''); setNewPw(''); setConfirmPw('')
-  }
+    show('Đổi mật khẩu thành công');
+    setOldPw(''); setNewPw(''); setConfirmPw('');
+  };
 
   const clearProfile = () => {
-    if (!user?.email) return
-    const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}')
-    delete all[user.email]
-    localStorage.setItem(LS_PROFILE, JSON.stringify(all))
-    setAddress(''); setPhone('')
-    show('Đã xoá dữ liệu hồ sơ cục bộ')
-  }
+    if (!user?.email) return;
+    const all = JSON.parse(localStorage.getItem(LS_PROFILE) || '{}');
+    delete all[user.email];
+    localStorage.setItem(LS_PROFILE, JSON.stringify(all));
+    setAddress(''); setPhone('');
+    show('Đã xoá dữ liệu hồ sơ cục bộ');
+  };
 
   const css = useMemo(() => `
     .pf-wrap{max-width:1080px;margin:24px auto;padding:0 16px; box-sizing:border-box}
     .pf-grid{display:grid;grid-template-columns:repeat(3, minmax(280px,1fr));gap:16px;align-items:start}
     .pf-card{background:#fff;border:1px solid #eee;border-radius:14px;padding:16px;overflow:hidden; box-sizing:border-box}
     .pf-title{font-size:18px;font-weight:900;margin:0 0 10px}
-    .pf-input{width:100%;height:40px;border:1px solid #e6e6ea;border-radius:10px;padding:0 12px;outline:none;margin-bottom:10px; box-sizing:border-box}
+    .pf-input{width:100%;height:40px;border:1px solid #e6e6ea;border-radius:10px;padding:0 12px;outline:none;margin-bottom:6px; box-sizing:border-box}
+    .pf-err{color:#c24a26;font-size:12px;margin:0 0 8px}
     .pf-btn{height:40px;border:none;border-radius:20px;background:#ff7a59;color:#fff;font-weight:800;cursor:pointer;padding:0 18px}
     .pf-actions{display:flex;gap:8px;flex-wrap:wrap}
     .pf-btn.ghost{background:#fff; color:#333; border:1px solid #e6e6ea}
@@ -78,7 +84,7 @@ export default function Profile() {
     .dark .pf-btn.ghost{background:#111;color:#eee;border-color:#333}
     @media (max-width:980px){ .pf-grid{grid-template-columns:repeat(2, minmax(260px,1fr));} }
     @media (max-width:640px){ .pf-grid{grid-template-columns:1fr;} }
-  `, [])
+  `, []);
 
   return (
     <section className="pf-wrap">
@@ -108,12 +114,14 @@ export default function Profile() {
             className="pf-input"
             value={phone}
             onChange={e=>setPhone(e.target.value)}
+            onBlur={(e)=> setErrors(er=>({ ...er, phone: isPhoneVN(e.target.value) ? null : 'Số điện thoại không hợp lệ (VN)' }))}
             placeholder="Nhập số điện thoại mới"
             inputMode="tel"
           />
+          {errors.phone && <div className="pf-err">{errors.phone}</div>}
           <div className="pf-actions">
             <button className="pf-btn" onClick={updatePhone}>Lưu số điện thoại</button>
-            <button className="pf-btn ghost" onClick={()=>setPhone('')}>Xoá ô</button>
+            <button className="pf-btn ghost" onClick={()=>{ setPhone(''); setErrors(e=>({ ...e, phone:null })); }}>Xoá ô</button>
           </div>
         </div>
 
@@ -135,5 +143,5 @@ export default function Profile() {
         <button className="pf-btn ghost" onClick={clearProfile}>Xoá dữ liệu hồ sơ (cục bộ)</button>
       </div>
     </section>
-  )
+  );
 }
