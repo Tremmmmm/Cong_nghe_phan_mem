@@ -102,3 +102,7 @@ export const capturePayment = async (paymentId) => {
   })
   return data
 }
+
+export const patchOrder = (id, payload) =>
+  api.patch(`/orders/${id}`, payload).then(r => r.data);
+

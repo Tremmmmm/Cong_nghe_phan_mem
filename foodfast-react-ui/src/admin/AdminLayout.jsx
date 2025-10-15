@@ -45,7 +45,7 @@ export default function AdminLayout(){
             Dashboard
           </NavLink>
           <NavLink to="/admin/orders" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Đơn hàng
+            Lịch sử đơn hàng
           </NavLink>
           {/* Kitchen / Restaurant nằm trong Admin */}
           <NavLink to="/admin/restaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>

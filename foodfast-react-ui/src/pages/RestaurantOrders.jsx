@@ -2,6 +2,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../utils/api";
 import { formatVND } from "../utils/format";
+import OrderEditModal from "../components/OrderEditModal";
+import CancelOrderModal from "../components/CancelOrderModal";
+import { patchOrder } from "../utils/api";
 
 const VND = (n) => formatVND(n);
 
@@ -27,7 +30,7 @@ const STATUS_LABEL = {
 const NEXT_STATUS = {
   [STATUS.NEW]: [STATUS.ACCEPTED, STATUS.CANCELLED],
   [STATUS.ACCEPTED]: [STATUS.READY, STATUS.CANCELLED],
-  [STATUS.READY]: [STATUS.DELIVERING, STATUS.ACCEPTED], // cho phép trả lại nếu cần
+  [STATUS.READY]: [STATUS.DELIVERING, STATUS.ACCEPTED],
   [STATUS.DELIVERING]: [STATUS.COMPLETED],
   [STATUS.COMPLETED]: [],
   [STATUS.CANCELLED]: [],
@@ -42,43 +45,137 @@ const BADGE_COLOR = {
   [STATUS.CANCELLED]: "#9e9e9e",
 };
 
+function SmallTag({ children }) {
+  return (
+    <span
+      style={{
+        fontSize: 11,
+        padding: "2px 6px",
+        borderRadius: 999,
+        border: "1px solid #ddd",
+        background: "#fafafa",
+        color: "#666",
+        marginLeft: 8,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
 function Badge({ status }) {
   const c = BADGE_COLOR[status] || "#999";
   return (
-    <span
-      className="badge"
-      style={{ color: c, borderColor: c, background: "#fff" }}
-    >
+    <span className="badge" style={{ color: c, borderColor: c, background: "#fff" }}>
       {STATUS_LABEL[status] || status}
     </span>
   );
 }
 
-function OrderCard({ order, onMove, onCancel }) {
+function MoreMenu({ onEdit, onCancel, canEdit, disabledEdit }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <button className="ff-btn ff-btn--ghost" onClick={() => setOpen((v) => !v)}>
+        Xem thêm ▾
+      </button>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "110%",
+            right: 0,
+            minWidth: 160,
+            background: "#fff",
+            border: "1px solid #eee",
+            borderRadius: 10,
+            boxShadow: "0 8px 24px rgba(0,0,0,.08)",
+            padding: 6,
+            zIndex: 5,
+          }}
+          onMouseLeave={() => setOpen(false)}
+        >
+          <button
+            className="ff-menu-item"
+            disabled={!canEdit || disabledEdit}
+            title={disabledEdit ? "Đã chỉnh sửa 1 lần" : ""}
+            onClick={() => {
+              setOpen(false);
+              onEdit();
+            }}
+          >
+            Sửa đơn
+          </button>
+          <button
+            className="ff-menu-item"
+            onClick={() => {
+              setOpen(false);
+              onCancel();
+            }}
+          >
+            Huỷ đơn
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderCard({ order, onMove, onAskCancel, onEdit }) {
   const s = order.status || STATUS.NEW;
+  const canEdit = s === STATUS.NEW || s === STATUS.ACCEPTED;
+  const disabledEdit = !!order.modified; // chỉ 1 lần sửa
+
   const actions = [];
 
   if (s === STATUS.NEW) {
     actions.push(
-      <button key="accept" className="ff-btn" onClick={() => onMove(order, STATUS.ACCEPTED)}>Xác nhận</button>,
-      <button key="cancel" className="ff-btn ff-btn--ghost" onClick={() => onCancel(order)}>Huỷ đơn</button>,
+      <button key="accept" className="ff-btn" onClick={() => onMove(order, STATUS.ACCEPTED)}>
+        Xác nhận
+      </button>,
+      <MoreMenu
+        key="more"
+        canEdit={canEdit}
+        disabledEdit={disabledEdit}
+        onEdit={() => onEdit(order)}
+        onCancel={() => onAskCancel(order)}
+      />
     );
   }
   if (s === STATUS.ACCEPTED) {
     actions.push(
-      <button key="ready" className="ff-btn" onClick={() => onMove(order, STATUS.READY)}>Hoàn tất (đã xong món)</button>,
-      <button key="cancel" className="ff-btn ff-btn--ghost" onClick={() => onCancel(order)}>Huỷ đơn</button>,
+      <button key="ready" className="ff-btn" onClick={() => onMove(order, STATUS.READY)}>
+        Hoàn tất (đã xong món)
+      </button>,
+      <MoreMenu
+        key="more"
+        canEdit={canEdit}
+        disabledEdit={disabledEdit}
+        onEdit={() => onEdit(order)}
+        onCancel={() => onAskCancel(order)}
+      />
     );
   }
   if (s === STATUS.READY) {
     actions.push(
-      <button key="deliver" className="ff-btn" onClick={() => onMove(order, STATUS.DELIVERING)}>Giao bằng Drone</button>,
-      <button key="back" className="ff-btn ff-btn--ghost" onClick={() => onMove(order, STATUS.ACCEPTED)} title="Trả về bước Đã xác nhận">Trả về</button>,
+      <button key="deliver" className="ff-btn" onClick={() => onMove(order, STATUS.DELIVERING)}>
+        Giao bằng Drone
+      </button>,
+      <button
+        key="back"
+        className="ff-btn ff-btn--ghost"
+        onClick={() => onMove(order, STATUS.ACCEPTED)}
+        title="Trả về bước Đã xác nhận"
+      >
+        Trả về
+      </button>
     );
   }
   if (s === STATUS.DELIVERING) {
     actions.push(
-      <button key="done" className="ff-btn" onClick={() => onMove(order, STATUS.COMPLETED)}>Đánh dấu đã giao</button>,
+      <button key="done" className="ff-btn" onClick={() => onMove(order, STATUS.COMPLETED)}>
+        Đánh dấu đã giao
+      </button>
     );
   }
 
@@ -95,20 +192,31 @@ function OrderCard({ order, onMove, onCancel }) {
         <div>
           <b>#{order.code || order.id}</b>{" "}
           <span className="muted">• {order.customerName || order.userEmail || "Khách"}</span>
+          {order.modified ? <SmallTag>Đã chỉnh sửa</SmallTag> : null}
         </div>
         <Badge status={s} />
       </div>
 
       <div className="k-meta">
-        <div>Món: <b>{order.items?.length ?? 0}</b></div>
-        <div>Tổng: <b>{VND(order.finalTotal ?? order.total ?? 0)}</b></div>
+        <div>
+          Món: <b>{order.items?.length ?? 0}</b>
+        </div>
+        <div>
+          Tổng: <b>{VND(order.finalTotal ?? order.total ?? 0)}</b>
+        </div>
         <div className="muted">
           {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}
         </div>
       </div>
 
       <div className="act-row" style={{ marginTop: 10 }}>
-        {actions.length ? actions : <button className="ff-btn ff-btn--disabled" disabled>Không có thao tác</button>}
+        {actions.filter(Boolean).length ? (
+          actions
+        ) : (
+          <button className="ff-btn ff-btn--disabled" disabled>
+            Không có thao tác
+          </button>
+        )}
       </div>
     </div>
   );
@@ -117,6 +225,13 @@ function OrderCard({ order, onMove, onCancel }) {
 export default function RestaurantOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // modals
+  const [editOpen, setEditOpen] = useState(false);
+  const [editOrder, setEditOrder] = useState(null);
+
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelOrderObj, setCancelOrderObj] = useState(null);
 
   const columns = [STATUS.NEW, STATUS.ACCEPTED, STATUS.READY, STATUS.DELIVERING, STATUS.COMPLETED, STATUS.CANCELLED];
 
@@ -143,9 +258,16 @@ export default function RestaurantOrders() {
     .ff-btn--disabled{background:#f0f0f0;color:#999;cursor:not-allowed}
     .ff-btn:hover{filter:brightness(0.98)}
     .ff-btn:active{transform:translateY(1px)}
+    .ff-menu-item{display:block;width:100%;text-align:left;background:#fff;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .ff-menu-item:hover{background:#fafafa}
     .dark .col,.dark .card{background:#151515;border-color:#333}
     .dark .col-count{background:#1d1d1d;border-color:#333}
     .dark .muted{color:#aaa}
+
+    /* hỗ trợ canh hàng trong modal edit */
+    .ff-modal .ff-edit-row{align-items:flex-start !important}
+    .ff-modal .ff-edit-row .c3{display:grid;grid-template-rows:32px auto;align-items:start}
+    .ff-modal .ff-edit-row .c3 input{height:32px}
   `;
 
   const grouped = useMemo(() => {
@@ -154,55 +276,41 @@ export default function RestaurantOrders() {
     return by;
   }, [orders]);
 
-  // parse "HH:mm:ss dd/MM/yyyy" hoặc ISO
-function toTs(v) {
-  if (!v) return 0;
-  if (v instanceof Date) return v.getTime();
+  function toTs(v) {
+    if (!v) return 0;
+    if (v instanceof Date) return v.getTime();
+    if (typeof v === "number") return v;
+    const num = Number(v);
+    if (!Number.isNaN(num) && String(num).length >= 10) return num;
 
-  // nếu là số hoặc chuỗi số (timestamp ms)
-  if (typeof v === "number") return v;
-  const num = Number(v);
-  if (!Number.isNaN(num) && String(num).length >= 10) return num;
+    const s = String(v).trim();
+    const iso = Date.parse(s);
+    if (!Number.isNaN(iso)) return iso;
 
-  const s = String(v).trim();
+    let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (m) {
+      const [, dd, MM, yyyy, hh = "0", mm = "0", ss = "0"] = m;
+      return new Date(+yyyy, +MM - 1, +dd, +hh, +mm, +ss).getTime();
+    }
 
-  // ISO / Date.parse chuẩn
-  const iso = Date.parse(s);
-  if (!Number.isNaN(iso)) return iso;
-
-  // 1) dd/MM/yyyy [HH:mm[:ss]]
-  let m = s.match(
-    /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
-  );
-  if (m) {
-    const [, dd, MM, yyyy, hh = "0", mm = "0", ss = "0"] = m;
-    return new Date(+yyyy, +MM - 1, +dd, +hh, +mm, +ss).getTime();
+    m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?[ ,]+(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) {
+      const [, hh, mm, ss = "0", dd, MM, yyyy] = m;
+      return new Date(+yyyy, +MM - 1, +dd, +hh, +mm, +ss).getTime();
+    }
+    return 0;
   }
-
-  // 2) HH:mm[:ss] dd/MM/yyyy
-  m = s.match(
-    /^(\d{1,2}):(\d{2})(?::(\d{2}))?[ ,]+(\d{1,2})\/(\d{1,2})\/(\d{4})$/
-  );
-  if (m) {
-    const [, hh, mm, ss = "0", dd, MM, yyyy] = m;
-    return new Date(+yyyy, +MM - 1, +dd, +hh, +mm, +ss).getTime();
-  }
-
-  return 0;
-}
 
   async function fetchOrders() {
-  setLoading(true);
-  try {
-    const { data } = await api.get("/orders", { params: { _: Date.now() } });
-    const list = (Array.isArray(data) ? data : []).slice().sort(
-      (a, b) => toTs(b.createdAt) - toTs(a.createdAt)
-    );
-    setOrders(list);
-  } finally {
-    setLoading(false);
+    setLoading(true);
+    try {
+      const { data } = await api.get("/orders", { params: { _: Date.now() } });
+      const list = (Array.isArray(data) ? data : []).slice().sort((a, b) => toTs(b.createdAt) - toTs(a.createdAt));
+      setOrders(list);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   async function moveStatus(order, target) {
     const allow = NEXT_STATUS[order.status || STATUS.NEW] || [];
@@ -229,30 +337,84 @@ function toTs(v) {
     }
   }
 
-  async function cancelOrder(order) {
-    if (!window.confirm("Huỷ đơn này?")) return;
-    const prev = order.status || STATUS.NEW;
-    setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, status: STATUS.CANCELLED } : o)));
+  // === Edit handlers ===
+  function onEdit(order) {
+    // chỉ cho mở modal khi NEW/ACCEPTED và chưa sửa
+    if (!((order.status === STATUS.NEW || order.status === STATUS.ACCEPTED) && !order.modified)) return;
+    setEditOrder(order);
+    setEditOpen(true);
+  }
+
+  async function handleSaveEdit(patch) {
+    const ord = editOrder;
+    setEditOpen(false);
+
+    // đánh dấu chỉ sửa 1 lần
+    patch.modified = true;
+
+    // optimistic
+    setOrders((list) => list.map((o) => (o.id === ord.id ? { ...o, ...patch } : o)));
     try {
-      const now = new Date().toISOString();
-      await api.patch(`/orders/${order.id}`, {
-        status: STATUS.CANCELLED,
-        cancelReason: "merchant_cancelled",
-        cancelledAt: now,
-        updatedAt: now,
-      });
+      await patchOrder(ord.id, patch);
     } catch (e) {
-      setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, status: prev } : o)));
       console.error(e);
-      alert("Huỷ đơn thất bại. Đã hoàn tác.");
+      alert("Lưu chỉnh sửa thất bại. Đã hoàn tác.");
+      fetchOrders();
+    } finally {
+      setEditOrder(null);
     }
   }
 
-  useEffect(() => { fetchOrders(); }, []);
+  // === Cancel handlers ===
+  function onAskCancel(order) {
+    setCancelOrderObj(order);
+    setCancelOpen(true);
+  }
+
+  async function handleConfirmCancel({ reason, note }) {
+    const ord = cancelOrderObj;
+    setCancelOpen(false);
+
+    const prev = ord.status || STATUS.NEW;
+    setOrders((list) => list.map((o) => (o.id === ord.id ? { ...o, status: STATUS.CANCELLED } : o)));
+
+    try {
+      const now = new Date().toISOString();
+      await api.patch(`/orders/${ord.id}`, {
+        status: STATUS.CANCELLED,
+        cancelReason: reason,
+        cancelBy: "merchant",          // 👈 NEW: để lịch sử đơn hiển thị “Hủy bởi cửa hàng”
+        cancelNote: note,
+        cancelledAt: now,
+        updatedAt: now,
+      });
+
+      // tham khảo ShopeeFood: gợi ý cập nhật menu/tình trạng quán
+      if (reason === "out_of_stock") {
+        if (window.confirm("Huỷ do hết món. Bạn có muốn cập nhật món tạm hết hàng trên menu không?")) {
+          // TODO: điều hướng sang trang menu/inventory của merchant
+          // window.location.href = "/merchant/menu";
+        }
+      } else if (reason === "closed") {
+        alert("Đã huỷ do quán đóng cửa. Hãy cập nhật trạng thái quán để tránh khách đặt nhầm.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Huỷ đơn thất bại. Đã hoàn tác.");
+      setOrders((list) => list.map((o) => (o.id === ord.id ? { ...o, status: prev } : o)));
+    } finally {
+      setCancelOrderObj(null);
+    }
+  }
 
   useEffect(() => {
+    fetchOrders();
+  }, []);
+  useEffect(() => {
     const onFocus = () => fetchOrders();
-    const onVis = () => { if (document.visibilityState === "visible") fetchOrders(); };
+    const onVis = () => {
+      if (document.visibilityState === "visible") fetchOrders();
+    };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVis);
     return () => {
@@ -261,8 +423,12 @@ function toTs(v) {
     };
   }, []);
 
-  function onDragEnter(e) { e.currentTarget.classList.add("drag-over"); }
-  function onDragLeave(e) { e.currentTarget.classList.remove("drag-over"); }
+  function onDragEnter(e) {
+    e.currentTarget.classList.add("drag-over");
+  }
+  function onDragLeave(e) {
+    e.currentTarget.classList.remove("drag-over");
+  }
   function onDropCol(e, targetStatus) {
     e.preventDefault();
     e.currentTarget.classList.remove("drag-over");
@@ -281,7 +447,9 @@ function toTs(v) {
 
       <div className="top">
         <h2 className="title">Quản lý đơn hàng</h2>
-        <button className="ff-btn" onClick={fetchOrders}>Làm mới</button>
+        <button className="ff-btn" onClick={fetchOrders}>
+          Làm mới
+        </button>
       </div>
 
       {loading ? (
@@ -302,20 +470,39 @@ function toTs(v) {
                 <span className="col-count">{grouped[col]?.length || 0}</span>
               </div>
 
-              {grouped[col]?.length
-                ? grouped[col].map((o) => (
-                    <OrderCard
-                      key={o.id}
-                      order={o}
-                      onMove={moveStatus}
-                      onCancel={cancelOrder}
-                    />
-                  ))
-                : <div className="muted">Không có đơn</div>}
+              {grouped[col]?.length ? (
+                grouped[col].map((o) => (
+                  <OrderCard key={o.id} order={o} onMove={moveStatus} onEdit={onEdit} onAskCancel={onAskCancel} />
+                ))
+              ) : (
+                <div className="muted">Không có đơn</div>
+              )}
             </section>
           ))}
         </div>
       )}
+
+      {/* Modal sửa đơn */}
+      <OrderEditModal
+        open={editOpen}
+        order={editOrder}
+        onClose={() => {
+          setEditOpen(false);
+          setEditOrder(null);
+        }}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Modal huỷ đơn có lý do */}
+      <CancelOrderModal
+        open={cancelOpen}
+        order={cancelOrderObj}
+        onClose={() => {
+          setCancelOpen(false);
+          setCancelOrderObj(null);
+        }}
+        onConfirm={handleConfirmCancel}
+      />
     </div>
   );
 }
