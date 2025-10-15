@@ -1,17 +1,19 @@
+// src/pages/AdminDashboard.jsx
 import { useEffect, useMemo, useState } from 'react';
 import { getAllOrders } from '../utils/api';
 import { formatVND } from '../utils/format';
 
 const VND = (n) => formatVND(n);
 
-// Chuẩn hoá DB → UI status
+// Chuẩn hoá DB → UI status (ĐỒNG BỘ với AdminOrders.jsx)
 function normalizeStatus(db) {
   const s = (db || '').toLowerCase();
   if (!s) return 'order';
   if (['new','pending','confirmed'].includes(s)) return 'order';
-  if (s === 'preparing')  return 'processing';
+  if (['accepted','preparing','ready'].includes(s)) return 'processing';
   if (s === 'delivering') return 'delivery';
-  if (s === 'delivered')  return 'done';
+  if (['delivered','completed','done'].includes(s)) return 'done';
+  if (['cancelled','canceled'].includes(s)) return 'cancelled';
   return 'order';
 }
 
@@ -71,19 +73,22 @@ export default function AdminDashboard(){
     let revenueToday = 0;
     let revenueMonth = 0;
 
-    const byStatus = { order:0, processing:0, delivery:0, done:0 };
+    const byStatus = { order:0, processing:0, delivery:0, done:0, cancelled:0 };
+
     for (const o of orders) {
       const total = o.finalTotal ?? o.total ?? 0;
       const s = normalizeStatus(o.status);
       if (byStatus[s] != null) byStatus[s]++;
+
       const d = o.createdAt ? new Date(o.createdAt) : null;
       if (d) {
-        if (d >= startOfToday) revenueToday += total;
-        if (d >= startOfMonth) revenueMonth += total;
+        // BỎ QUA cancelled trong doanh thu
+        if (s !== 'cancelled' && d >= startOfToday) revenueToday += total;
+        if (s !== 'cancelled' && d >= startOfMonth) revenueMonth += total;
       }
     }
 
-    // nhóm doanh thu 7 ngày
+    // Doanh thu 7 ngày (BỎ QUA cancelled)
     const days = [];
     const fmt = (d) => d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' });
     for (let i = 6; i >= 0; i--) {
@@ -91,7 +96,8 @@ export default function AdminDashboard(){
       const next = new Date(day); next.setDate(day.getDate()+1);
       const sum = orders.reduce((s, o) => {
         const t = o.createdAt ? new Date(o.createdAt) : null;
-        if (t && t >= day && t < next) s += (o.finalTotal ?? o.total ?? 0);
+        const st = normalizeStatus(o.status);
+        if (t && t >= day && t < next && st !== 'cancelled') s += (o.finalTotal ?? o.total ?? 0);
         return s;
       }, 0);
       days.push({ label: fmt(day), value: sum });
@@ -122,6 +128,7 @@ export default function AdminDashboard(){
     .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
     .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
     .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
+    .badge.cancelled{background:#fde8e8;border-color:#f9c7c7;color:#b80d0d}
     .bars{display:flex;gap:8px;align-items:flex-end;height:120px;margin-top:8px}
     .bar{flex:1;background:#ffe8e0;border:1px solid #ffb199;border-radius:6px 6px 0 0;display:flex;align-items:flex-end;justify-content:center}
     .bar > span{font-size:11px;margin-bottom:4px;opacity:.9}
@@ -175,7 +182,7 @@ export default function AdminDashboard(){
             </div>
           </div>
 
-          {/* Status breakdown (không có cancelled) */}
+          {/* Status breakdown (không hiển thị cancelled) */}
           <div className="grid">
             {['order','processing','delivery','done'].map(s=>(
               <div className="card" key={s}>
