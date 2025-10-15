@@ -4,65 +4,61 @@ import { formatVND } from '../utils/format';
 
 const VND = (n)=>formatVND(n);
 
-// ===== DEMO fetch (đổi sang API thật của bạn) =====
+// ==== Helpers & APIs ====
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5181';
+const normalizeOrderId = (raw) => String(decodeURIComponent(raw || '')).replace(/^#/, '');
+
 async function getOrderById(id){
-  const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5181'}/orders/${id}`;
+  const url = `${API_BASE}/orders/${encodeURIComponent(id)}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error('Order not found');
+  if (!res.ok) throw new Error('Không tìm thấy đơn');
   return res.json();
 }
 async function getDroneMission(missionId){
-  const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5181'}/drone_missions/${missionId}`;
+  const url = `${API_BASE}/drone_missions/${encodeURIComponent(missionId)}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error('Mission not found');
+  if (!res.ok) throw new Error('Không tìm thấy mission');
   return res.json();
 }
-async function getDroneTelemetry(missionId){
-  const url = `${import.meta.env.VITE_API_URL || 'http://localhost:5181'}/drone_telemetry?missionId=${missionId}&_sort=ts&_order=desc&_limit=1`;
+async function findMissionByOrderId(orderId){
+  const url = `${API_BASE}/drone_missions?orderId=${encodeURIComponent(orderId)}&_sort=createdAt&_order=desc&_limit=1`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const arr = await res.json();
   return arr?.[0] || null;
 }
-// ===================================================
+async function getDroneTelemetry(missionId){
+  const url = `${API_BASE}/drone_telemetry?missionId=${encodeURIComponent(missionId)}&_sort=ts&_order=desc&_limit=1`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const arr = await res.json();
+  return arr?.[0] || null;
+}
 
-// Nạp Leaflet qua CDN nếu chưa có
+// Leaflet loader
 function ensureLeaflet() {
   return new Promise((resolve, reject) => {
     if (window.L) return resolve(window.L);
-
-    // CSS
     const cssId = "leaflet-css-cdn";
     if (!document.getElementById(cssId)) {
       const l = document.createElement("link");
-      l.id = cssId;
-      l.rel = "stylesheet";
+      l.id = cssId; l.rel = "stylesheet";
       l.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
       document.head.appendChild(l);
     }
-    // JS
     const jsId = "leaflet-js-cdn";
     if (document.getElementById(jsId)) {
-      const check = setInterval(() => {
-        if (window.L) {
-          clearInterval(check);
-          resolve(window.L);
-        }
-      }, 50);
+      const t = setInterval(()=>{ if(window.L){ clearInterval(t); resolve(window.L); }},50);
       return;
     }
     const s = document.createElement("script");
-    s.id = jsId;
-    s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    s.async = true;
+    s.id = jsId; s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"; s.async = true;
     s.onload = () => resolve(window.L);
     s.onerror = reject;
     document.body.appendChild(s);
-  }).then((L) => {
-    // Fix icon khi dùng CDN
+  }).then((L)=>{
     const iconBase = "https://unpkg.com/leaflet@1.9.4/dist/images/";
-    const Default = L.Icon.Default;
-    Default.mergeOptions({
+    L.Icon.Default.mergeOptions({
       iconRetinaUrl: iconBase + "marker-icon-2x.png",
       iconUrl: iconBase + "marker-icon.png",
       shadowUrl: iconBase + "marker-shadow.png",
@@ -85,7 +81,9 @@ const PILL = {
 };
 
 export default function DroneTracker(){
-  const { id } = useParams();
+  const { id: rawId } = useParams();
+  const orderId = normalizeOrderId(rawId);
+
   const [order, setOrder] = useState(null);
   const [mission, setMission] = useState(null);
   const [telemetry, setTelemetry] = useState(null);
@@ -122,56 +120,64 @@ export default function DroneTracker(){
     return { background:c.bg, borderColor:c.br, color:c.tx };
   }, [mission?.status]);
 
-  const timeline = useMemo(()=>{
-    const steps = ['queued','preflight','takeoff','enroute','descending','dropoff','returning','landed'];
-    const cur = (mission?.status || 'queued').toLowerCase();
-    return steps.map(s=>({ id:s, active: steps.indexOf(s) <= steps.indexOf(cur)}));
-  }, [mission?.status]);
-
-  // Load order + mission + telemetry
+  // Load order + mission (+fallback by orderId) + telemetry
   useEffect(()=>{
     let ok = true;
     (async()=>{
       try{
         setLoading(true);
-        const o = await getOrderById(id);
+        const o = await getOrderById(orderId);
         if (!ok) return;
         setOrder(o);
-        if (!o?.droneMissionId) { setErr('Đơn này chưa gán droneMissionId'); return; }
-        const m = await getDroneMission(o.droneMissionId);
+
+        let m = null;
+        if (o?.droneMissionId) {
+          m = await getDroneMission(o.droneMissionId);
+        } else {
+          m = await findMissionByOrderId(orderId);
+        }
         if (!ok) return;
+
+        if (!m?.id) {
+          setErr('Đơn này chưa có drone mission nên chưa thể theo dõi hành trình.');
+          return;
+        }
         setMission(m);
-        const t = await getDroneTelemetry(o.droneMissionId);
+
+        const t = await getDroneTelemetry(m.id);
         if (!ok) return;
-        setTelemetry(t);
+        if (t) setTelemetry(t);
       }catch(e){ setErr(e.message || 'Lỗi tải dữ liệu'); }
       finally{ setLoading(false); }
     })();
     return ()=>{ ok=false; };
-  }, [id]);
+  }, [orderId]);
 
-  // Init map once we have Leaflet + a first lat/lng (or fallback to default center)
+  // Init/Update map
   useEffect(()=>{
     let disposed = false;
     (async ()=>{
       const L = await ensureLeaflet();
       if (disposed) return;
 
-      const center = telemetry?.lat && telemetry?.lng ? [telemetry.lat, telemetry.lng] : [10.776, 106.701]; // HCM fallback
+      const center = (telemetry?.lat && telemetry?.lng)
+        ? [telemetry.lat, telemetry.lng]
+        : [10.776, 106.701]; // fallback HCM
+
       if (!mapRef.current) {
         const map = L.map('drone-map', { zoomControl: true }).setView(center, 14);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 20 }).addTo(map);
         mapRef.current = map;
+      } else {
+        mapRef.current.setView(center, 14);
       }
-      // draw marker
+
       if (telemetry?.lat && telemetry?.lng && !markerRef.current) {
         markerRef.current = L.marker([telemetry.lat, telemetry.lng]).addTo(mapRef.current);
       }
-      // draw route if mission.path exists: [{lat,lng,ts}, ...]
+
       if (mission?.path && mission.path.length && !pathRef.current) {
-        const latlngs = mission.path
-          .filter(p => p.lat && p.lng)
-          .map(p => [p.lat, p.lng]);
+        const latlngs = mission.path.filter(p => p.lat && p.lng).map(p => [p.lat, p.lng]);
         if (latlngs.length >= 2) {
           pathRef.current = L.polyline(latlngs, { color: '#2563eb', weight: 4, opacity: 0.8 }).addTo(mapRef.current);
           mapRef.current.fitBounds(pathRef.current.getBounds(), { padding: [20,20] });
@@ -181,7 +187,7 @@ export default function DroneTracker(){
     return ()=>{ disposed = true; };
   }, [mission?.path, telemetry?.lat, telemetry?.lng]);
 
-  // Update marker when telemetry changes (simulate moving)
+  // Move marker when telemetry changes
   useEffect(()=>{
     let alive = true;
     (async ()=>{
@@ -201,7 +207,7 @@ export default function DroneTracker(){
     return ()=>{ alive = false; };
   }, [telemetry?.lat, telemetry?.lng]);
 
-  // Poll telemetry mỗi 5s (nếu muốn realtime)
+  // Poll telemetry 5s
   useEffect(()=>{
     if (!mission?.id) return;
     const iv = setInterval(async ()=>{
@@ -228,7 +234,7 @@ export default function DroneTracker(){
         <div className="card" style={{borderColor:'#f9c7c7', background:'#fde8e8', color:'#b80d0d'}}>❌ {err}</div>
       ) : (
         <div className="grid">
-          {/* Cột trái: bản đồ + trạng thái live */}
+          {/* Map + live status */}
           <div className="card">
             <div className="row">
               <div className="title">Hành trình</div>
@@ -237,7 +243,11 @@ export default function DroneTracker(){
               </span>
             </div>
 
-            {/* Bản đồ thật (Leaflet / OSM) */}
+            {!mission?.id && (
+              <div className="muted" style={{marginBottom:8}}>
+                Chưa có mission cho đơn này. Bản đồ hiển thị vị trí mặc định.
+              </div>
+            )}
             <div id="drone-map" className="map" />
 
             <div className="timeline">
@@ -256,7 +266,7 @@ export default function DroneTracker(){
             </div>
           </div>
 
-          {/* Cột phải: thông tin đơn + KPI */}
+          {/* Order info */}
           <div className="card">
             <div className="title">Thông tin đơn #{order?.id}</div>
             <div className="meta">
