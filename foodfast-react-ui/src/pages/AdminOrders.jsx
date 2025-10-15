@@ -1,5 +1,6 @@
+// src/pages/AdminOrders.jsx
 import { useEffect, useMemo, useState } from 'react';
-import { myOrders, updateOrderStatus } from '../utils/api';
+import { myOrders } from '../utils/api';
 import { exportCsv } from '../utils/exportCsv';
 import { formatVND } from '../utils/format';
 
@@ -10,22 +11,25 @@ function normalizeStatus(db) {
   const s = (db || '').toLowerCase();
   if (!s) return 'order';
   if (['new','pending','confirmed'].includes(s)) return 'order';
-  if (s === 'preparing') return 'processing';
+  if (['accepted','preparing','ready'].includes(s)) return 'processing';
   if (s === 'delivering') return 'delivery';
-  if (s === 'delivered') return 'done';
-  if (s === 'cancelled') return 'cancelled';
+  if (['delivered','completed','done'].includes(s)) return 'done';
+  if (['cancelled','canceled'].includes(s)) return 'cancelled';
   return 'order';
 }
-function denormalizeStatus(ui) {
-  const s = (ui || '').toLowerCase();
-  if (s === 'order') return 'confirmed';
-  if (s === 'processing') return 'preparing';
-  if (s === 'delivery') return 'delivering';
-  if (s === 'done') return 'delivered';
-  if (s === 'cancelled') return 'cancelled';
-  return 'confirmed';
-}
 const VND = (n) => formatVND(n);
+
+const CANCEL_BY_LABEL = {
+  merchant: 'cửa hàng',
+  customer: 'khách hàng',
+  rider: 'tài xế',
+  system: 'hệ thống',
+};
+const REASON_LABEL = {
+  out_of_stock: 'Quán hết món',
+  closed: 'Quán đóng cửa',
+  other: 'Lý do khác',
+};
 
 export default function AdminOrders({ variant }) {
   const isRestaurant = variant === 'restaurant';
@@ -38,21 +42,19 @@ export default function AdminOrders({ variant }) {
   const [filter, setFilter] = useState('all');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(() => {
+    const saved = Number(localStorage.getItem('orders_limit') || 10);
+    return [5,10,20,50].includes(saved) ? saved : 10;
+  });
   const [pageCount, setPageCount] = useState(1);
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
-      // Luôn lấy full rồi FE filter
       const res = await myOrders({
-        page: 1,
-        limit: 10000,
-        status: 'all',
-        q: '',
-        sort: 'createdAt',
-        order: 'desc'
+        page: 1, limit: 10000, status: 'all', q: '',
+        sort: 'createdAt', order: 'desc'
       });
 
       const arr = Array.isArray(res) ? res : (res?.rows || res?.data || []);
@@ -74,12 +76,17 @@ export default function AdminOrders({ variant }) {
       if (filter !== 'all') {
         list = list.filter(o => o._uiStatus === filter);
       } else if (isRestaurant) {
-        // Restaurant: mặc định ẩn cancelled khi filter = all
         list = list.filter(o => o._uiStatus !== 'cancelled');
       }
 
       // sort createdAt desc
-      list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const toTs = (v) => {
+        if (!v) return 0;
+        if (typeof v === 'number') return v;
+        const p = Date.parse(v);
+        return Number.isNaN(p) ? 0 : p;
+        };
+      list.sort((a,b) => toTs(b.createdAt) - toTs(a.createdAt));
 
       setFiltered(list);
 
@@ -88,7 +95,6 @@ export default function AdminOrders({ variant }) {
       const safePage = Math.min(page, pc);
       const start = (safePage - 1) * limit;
       const end = start + limit;
-
       setRows(list.slice(start, end));
       setPageCount(pc);
       if (safePage !== page) setPage(safePage);
@@ -97,10 +103,8 @@ export default function AdminOrders({ variant }) {
     }
   };
 
-  // tải lần đầu + khi điều kiện lọc/sort/trang thay đổi
   useEffect(()=>{ fetchData(); }, [page, limit, filter, q, isRestaurant]);
 
-  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus
   useEffect(() => {
     const onFocus = () => fetchData();
     const onVis = () => { if (document.visibilityState === 'visible') fetchData(); };
@@ -112,21 +116,6 @@ export default function AdminOrders({ variant }) {
     };
   }, [page, limit, filter, q, isRestaurant]);
 
-  // Transitions tuần tự
-  const canToProcessing = (ui) => ui === 'order';
-  const canToDelivery   = (ui) => ui === 'processing';
-  const canToDone       = (ui) => ui === 'delivery';
-
-  const changeStatus = async (id, targetUi) => {
-    const serverStatus = denormalizeStatus(targetUi);
-    const updated = await updateOrderStatus(id, serverStatus);
-    const apply = (o)=> o.id === id
-      ? { ...o, ...(updated || {}), status: serverStatus, _uiStatus: targetUi }
-      : o;
-    setRows(prev => prev.map(apply));
-    setFiltered(prev => prev.map(apply));
-  };
-
   const ts = () => new Date().toISOString().replace(/[:.]/g,'-');
   const onExportPage = () => exportCsv(`orders_page_${page}_${ts()}.csv`, rows);
   const onExportAll  = () => exportCsv(`orders_all_filtered_${ts()}.csv`, filtered);
@@ -135,39 +124,58 @@ export default function AdminOrders({ variant }) {
     const today = new Date(); today.setHours(0,0,0,0);
     let revenue = 0, todayCount = 0;
     const byStatus = Object.fromEntries(UI_SUMMARY.map(s=>[s,0]));
-    for (const o of rows) {
+    for (const o of filtered) {
       if (o._uiStatus !== 'cancelled') revenue += (o.finalTotal ?? o.total ?? 0);
       if (byStatus[o._uiStatus] != null) byStatus[o._uiStatus]++;
       const d = o.createdAt ? new Date(o.createdAt) : null;
       if (d && d >= today) todayCount++;
     }
-    return { revenue, todayCount, byStatus, total: rows.length };
-  }, [rows]);
+
+    const pageByStatus = Object.fromEntries(UI_SUMMARY.map(s=>[s,0]));
+    let pageRevenue = 0;
+    for (const o of rows) {
+      if (o._uiStatus !== 'cancelled') pageRevenue += (o.finalTotal ?? o.total ?? 0);
+      if (pageByStatus[o._uiStatus] != null) pageByStatus[o._uiStatus]++;
+    }
+    return {
+      revenue, todayCount, byStatus, total: filtered.length,
+      pageRevenue, pageByStatus, pageCount: rows.length
+    };
+  }, [filtered, rows]);
 
   const styles = `
     .adm-wrap{padding:24px 0}
+
     .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .order-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
-    .orders{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
-    .order-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-    .order-item-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e9e9e9}
+    .grid-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .ff-btn{height:36px;border:none;border-radius:18px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer}
+    select,input[type=text]{height:32px;border-radius:8px;border:1px solid #ddd;padding:0 8px}
+    .muted{color:#777}
+
+    /* === DASHBOARD-STYLE CARDS === */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
+    .title{font-size:14px;font-weight:700;opacity:.8;margin:0 0 6px}
+    .val{font-size:22px;font-weight:900}
+    .row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
+
+    /* Badge màu giống Dashboard */
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#f7f7f7;border:1px solid #e8e8e8;text-transform:capitalize;font-weight:700}
     .badge.order{background:#fff0e9;border-color:#ffd8c6;color:#c24a26}
     .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
     .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
     .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
     .badge.cancelled{background:#fde8e8;border-color:#f9c7c7;color:#b80d0d}
+
+    /* Danh sách đơn */
+    .orders{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
+    .order-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
+    .order-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .order-item-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e9e9e9}
     .sum{font-weight:800}
-    .ff-btn{height:36px;border:none;border-radius:18px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer}
-    select,input[type=text]{height:32px;border-radius:8px;border:1px solid #ddd;padding:0 8px}
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
+
     .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
     .pager button{height:32px;border:none;border-radius:8px;padding:0 10px;background:#f0f0f0;cursor:pointer}
-    .grid-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .act{display:flex;gap:8px;flex-wrap:wrap}
-    .btn{height:32px;border:none;border-radius:16px;padding:0 12px;background:#f4f4f6;cursor:pointer}
-    .btn.primary{background:#ff7a59;color:#fff}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
   `;
 
   return (
@@ -175,7 +183,7 @@ export default function AdminOrders({ variant }) {
       <style>{styles}</style>
 
       <div className="topbar">
-        <h2>{isRestaurant ? 'Restaurant Orders' : 'Quản trị đơn hàng'}</h2>
+        <h2>{isRestaurant ? 'Restaurant Orders' : 'Lịch sử đơn hàng'}</h2>
         <div className="grid-actions">
           <button className="ff-btn" onClick={fetchData}>Refresh</button>
 
@@ -197,7 +205,14 @@ export default function AdminOrders({ variant }) {
 
           <label style={{display:'flex', alignItems:'center', gap:6}}>
             <span>Hiển thị:</span>
-            <select value={limit} onChange={e=>{ setLimit(Number(e.target.value)); setPage(1); }}>
+            <select
+              value={limit}
+              onChange={e=>{
+                const val = Number(e.target.value);
+                setLimit(val);
+                localStorage.setItem('orders_limit', val);
+                setPage(1);
+              }}>
               {[5,10,20,50].map(n => <option key={n} value={n}>{n}/trang</option>)}
             </select>
           </label>
@@ -211,28 +226,42 @@ export default function AdminOrders({ variant }) {
         </div>
       </div>
 
-      {/* Cards tổng quan (trang hiện tại) */}
-      <div className="cards">
-        <div className="order-card">
-          <div><b>Doanh thu (trang)</b></div>
-          <div className="sum" style={{fontSize:20}}>{VND(summary.revenue)}</div>
+      {/* Cards tổng quan — giống Dashboard */}
+      <div className="grid">
+        <div className="card">
+          <div className="title">Doanh thu</div>
+          <div className="val">{VND(summary.revenue)}</div>
+          <div className="muted" style={{marginTop:4}}>Trang này: {VND(summary.pageRevenue)}</div>
         </div>
-        <div className="order-card">
-          <div><b>Đơn hôm nay (trang)</b></div>
-          <div className="sum" style={{fontSize:20}}>{summary.todayCount}</div>
+        <div className="card">
+          <div className="title">Đơn hôm nay</div>
+          <div className="val">{summary.todayCount}</div>
         </div>
-        <div className="order-card">
-          <div><b>Tổng đơn (trang)</b></div>
-          <div className="sum" style={{fontSize:20}}>{summary.total}</div>
+        <div className="card">
+          <div className="title">Tổng đơn</div>
+          <div className="val">{summary.total}</div>
+          <div className="muted" style={{marginTop:4}}>Trang này: {summary.pageCount}</div>
         </div>
-        {UI_SUMMARY.map(s=>(
-          <div key={s} className="order-card">
-            <div><span className={`badge ${s}`}>{s}</span></div>
-            <div className="sum" style={{fontSize:20}}>{summary.byStatus[s] || 0}</div>
+        <div className="card">
+          <div className="title">Đơn chờ (order)</div>
+          <div className="val">{summary.byStatus.order || 0}</div>
+        </div>
+      </div>
+
+      {/* Thống kê theo trạng thái — giống Dashboard */}
+      <div className="grid">
+        {['order','processing','delivery','done'].map(s => (
+          <div className="card" key={s}>
+            <div className="row">
+              <span className={`badge ${s}`}>{s}</span>
+              <b>{summary.byStatus[s] || 0}</b>
+            </div>
+            <div className="muted">Số đơn theo trạng thái</div>
           </div>
         ))}
       </div>
 
+      {/* Danh sách đơn */}
       {loading ? 'Đang tải…' : (!rows.length ? 'Không có đơn.' : (
         <>
           <div className="orders">
@@ -243,7 +272,7 @@ export default function AdminOrders({ variant }) {
                   <header className="order-head">
                     <div>
                       <strong>Đơn #{o.id}</strong>
-                      <div style={{opacity:.7}}>
+                      <div className="muted">
                         {o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—'}
                       </div>
                     </div>
@@ -263,34 +292,23 @@ export default function AdminOrders({ variant }) {
                     ))}
                   </div>
 
-                  <footer className="order-foot" style={{marginTop:8, display:'flex', justifyContent:'space-between', alignItems:'center', gap:8, flexWrap:'wrap'}}>
+                  <footer style={{marginTop:8}}>
                     <div>
                       <div><strong>{o.customerName}</strong></div>
-                      <div style={{opacity:.8}}>{o.phone} — {o.address}</div>
+                      <div className="muted">{o.phone} — {o.address}</div>
                       {o.couponCode && (
-                        <div style={{opacity:.8}}>Mã: {o.couponCode} — Giảm: -{VND(o.discount||0)}</div>
+                        <div className="muted">Mã: {o.couponCode} — Giảm: -{VND(o.discount||0)}</div>
                       )}
                     </div>
 
-                    <div className="act">
-                      <button
-                        className="btn"
-                        disabled={!canToProcessing(ui)}
-                        onClick={()=>changeStatus(o.id, 'processing')}
-                      >Start processing</button>
-
-                      <button
-                        className="btn"
-                        disabled={!canToDelivery(ui)}
-                        onClick={()=>changeStatus(o.id, 'delivery')}
-                      >Start delivery</button>
-
-                      <button
-                        className="btn primary"
-                        disabled={!canToDone(ui)}
-                        onClick={()=>changeStatus(o.id, 'done')}
-                      >Mark done</button>
-                    </div>
+                    {ui === 'cancelled' && (
+                      <div className="muted" style={{ marginTop: 6 }}>
+                        {`Hủy bởi ${CANCEL_BY_LABEL[o.cancelBy] || 'khác'}`}
+                        {o.cancelReason ? ` • ${REASON_LABEL[o.cancelReason] || o.cancelReason}` : ''}
+                        {o.cancelledAt ? ` • ${new Date(o.cancelledAt).toLocaleString('vi-VN')}` : ''}
+                        {o.cancelNote ? ` • Ghi chú: ${o.cancelNote}` : ''}
+                      </div>
+                    )}
                   </footer>
                 </article>
               );
