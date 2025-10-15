@@ -1,5 +1,6 @@
 // src/pages/AdminOrders.jsx
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { myOrders } from '../utils/api';
 import { exportCsv } from '../utils/exportCsv';
 import { formatVND } from '../utils/format';
@@ -19,6 +20,7 @@ function normalizeStatus(db) {
 }
 const VND = (n) => formatVND(n);
 
+// Label hiển thị khi huỷ
 const CANCEL_BY_LABEL = {
   merchant: 'cửa hàng',
   customer: 'khách hàng',
@@ -33,6 +35,14 @@ const REASON_LABEL = {
 
 export default function AdminOrders({ variant }) {
   const isRestaurant = variant === 'restaurant';
+
+  // nhận biết mode drone: /admin/drone hoặc ?mode=drone
+  const { pathname, search } = useLocation();
+  const mode = useMemo(() => {
+    if (pathname.endsWith('/admin/drone')) return 'drone';
+    const qs = new URLSearchParams(search);
+    return (qs.get('mode') || '').toLowerCase();
+  }, [pathname, search]);
 
   const [rows, setRows] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -52,6 +62,7 @@ export default function AdminOrders({ variant }) {
     try {
       setLoading(true);
 
+      // Lấy full, FE filter
       const res = await myOrders({
         page: 1, limit: 10000, status: 'all', q: '',
         sort: 'createdAt', order: 'desc'
@@ -59,6 +70,15 @@ export default function AdminOrders({ variant }) {
 
       const arr = Array.isArray(res) ? res : (res?.rows || res?.data || []);
       let list = (arr || []).map(o => ({ ...o, _uiStatus: normalizeStatus(o.status) }));
+
+      // lọc theo Drone mode (nếu đang ở /admin/drone)
+      if (mode === 'drone') {
+        list = list.filter(o =>
+          (o.deliveryMode || '').toLowerCase() === 'drone' ||
+          (o.courier || '').toLowerCase() === 'drone' ||
+          !!o.droneMissionId
+        );
+      }
 
       // search
       const t = (q || '').trim().toLowerCase();
@@ -79,13 +99,13 @@ export default function AdminOrders({ variant }) {
         list = list.filter(o => o._uiStatus !== 'cancelled');
       }
 
-      // sort createdAt desc
+      // sort createdAt desc (kể cả string)
       const toTs = (v) => {
         if (!v) return 0;
         if (typeof v === 'number') return v;
         const p = Date.parse(v);
         return Number.isNaN(p) ? 0 : p;
-        };
+      };
       list.sort((a,b) => toTs(b.createdAt) - toTs(a.createdAt));
 
       setFiltered(list);
@@ -103,8 +123,9 @@ export default function AdminOrders({ variant }) {
     }
   };
 
-  useEffect(()=>{ fetchData(); }, [page, limit, filter, q, isRestaurant]);
+  useEffect(()=>{ fetchData(); }, [page, limit, filter, q, isRestaurant, mode]);
 
+  // Revalidate khi Tab focus lại
   useEffect(() => {
     const onFocus = () => fetchData();
     const onVis = () => { if (document.visibilityState === 'visible') fetchData(); };
@@ -114,12 +135,13 @@ export default function AdminOrders({ variant }) {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [page, limit, filter, q, isRestaurant]);
+  }, [page, limit, filter, q, isRestaurant, mode]);
 
   const ts = () => new Date().toISOString().replace(/[:.]/g,'-');
   const onExportPage = () => exportCsv(`orders_page_${page}_${ts()}.csv`, rows);
   const onExportAll  = () => exportCsv(`orders_all_filtered_${ts()}.csv`, filtered);
 
+  // Tổng hợp: "tất cả đã lọc" + số phụ cho trang hiện tại
   const summary = useMemo(() => {
     const today = new Date(); today.setHours(0,0,0,0);
     let revenue = 0, todayCount = 0;
@@ -145,35 +167,24 @@ export default function AdminOrders({ variant }) {
 
   const styles = `
     .adm-wrap{padding:24px 0}
-
     .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .grid-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .ff-btn{height:36px;border:none;border-radius:18px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer}
-    select,input[type=text]{height:32px;border-radius:8px;border:1px solid #ddd;padding:0 8px}
-    .muted{color:#777}
-
-    /* === DASHBOARD-STYLE CARDS === */
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
-    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
-    .title{font-size:14px;font-weight:700;opacity:.8;margin:0 0 6px}
-    .val{font-size:22px;font-weight:900}
-    .row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
-
-    /* Badge màu giống Dashboard */
+    .order-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
+    .orders{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
+    .order-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+    .order-item-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e9e9e9}
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#f7f7f7;border:1px solid #e8e8e8;text-transform:capitalize;font-weight:700}
     .badge.order{background:#fff0e9;border-color:#ffd8c6;color:#c24a26}
     .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
     .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
     .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
     .badge.cancelled{background:#fde8e8;border-color:#f9c7c7;color:#b80d0d}
-
-    /* Danh sách đơn */
-    .orders{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
-    .order-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
-    .order-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-    .order-item-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e9e9e9}
     .sum{font-weight:800}
-
+    .ff-btn{height:36px;border:none;border-radius:18px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer}
+    select,input[type=text]{height:32px;border-radius:8px;border:1px solid #ddd;padding:0 8px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
+    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
+    .row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
+    .muted{color:#777}
     .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
     .pager button{height:32px;border:none;border-radius:8px;padding:0 10px;background:#f0f0f0;cursor:pointer}
   `;
@@ -183,8 +194,12 @@ export default function AdminOrders({ variant }) {
       <style>{styles}</style>
 
       <div className="topbar">
-        <h2>{isRestaurant ? 'Restaurant Orders' : 'Lịch sử đơn hàng'}</h2>
-        <div className="grid-actions">
+        <h2>
+          {mode === 'drone'
+            ? 'Đơn giao bằng Drone'
+            : (isRestaurant ? 'Restaurant Orders' : 'Lịch sử đơn hàng')}
+        </h2>
+        <div className="grid-actions" style={{display:'flex', gap:10, alignItems:'center', flexWrap:'wrap'}}>
           <button className="ff-btn" onClick={fetchData}>Refresh</button>
 
           <input
@@ -217,7 +232,7 @@ export default function AdminOrders({ variant }) {
             </select>
           </label>
 
-          {!isRestaurant && (
+          {mode !== 'drone' && !isRestaurant && (
             <>
               <button className="ff-btn" onClick={onExportPage}>Export CSV (trang)</button>
               <button className="ff-btn" onClick={onExportAll}>Export CSV (tất cả)</button>
@@ -226,32 +241,32 @@ export default function AdminOrders({ variant }) {
         </div>
       </div>
 
-      {/* Cards tổng quan — giống Dashboard */}
-      <div className="grid">
+      {/* Cards tổng quan */}
+      <div className="cards">
         <div className="card">
-          <div className="title">Doanh thu</div>
-          <div className="val">{VND(summary.revenue)}</div>
+          <div><b>Doanh thu</b></div>
+          <div className="sum">{VND(summary.revenue)}</div>
           <div className="muted" style={{marginTop:4}}>Trang này: {VND(summary.pageRevenue)}</div>
         </div>
         <div className="card">
-          <div className="title">Đơn hôm nay</div>
-          <div className="val">{summary.todayCount}</div>
+          <div><b>Đơn hôm nay</b></div>
+          <div className="sum" style={{fontSize:20}}>{summary.todayCount}</div>
         </div>
         <div className="card">
-          <div className="title">Tổng đơn</div>
-          <div className="val">{summary.total}</div>
+          <div><b>Tổng đơn</b></div>
+          <div className="sum">{summary.total}</div>
           <div className="muted" style={{marginTop:4}}>Trang này: {summary.pageCount}</div>
         </div>
         <div className="card">
-          <div className="title">Đơn chờ (order)</div>
-          <div className="val">{summary.byStatus.order || 0}</div>
+          <div><b>Đơn chờ (order)</b></div>
+          <div className="sum">{summary.byStatus.order || 0}</div>
         </div>
       </div>
 
-      {/* Thống kê theo trạng thái — giống Dashboard */}
-      <div className="grid">
+      {/* Thống kê theo trạng thái */}
+      <div className="cards">
         {['order','processing','delivery','done'].map(s => (
-          <div className="card" key={s}>
+          <div key={s} className="card">
             <div className="row">
               <span className={`badge ${s}`}>{s}</span>
               <b>{summary.byStatus[s] || 0}</b>
@@ -279,6 +294,7 @@ export default function AdminOrders({ variant }) {
                     <div style={{display:'flex', gap:8, alignItems:'center'}}>
                       <span className={`badge ${ui}`}>{ui}</span>
                       <div className="sum">{VND(o.finalTotal ?? o.total)}</div>
+                      {/* ĐÃ BỎ nút Xem hành trình (Drone) theo yêu cầu */}
                     </div>
                   </header>
 

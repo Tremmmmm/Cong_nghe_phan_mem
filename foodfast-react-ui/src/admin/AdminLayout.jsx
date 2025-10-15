@@ -36,7 +36,6 @@ export default function AdminLayout(){
       <aside className="aside">
         <div className="a-title">Trang quản trị</div>
         <nav className="a-nav">
-          {/* NEW: Người dùng */}
           <NavLink to="/admin/users" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Người dùng
           </NavLink>
@@ -44,10 +43,16 @@ export default function AdminLayout(){
           <NavLink to="/admin/dashboard" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Dashboard
           </NavLink>
+
           <NavLink to="/admin/orders" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Lịch sử đơn hàng
           </NavLink>
-          {/* Kitchen / Restaurant nằm trong Admin */}
+
+          {/* Drone: route riêng để NavLink match chính xác */}
+          <NavLink to="/admin/drone" className={({isActive})=>`a-link ${isActive?'active':''}`}>
+            Drone (theo dõi)
+          </NavLink>
+
           <NavLink to="/admin/restaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Khu nhà hàng (PoC)
           </NavLink>
