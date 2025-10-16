@@ -80,7 +80,7 @@ export default function Favorites() {
 
       {items.length === 0 ? (
         <div className="empty">
-          Chưa có món yêu thích. Vào trang <Link to="/menu" style={{fontWeight:700}}>Menu</Link> bấm ❤️ để thêm nhé.
+          Chưa có món yêu thích. Vào trang <Link to="/menu" style={{fontWeight:700}}>Thực đơn</Link> bấm ❤️ để thêm nhé.
         </div>
       ) : (
         <>
