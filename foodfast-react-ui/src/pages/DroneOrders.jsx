@@ -129,30 +129,11 @@ function StatusPill({ status }) {
 }
 
 function CoordText({ lat, lng }) {
-  if (!(lat && lng)) return <span className="mini">Chưa có tọa độ</span>;
+  if (!(Number.isFinite(lat) && Number.isFinite(lng))) {
+    return <span className="mini">Chưa có tọa độ</span>;
+  }
   const s = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  const copy = () => navigator.clipboard?.writeText(s).catch(() => {});
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span className="mini" title={s}>
-        {s}
-      </span>
-      <button
-        className="btn btn-ghost"
-        onClick={copy}
-        title="Copy tọa độ"
-        style={{
-          height: 28,
-          padding: "0 10px",
-          background: "#f3f4f6",
-          color: "#111",
-          border: "1px solid #e5e7eb",
-        }}
-      >
-        Copy
-      </button>
-    </div>
-  );
+  return <span className="mini" title={s}>{s}</span>;
 }
 
 /* ====================== Main ====================== */

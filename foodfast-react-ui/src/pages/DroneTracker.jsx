@@ -1,6 +1,7 @@
-// src/pages/DroneTracker.jsx (Leaflet + OSM, no Google key)
+// src/pages/DroneTracker.jsx
+// Leaflet + OSM (không cần Google key)
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
   getOrder as apiGetOrder,
   getMissionById,
@@ -9,7 +10,6 @@ import {
   postDronePosition,
 } from '../utils/api';
 
-// ====== Config ======
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5181';
 const normalizeOrderId = (raw) => String(decodeURIComponent(raw || '')).replace(/^#/, '');
 
@@ -17,7 +17,6 @@ const normalizeOrderId = (raw) => String(decodeURIComponent(raw || '')).replace(
 function ensureLeaflet() {
   return new Promise((resolve, reject) => {
     if (window.L) return resolve(window.L);
-    // CSS
     const cssId = 'leaflet-css-cdn';
     if (!document.getElementById(cssId)) {
       const l = document.createElement('link');
@@ -26,7 +25,6 @@ function ensureLeaflet() {
       l.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
       document.head.appendChild(l);
     }
-    // JS
     const jsId = 'leaflet-js-cdn';
     if (document.getElementById(jsId)) {
       const t = setInterval(() => { if (window.L) { clearInterval(t); resolve(window.L); } }, 50);
@@ -40,7 +38,6 @@ function ensureLeaflet() {
     s.onerror = reject;
     document.body.appendChild(s);
   }).then((L) => {
-    // default marker icons for CDN
     const iconBase = 'https://unpkg.com/leaflet@1.9.4/dist/images/';
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: iconBase + 'marker-icon-2x.png',
@@ -51,10 +48,29 @@ function ensureLeaflet() {
   });
 }
 
+// ====== Helpers tọa độ & tính khoảng cách ======
+const toLL = (p) => Array.isArray(p) ? p : [p?.lat, p?.lng ?? p?.lon ?? p?.longitude];
+const isLL = (ll) => Array.isArray(ll) && Number.isFinite(ll[0]) && Number.isFinite(ll[1]);
+const validLL = (a, b) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a) <= 90 && Math.abs(b) <= 180;
+const normPoint = (p) => {
+  let lat = Number(p.lat), lng = Number(p.lng ?? p.lon ?? p.longitude);
+  if (!(Math.abs(lat) <= 90) && Math.abs(lng) <= 90) [lat, lng] = [lng, lat]; // đảo -> sửa
+  return { ...p, lat, lng };
+};
+// Haversine (km)
+const toRad = (d) => (d * Math.PI) / 180;
+function haversineKm([lat1, lng1], [lat2, lng2]) {
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
 export default function DroneTracker() {
   const { id: rawId } = useParams();
   const orderId = normalizeOrderId(rawId);
-  const navigate = useNavigate();
 
   // data state
   const [order, setOrder] = useState(null);
@@ -63,6 +79,11 @@ export default function DroneTracker() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const [simulating, setSimulating] = useState(false);
+
+  // view controls
+  const [follow, setFollow] = useState(false);     // mặc định OFF
+  const [canRefit, setCanRefit] = useState(false); // hiện nút Fit Route sau khi fit 1 lần
+  const [etaMin, setEtaMin] = useState(null);      // ETA phút (FE)
 
   // timers
   const pollRef = useRef(null);
@@ -76,42 +97,24 @@ export default function DroneTracker() {
   const markerRef = useRef(null);
   const didFitRef = useRef(false);
 
-  // ===== Helpers compatible with your DB (missionId vs droneId) =====
+  // ===== Load positions (tương thích 2 kiểu missionId/droneId) =====
   const fetchPositionsCompat = useCallback(async (missionId, since = 0) => {
-    // 1) try standard missionId
     try {
       const arr = await getDronePositions({ missionId, since });
-      if (arr?.length) {
-        return arr.map(p => ({
-          ...p,
-          timestamp: typeof p.timestamp === 'string' ? Date.parse(p.timestamp) : p.timestamp,
-        }));
-      }
-    } catch { /* ignore */ }
-
-    // 2) fallback DB that used "droneId"
+      if (arr?.length) return arr.map(normPoint);
+    } catch {}
     try {
-      const q = new URLSearchParams({
-        droneId: String(missionId),
-        _sort: 'timestamp',
-        _order: 'asc',
-      });
+      const q = new URLSearchParams({ droneId: String(missionId), _sort: 'timestamp', _order: 'asc' });
       if (since && Number(since) > 0) q.set('timestamp_gte', String(since));
       const r = await fetch(`${API_BASE}/dronePositions?${q.toString()}`);
       if (!r.ok) return [];
       const arr = await r.json();
-      return (arr || []).map(p => ({
-        ...p,
-        timestamp: typeof p.timestamp === 'string' ? Date.parse(p.timestamp) : p.timestamp,
-      }));
-    } catch {
-      return [];
-    }
+      return arr.map(normPoint);
+    } catch { return []; }
   }, []);
 
   const findMissionByOrderId = useCallback(async (oid) => {
-    const url = `${API_BASE}/droneMissions?orderId=${encodeURIComponent(oid)}&_sort=startTime&_order=desc&_limit=1`;
-    const res = await fetch(url);
+    const res = await fetch(`${API_BASE}/droneMissions?orderId=${encodeURIComponent(oid)}&_sort=startTime&_order=desc&_limit=1`);
     if (!res.ok) return null;
     const arr = await res.json();
     return arr?.[0] || null;
@@ -127,9 +130,7 @@ export default function DroneTracker() {
         if (!alive) return;
         setOrder(o);
 
-        let m = null;
-        if (o?.droneMissionId) m = await getMissionById(o.droneMissionId);
-        else m = await findMissionByOrderId(orderId);
+        const m = o?.droneMissionId ? await getMissionById(o.droneMissionId) : await findMissionByOrderId(orderId);
         if (!alive) return;
 
         if (!m?.id) {
@@ -138,12 +139,8 @@ export default function DroneTracker() {
           return;
         }
         setMission(m);
-      } catch (e) {
-        console.error(e);
-        setErr(e.message || 'Lỗi tải dữ liệu');
-      } finally {
-        setLoading(false);
-      }
+      } catch (e) { console.error(e); setErr(e.message || 'Lỗi tải dữ liệu'); }
+      finally { setLoading(false); }
     })();
     return () => { alive = false; };
   }, [orderId, findMissionByOrderId]);
@@ -153,34 +150,33 @@ export default function DroneTracker() {
     if (pollRef.current) return;
     pollRef.current = setInterval(async () => {
       try {
-        const data = await fetchPositionsCompat(missionId, lastTsRef.current);
-        if (data?.length) {
+        let data = await fetchPositionsCompat(missionId, lastTsRef.current);
+        data = (data || [])
+          .filter(p => (p.missionId == null || String(p.missionId) === String(missionId)))
+          .map(normPoint)
+          .filter(p => validLL(p.lat, p.lng));
+
+        if (data.length) {
           lastTsRef.current = data[data.length - 1].timestamp || lastTsRef.current;
           setPositions(prev => [...prev, ...data]);
         }
-      } catch (e) {
-        console.error('poll error', e);
-      }
+      } catch (e) { console.error('poll error', e); }
     }, 2000);
   }, [fetchPositionsCompat]);
 
-  const stopPolling = useCallback(() => {
+  const stopAll = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    if (simRef.current) { clearInterval(simRef.current); simRef.current = null; }
   }, []);
+  useEffect(() => stopAll, [stopAll]);
 
-  useEffect(() => () => { stopPolling(); stopSimulator(); }, [stopPolling]);
+  useEffect(() => { if (mission?.id) startPolling(mission.id); }, [mission?.id, startPolling]);
 
-  useEffect(() => {
-    if (mission?.id) startPolling(mission.id);
-  }, [mission?.id, startPolling]);
-
-  // ===== Simulator (if no mission; optional button) =====
+  // ===== Simulator (optional) =====
   const startSimulator = useCallback(async () => {
     if (simRef.current) return;
-
     const origin = { lat: 10.777642, lng: 106.695242 };     // Bến Thành
     const destination = { lat: 10.800976, lng: 106.653238 }; // gần Landmark
-
     try {
       const m = await createDemoMission({ origin, destination });
       setMission(m);
@@ -201,33 +197,37 @@ export default function DroneTracker() {
         const lng = origin.lng + dLng * i;
         const heading = Math.atan2(dLng, dLat) * 180 / Math.PI;
         const ts = Date.now();
-        try {
-          await postDronePosition({ missionId: m.id, lat, lng, heading, speed: 12, timestamp: ts });
-        } catch (e) { console.error('sim post err', e); }
-        if (i >= steps) stopSimulator();
+        await postDronePosition({ missionId: m.id, lat, lng, heading, speed: 12, timestamp: ts }).catch(()=>{});
+        if (i >= steps) { clearInterval(simRef.current); simRef.current = null; setSimulating(false); }
       }, 2000);
 
       setSimulating(true);
       startPolling(m.id);
-    } catch (e) {
-      console.error(e);
-      setErr('Không thể khởi tạo mission demo.');
-    }
+    } catch (e) { console.error(e); setErr('Không thể khởi tạo mission demo.'); }
   }, [startPolling]);
 
-  const stopSimulator = useCallback(() => {
-    if (simRef.current) { clearInterval(simRef.current); simRef.current = null; }
-    setSimulating(false);
-  }, []);
-
   // ===== Derived =====
-  const path = useMemo(() => positions.map(p => [p.lat, p.lng]), [positions]);
+  const path = useMemo(() => positions.map(p => [p.lat, p.lng]).filter(isLL), [positions]);
   const center = useMemo(() => {
-    if (path.length) return path[path.length - 1];
-    if (mission?.path?.length) return [mission.path[0].lat, mission.path[0].lng];
-    return [10.776, 106.701]; // HCM fallback
+    if (path.length && isLL(path[path.length - 1])) return path[path.length - 1];
+    if (mission?.path?.length) {
+      const first = toLL(mission.path[0]);
+      if (isLL(first)) return first;
+    }
+    return [10.776, 106.701];
   }, [path, mission?.path]);
   const lastPos = path[path.length - 1];
+
+  // ===== Tính ETA (phút) ở FE =====
+  useEffect(() => {
+    const mPath = (mission?.path || []).map(toLL).filter(isLL);
+    if (!isLL(lastPos) || !mPath.length) { setEtaMin(null); return; }
+    const dest = mPath[mPath.length - 1];
+    const distKm = haversineKm(lastPos, dest);
+    const speed = Number(mission?.speedKmh) > 0 ? Number(mission.speedKmh) : 35; // km/h
+    const minutes = speed > 0 ? Math.ceil((distKm / speed) * 60) : null;
+    setEtaMin(Number.isFinite(minutes) ? minutes : null);
+  }, [lastPos, mission?.path, mission?.speedKmh]);
 
   // ===== Init / update Leaflet map =====
   useEffect(() => {
@@ -238,42 +238,62 @@ export default function DroneTracker() {
 
       // init map once
       if (!mapRef.current) {
-        const map = L.map('drone-map', { zoomControl: true }).setView(center, 14);
+        const el = document.getElementById('drone-map');
+        if (!el) return;
+        if (el._leaflet_id) el._leaflet_id = null; // Strict Mode protection
+        const map = L.map(el, { zoomControl: true }).setView(center, 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 20 }).addTo(map);
         mapRef.current = map;
-      } else {
-        // keep camera near the last position if exists
-        if (lastPos) mapRef.current.panTo(lastPos, { animate: true });
       }
 
-      // draw planned mission path once (if exists)
+      // mission path (xanh) — có thể comment nếu muốn ẩn
       if (!missionPathRef.current && mission?.path?.length >= 2 && mapRef.current) {
-        const latlngs = mission.path.filter(p => p.lat && p.lng).map(p => [p.lat, p.lng]);
-        missionPathRef.current = L.polyline(latlngs, { color: '#2563eb', weight: 4, opacity: 0.6 }).addTo(mapRef.current);
-        if (!didFitRef.current) {
-          mapRef.current.fitBounds(missionPathRef.current.getBounds(), { padding: [24, 24] });
-          didFitRef.current = true;
+        const latlngs = (mission.path || []).map(toLL).filter(isLL);
+        if (latlngs.length >= 2) {
+          missionPathRef.current = L.polyline(latlngs, { color: '#2563eb', weight: 4, opacity: 0.5 })
+            .addTo(mapRef.current);
+          if (!didFitRef.current) {
+            mapRef.current.fitBounds(missionPathRef.current.getBounds(), { padding: [24, 24] });
+            didFitRef.current = true;
+            setCanRefit(true);
+          }
         }
       }
 
-      // draw/update trail polyline (positions)
+      // trail (đen) — theo dữ liệu thật
       if (!trailRef.current && path.length >= 2 && mapRef.current) {
-        trailRef.current = L.polyline(path, { color: '#111827', weight: 4, opacity: 0.9 }).addTo(mapRef.current);
+        trailRef.current = L.polyline(path.filter(isLL), { color: '#111827', weight: 4, opacity: 0.9 })
+          .addTo(mapRef.current);
       } else if (trailRef.current && path.length >= 2) {
-        trailRef.current.setLatLngs(path);
+        trailRef.current.setLatLngs(path.filter(isLL));
       }
 
-      // draw/update moving marker
-      if (lastPos && mapRef.current) {
-        if (!markerRef.current) {
-          markerRef.current = L.marker(lastPos).addTo(mapRef.current);
-        } else {
-          markerRef.current.setLatLng(lastPos);
-        }
+      // moving marker
+      if (isLL(lastPos) && mapRef.current) {
+        if (!markerRef.current) markerRef.current = L.marker(lastPos).addTo(mapRef.current);
+        else markerRef.current.setLatLng(lastPos);
+      }
+
+      // chỉ center khi Follow bật
+      if (follow && isLL(lastPos) && mapRef.current) {
+        mapRef.current.setView(lastPos, mapRef.current.getZoom() || 16, { animate: true });
       }
     })();
     return () => { disposed = true; };
-  }, [mission?.path, center, lastPos, path]);
+  }, [mission?.path, center, lastPos, path, follow]);
+
+  // cleanup toàn cục khi unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      if (simRef.current)  { clearInterval(simRef.current);  simRef.current  = null; }
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+      trailRef.current = null;
+      missionPathRef.current = null;
+      markerRef.current = null;
+      didFitRef.current = false;
+    };
+  }, []);
 
   // ===== UI =====
   const styles = `
@@ -281,14 +301,17 @@ export default function DroneTracker() {
     .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
     .btn{height:36px;border:none;border-radius:10px;background:#111;color:#fff;padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
     .btn.secondary{background:#f3f4f6;color:#111;border:1px solid #e5e7eb}
+    .btn.ghost{background:#fff;color:#111;border:1px solid #e5e7eb}
+    .btn.on{background:#059669}
     .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
     .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
-    .map{height:420px;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb}
+    .map{height:420px;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;position:relative}
     .kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     .box{border:1px solid #eee;border-radius:12px;padding:10px}
     .label{font-size:12px;opacity:.7}
     .val{font-weight:900}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr} .map{height:340px} }
+    .map-actions{position:absolute;right:12px;top:12px;display:flex;gap:8px;z-index:1000}
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} .map{height:340px} }
   `;
 
   if (loading) return <div className="p-6">Đang tải dữ liệu…</div>;
@@ -308,23 +331,88 @@ export default function DroneTracker() {
           )}
         </div>
         <div style={{display:'flex',gap:8}}>
-          {!mission?.id && (
-            <button className="btn" onClick={startSimulator}>Tạo mission demo</button>
-          )}
+          {!mission?.id && <button className="btn" onClick={startSimulator}>Tạo mission demo</button>}
           <Link to="/admin/drone" className="btn secondary" style={{textDecoration:'none'}}>← Về danh sách Drone</Link>
-          <button className="btn secondary" onClick={() => navigate(-1)}>Quay lại</button>
         </div>
       </div>
 
-      {err && <div className="card" style={{borderColor:'#f9c7c7', background:'#fde8e8', color:'#b80d0d'}}>❌ {err}</div>}
+      {err && <div className="card" style={{borderColor:'#f9c7c7',background:'#fde8e8',color:'#b80d0d'}}>❌ {err}</div>}
 
       <div className="grid">
-        {/* Map + trail */}
+        {/* Map + hành động hữu ích cho tọa độ */}
         <div className="card">
-          <div id="drone-map" className="map" />
-          <div className="text-sm" style={{marginTop:8}}>
-            {lastPos ? (
-              <>Vị trí hiện tại: <b>{lastPos[0].toFixed(6)}, {lastPos[1].toFixed(6)}</b></>
+          <div className="map">
+            <div className="map-actions">
+              <button
+                className={`btn ghost ${follow ? 'on' : ''}`}
+                onClick={() => setFollow(f => !f)}
+                title="Bật/tắt tự bám theo drone"
+              >
+                {follow ? 'Follow: ON' : 'Follow: OFF'}
+              </button>
+              {canRefit && missionPathRef.current && (
+                <button
+                  className="btn ghost"
+                  onClick={() => {
+                    if (mapRef.current && missionPathRef.current) {
+                      mapRef.current.fitBounds(missionPathRef.current.getBounds(), { padding: [24, 24] });
+                    }
+                  }}
+                  title="Canh bản đồ theo toàn tuyến"
+                >
+                  Fit route
+                </button>
+              )}
+            </div>
+            <div id="drone-map" style={{height:'100%', width:'100%'}} />
+          </div>
+
+          {/* === Cách B: Hành động hữu ích thay vì copy đơn thuần === */}
+          <div className="text-sm" style={{marginTop:8, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
+            {isLL(lastPos) ? (
+              <>
+                <>Vị trí hiện tại: <b>{lastPos[0].toFixed(6)}, {lastPos[1].toFixed(6)}</b></>
+
+                {/* Mở trên Google Maps */}
+                <a
+                  className="btn ghost"
+                  href={`https://www.google.com/maps?q=${lastPos[0]},${lastPos[1]}`}
+                  target="_blank" rel="noreferrer"
+                  title="Mở trên Google Maps"
+                >
+                  Mở Google Maps
+                </a>
+
+                {/* Mở trên OSM */}
+                <a
+                  className="btn ghost"
+                  href={`https://www.openstreetmap.org/?mlat=${lastPos[0]}&mlon=${lastPos[1]}#map=17/${lastPos[0]}/${lastPos[1]}`}
+                  target="_blank" rel="noreferrer"
+                  title="Mở trên OpenStreetMap"
+                >
+                  Mở OSM
+                </a>
+
+                {/* Đi đến tọa độ… (dán lat,lng) */}
+                <button
+                  className="btn ghost"
+                  onClick={() => {
+                    const s = window.prompt(
+                      'Dán tọa độ "lat,lng" để nhảy tới:',
+                      `${lastPos[0].toFixed(6)}, ${lastPos[1].toFixed(6)}`
+                    );
+                    if (!s) return;
+                    const m = s.match(/(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)/);
+                    if (!m) return alert('Định dạng không hợp lệ. Ví dụ: 10.776889, 106.700806');
+                    const lat = parseFloat(m[1]), lng = parseFloat(m[3]);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return alert('Toạ độ không hợp lệ.');
+                    if (mapRef.current) mapRef.current.setView([lat, lng], 16, { animate: true });
+                  }}
+                  title="Dán lat,lng để pan tới"
+                >
+                  Đi đến tọa độ…
+                </button>
+              </>
             ) : <>Chưa có dữ liệu vị trí.</>}
           </div>
         </div>
@@ -332,10 +420,24 @@ export default function DroneTracker() {
         {/* Order & Telemetry */}
         <div className="card">
           <div className="kpi">
-            <div className="box"><div className="label">Tổng tiền</div><div className="val">{(order?.finalTotal ?? order?.total ?? 0).toLocaleString('vi-VN')} ₫</div></div>
-            <div className="box"><div className="label">Mission status</div><div className="val">{mission?.status || '—'}</div></div>
-            <div className="box"><div className="label">Cập nhật</div><div className="val">{positions.length ? new Date(positions[positions.length-1].timestamp).toLocaleTimeString('vi-VN') : '—'}</div></div>
-            <div className="box"><div className="label">ETA</div><div className="val">{mission?.eta != null ? `${mission.eta} phút` : '—'}</div></div>
+            <div className="box">
+              <div className="label">Tổng tiền</div>
+              <div className="val">{(order?.finalTotal ?? order?.total ?? 0).toLocaleString('vi-VN')} ₫</div>
+            </div>
+            <div className="box">
+              <div className="label">Mission status</div>
+              <div className="val">{mission?.status || '—'}</div>
+            </div>
+            <div className="box">
+              <div className="label">Cập nhật</div>
+              <div className="val">
+                {positions.length ? new Date(positions[positions.length-1].timestamp).toLocaleTimeString('vi-VN') : '—'}
+              </div>
+            </div>
+            <div className="box">
+              <div className="label">ETA</div>
+              <div className="val">{etaMin != null ? `${etaMin} phút` : '—'}</div>
+            </div>
           </div>
 
           <div style={{marginTop:12}}>

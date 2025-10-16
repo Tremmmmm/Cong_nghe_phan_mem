@@ -175,10 +175,21 @@
       "finalTotal": 188000,
       "couponCode": "SAVE50K",
       "createdAt": 1758043043881,
-      "status": "accepted",
+      "status": "delivering",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-15T14:27:42.672Z",
-      "acceptedAt": "2025-10-15T14:27:42.672Z"
+      "updatedAt": "2025-10-16T04:55:05.047Z",
+      "acceptedAt": "2025-10-15T14:27:42.672Z",
+      "readyAt": "2025-10-16T04:55:00.298Z",
+      "pickedAt": "2025-10-16T04:55:05.047Z",
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.800976,
+        "lng": 106.653238
+      },
+      "droneMissionId": "369e"
     },
     {
       "id": "9s39",
@@ -382,12 +393,13 @@
       "couponCode": "",
       "payment": "ONLINE",
       "createdAt": 1759203702877,
-      "status": "ready",
+      "status": "delivering",
       "payment_status": "unpaid",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-15T14:27:39.527Z",
+      "updatedAt": "2025-10-16T04:53:25.650Z",
       "acceptedAt": "2025-10-15T14:26:02.565Z",
-      "readyAt": "2025-10-15T14:27:39.527Z"
+      "readyAt": "2025-10-15T14:27:39.527Z",
+      "pickedAt": "2025-10-16T04:53:25.650Z"
     },
     {
       "id": "3g04",
@@ -687,7 +699,6 @@
       "updatedAt": "2025-09-30T03:41:42.904Z"
     }
   ],
-
   "droneMissions": [
     {
       "id": "DM-001",
@@ -697,21 +708,153 @@
       "endTime": null,
       "droneMissionId": "DM-001",
       "path": [
-        { "lat": 10.776, "lng": 106.700 },
-        { "lat": 10.777, "lng": 106.702 },
-        { "lat": 10.778, "lng": 106.705 }
+        {
+          "lat": 10.776,
+          "lng": 106.7
+        },
+        {
+          "lat": 10.777,
+          "lng": 106.702
+        },
+        {
+          "lat": 10.778,
+          "lng": 106.705
+        }
       ]
+    },
+    {
+      "id": "cbb8",
+      "status": "simulating",
+      "origin": {
+        "lat": 10.777642,
+        "lng": 106.695242
+      },
+      "destination": {
+        "lat": 10.800976,
+        "lng": 106.653238
+      },
+      "createdAt": "2025-10-16T05:13:18.094Z"
+    },
+    {
+      "id": "369e",
+      "orderId": "05e9",
+      "restaurantId": null,
+      "customerId": null,
+      "startedAt": "2025-10-16T05:14:47.800Z",
+      "status": "in_progress",
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.800976,
+          106.653238
+        ]
+      ],
+      "currentIndex": 0,
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "etaMinutes": 12
     }
   ],
-
   "dronePositions": [
     {
-      "id": 1,
+      "id": "1",
       "missionId": "DM-001",
       "lat": 10.776,
-      "lng": 106.700,
+      "lng": 106.7,
       "timestamp": 1760588000430
+    },
+    {
+      "id": "c173",
+      "missionId": "cbb8",
+      "lat": 10.777642,
+      "lng": 106.695242,
+      "heading": 0,
+      "speed": 0,
+      "timestamp": 1760591598126
+    },
+    {
+      "id": "789f",
+      "missionId": "cbb8",
+      "lat": 10.777901266666667,
+      "lng": 106.69477528888888,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591600175
+    },
+    {
+      "id": "aa5f",
+      "missionId": "cbb8",
+      "lat": 10.778160533333333,
+      "lng": 106.69430857777778,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591602177
+    },
+    {
+      "id": "fc7b",
+      "missionId": "cbb8",
+      "lat": 10.7784198,
+      "lng": 106.69384186666666,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591604174
+    },
+    {
+      "id": "c40c",
+      "missionId": "cbb8",
+      "lat": 10.778679066666667,
+      "lng": 106.69337515555554,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591606176
+    },
+    {
+      "id": "a6af",
+      "missionId": "cbb8",
+      "lat": 10.778938333333333,
+      "lng": 106.69290844444444,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591608179
+    },
+    {
+      "id": "672b",
+      "missionId": "cbb8",
+      "lat": 10.7791976,
+      "lng": 106.69244173333333,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591610181
+    },
+    {
+      "id": "ed94",
+      "missionId": "cbb8",
+      "lat": 10.779456866666667,
+      "lng": 106.69197502222221,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591612183
+    },
+    {
+      "id": "e5d3",
+      "missionId": "cbb8",
+      "lat": 10.779716133333334,
+      "lng": 106.69150831111111,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591614178
+    },
+    {
+      "id": "d312",
+      "missionId": "cbb8",
+      "lat": 10.7799754,
+      "lng": 106.69104159999999,
+      "heading": -60.94701735065347,
+      "speed": 12,
+      "timestamp": 1760591616174
     }
   ]
-  
 }

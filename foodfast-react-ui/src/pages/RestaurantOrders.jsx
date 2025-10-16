@@ -1,4 +1,3 @@
-// src/pages/RestaurantOrders.jsx
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../utils/api";
 import { formatVND } from "../utils/format";
@@ -312,6 +311,65 @@ export default function RestaurantOrders() {
     }
   }
 
+  // ====== NEW: helpers tạo mission tự động ======
+  const pickLatLng = (obj) => {
+    if (!obj) return null;
+    const lat = obj.lat ?? obj.latitude;
+    const lng = obj.lng ?? obj.longitude;
+    if (typeof lat === "number" && typeof lng === "number") return { lat, lng };
+    return null;
+  };
+
+  async function ensureMissionFor(order) {
+    if (order.droneMissionId) return order.droneMissionId;
+
+    const restaurantPos =
+      pickLatLng(order.restaurantLocation) ||
+      pickLatLng(order.restaurant) ||
+      pickLatLng(order.merchantLocation) ||
+      null;
+
+    const customerPos =
+      pickLatLng(order.customerLocation) ||
+      pickLatLng(order.shippingLocation) ||
+      pickLatLng(order.geo) ||
+      null;
+
+    const depotPos =
+      pickLatLng(order.droneDepot) ||
+      pickLatLng(order.hubLocation) ||
+      null;
+
+    const points = [];
+    if (depotPos) points.push(depotPos);
+    if (restaurantPos) points.push(restaurantPos);
+    if (customerPos) points.push(customerPos);
+
+    if (points.length < 2) {
+      throw new Error("Không đủ toạ độ (nhà hàng/khách) để tạo Drone Mission.");
+    }
+
+    const payload = {
+      orderId: order.id,
+      restaurantId: order.restaurantId,
+      customerId: order.customerId,
+      startedAt: new Date().toISOString(),
+      status: "in_progress",
+      path: points.map((p) => [p.lat, p.lng]),
+      currentIndex: 0,
+      vehicle: "drone",
+      speedKmh: 35,
+      etaMinutes: 12,
+    };
+
+    const { data: mission } = await api.post("/droneMissions", payload);
+    const missionId = mission?.id;
+    if (!missionId) throw new Error("Không lấy được ID của mission mới.");
+
+    await api.patch(`/orders/${order.id}`, { droneMissionId: missionId });
+    return missionId;
+  }
+
   async function moveStatus(order, target) {
     const allow = NEXT_STATUS[order.status || STATUS.NEW] || [];
     if (!allow.includes(target)) {
@@ -329,7 +387,21 @@ export default function RestaurantOrders() {
     if (target === STATUS.COMPLETED) patch.deliveredAt = nowIso;
 
     try {
+      // 1) cập nhật trạng thái
       await api.patch(`/orders/${order.id}`, patch);
+
+      // 2) auto tạo mission khi sang DELIVERING
+      if (target === STATUS.DELIVERING) {
+        try {
+          const missionId = await ensureMissionFor({ ...order, ...patch });
+          setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, droneMissionId: missionId } : o)));
+        } catch (e) {
+          console.error(e);
+          alert(
+            `Đơn đã chuyển sang Đang giao (Drone) nhưng chưa thể tạo Mission:\n${e.message}\n\nHãy kiểm tra toạ độ nhà hàng/khách.`
+          );
+        }
+      }
     } catch (e) {
       setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, status: prev } : o)));
       console.error(e);
@@ -339,7 +411,6 @@ export default function RestaurantOrders() {
 
   // === Edit handlers ===
   function onEdit(order) {
-    // chỉ cho mở modal khi NEW/ACCEPTED và chưa sửa
     if (!((order.status === STATUS.NEW || order.status === STATUS.ACCEPTED) && !order.modified)) return;
     setEditOrder(order);
     setEditOpen(true);
@@ -348,11 +419,8 @@ export default function RestaurantOrders() {
   async function handleSaveEdit(patch) {
     const ord = editOrder;
     setEditOpen(false);
-
-    // đánh dấu chỉ sửa 1 lần
     patch.modified = true;
 
-    // optimistic
     setOrders((list) => list.map((o) => (o.id === ord.id ? { ...o, ...patch } : o)));
     try {
       await patchOrder(ord.id, patch);
@@ -383,16 +451,15 @@ export default function RestaurantOrders() {
       await api.patch(`/orders/${ord.id}`, {
         status: STATUS.CANCELLED,
         cancelReason: reason,
-        cancelBy: "merchant",          // 👈 NEW: để lịch sử đơn hiển thị “Hủy bởi cửa hàng”
+        cancelBy: "merchant",
         cancelNote: note,
         cancelledAt: now,
         updatedAt: now,
       });
 
-      // tham khảo ShopeeFood: gợi ý cập nhật menu/tình trạng quán
       if (reason === "out_of_stock") {
         if (window.confirm("Huỷ do hết món. Bạn có muốn cập nhật món tạm hết hàng trên menu không?")) {
-          // TODO: điều hướng sang trang menu/inventory của merchant
+          // TODO: điều hướng sang menu/inventory
           // window.location.href = "/merchant/menu";
         }
       } else if (reason === "closed") {
