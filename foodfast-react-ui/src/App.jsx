@@ -117,7 +117,7 @@ export default function App() {
         </Route>
 
         {/* NEW: Trang theo dõi chi tiết 1 đơn Drone */}
-        <Route path="/drone/:id" element={<DroneTracker />} />
+        <Route path="/orders/:id/tracking" element={<DroneTracker />}  />
 
         {/* Fallbacks */}
         <Route path="/admin*" element={<Navigate to="/admin/dashboard" replace />} />

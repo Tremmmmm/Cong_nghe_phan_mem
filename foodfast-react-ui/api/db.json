@@ -686,5 +686,32 @@
       "createdAt": "2025-09-30T03:41:42.891Z",
       "updatedAt": "2025-09-30T03:41:42.904Z"
     }
+  ],
+
+  "droneMissions": [
+    {
+      "id": "DM-001",
+      "orderId": "w6hv",
+      "status": "delivering",
+      "startTime": "2025-10-15T12:13:20.430Z",
+      "endTime": null,
+      "droneMissionId": "DM-001",
+      "path": [
+        { "lat": 10.776, "lng": 106.700 },
+        { "lat": 10.777, "lng": 106.702 },
+        { "lat": 10.778, "lng": 106.705 }
+      ]
+    }
+  ],
+
+  "dronePositions": [
+    {
+      "id": 1,
+      "missionId": "DM-001",
+      "lat": 10.776,
+      "lng": 106.700,
+      "timestamp": 1760588000430
+    }
   ]
+  
 }

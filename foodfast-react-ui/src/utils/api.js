@@ -106,3 +106,26 @@ export const capturePayment = async (paymentId) => {
 export const patchOrder = (id, payload) =>
   api.patch(`/orders/${id}`, payload).then(r => r.data);
 
+// ===== DRONE MISSIONS / POSITIONS =====
+export const getOrderById = (id) => api.get(`/orders/${id}`).then(r => r.data)
+export const getMissionById = (id) => api.get(`/droneMissions/${id}`).then(r => r.data)
+
+export const createDemoMission = async ({ origin, destination }) => {
+  const payload = { status: 'simulating', origin, destination, createdAt: new Date().toISOString() }
+  const { data } = await api.post('/droneMissions', payload)
+  return data
+}
+
+export const getDronePositions = async ({ missionId, since = 0 }) => {
+  const q = new URLSearchParams({ missionId: String(missionId), _sort: 'timestamp', _order: 'asc' })
+  if (since && Number(since) > 0) q.set('timestamp_gte', String(since))
+  const { data } = await api.get(`/dronePositions?${q.toString()}`)
+  return data // [{ id, missionId, lat, lng, heading, speed, timestamp }]
+}
+
+export const postDronePosition = async (pos) => {
+  const { data } = await api.post('/dronePositions', pos)
+  return data
+}
+
+
