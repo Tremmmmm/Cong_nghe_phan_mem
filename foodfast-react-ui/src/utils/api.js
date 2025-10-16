@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // API json-server (menu, orders, sessions, payments)
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5176',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5181', // đồng bộ 5181
   withCredentials: false,
   timeout: 10000,
   headers: {
@@ -29,8 +29,18 @@ export const closeSession = async (sessionId) => {
 }
 
 // ====== ORDERS ======
-export const createOrder = (payload) =>
-  api.post('/orders', payload).then(r => r.data)
+// Ép status 'new' để nhà hàng thao tác ngay; giữ 'unpaid' cho COD
+export const createOrder = async (payload) => {
+  const sanitized = {
+    ...payload,
+    status: 'new',
+    payment_status: payload?.payment_status ?? 'unpaid',
+    createdAt: payload?.createdAt ?? Date.now(),
+    deliveryMode: payload?.deliveryMode || 'DRONE',
+  }
+  const { data } = await api.post('/orders', sanitized)
+  return data
+}
 
 export const placeOrder = createOrder
 
@@ -50,7 +60,7 @@ export const myOrders = async ({
     _: Date.now(), // cache-buster
   }
   if (status && status !== 'all') {
-    params.status = (status === 'pending') ? 'new' : status
+    params.status = (status === 'new') ? 'new' : status
   }
   if (q) params.q = q
 
@@ -104,7 +114,7 @@ export const capturePayment = async (paymentId) => {
 }
 
 export const patchOrder = (id, payload) =>
-  api.patch(`/orders/${id}`, payload).then(r => r.data);
+  api.patch(`/orders/${id}`, payload).then(r => r.data)
 
 // ===== DRONE MISSIONS / POSITIONS =====
 export const getOrderById = (id) => api.get(`/orders/${id}`).then(r => r.data)
@@ -127,5 +137,3 @@ export const postDronePosition = async (pos) => {
   const { data } = await api.post('/dronePositions', pos)
   return data
 }
-
-

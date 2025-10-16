@@ -1,3 +1,4 @@
+// src/pages/RestaurantOrders.jsx
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../utils/api";
 import { formatVND } from "../utils/format";
@@ -6,6 +7,25 @@ import CancelOrderModal from "../components/CancelOrderModal";
 import { patchOrder } from "../utils/api";
 
 const VND = (n) => formatVND(n);
+
+// === Toạ độ mặc định của nhà hàng (đổi theo vị trí quán của bạn) ===
+const RESTAURANT_COORDS = { lat: 10.776889, lng: 106.700806 }; // ví dụ: gần chợ Bến Thành
+
+// ===== Config cho Drone Mission auto =====
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5181";
+const toRad = (d) => (d * Math.PI) / 180;
+function haversineKm([lat1, lng1], [lat2, lng2]) {
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+const isNum = (x) => Number.isFinite(x);
+const hasCoords = (o) =>
+  isNum(o?.restaurantLocation?.lat) &&
+  isNum(o?.restaurantLocation?.lng) &&
+  isNum(o?.customerLocation?.lat)   &&
+  isNum(o?.customerLocation?.lng);
 
 // === Flow Drone ===
 const STATUS = {
@@ -48,13 +68,8 @@ function SmallTag({ children }) {
   return (
     <span
       style={{
-        fontSize: 11,
-        padding: "2px 6px",
-        borderRadius: 999,
-        border: "1px solid #ddd",
-        background: "#fafafa",
-        color: "#666",
-        marginLeft: 8,
+        fontSize: 11, padding: "2px 6px", borderRadius: 999,
+        border: "1px solid #ddd", background: "#fafafa", color: "#666", marginLeft: 8,
       }}
     >
       {children}
@@ -81,16 +96,9 @@ function MoreMenu({ onEdit, onCancel, canEdit, disabledEdit }) {
       {open && (
         <div
           style={{
-            position: "absolute",
-            top: "110%",
-            right: 0,
-            minWidth: 160,
-            background: "#fff",
-            border: "1px solid #eee",
-            borderRadius: 10,
-            boxShadow: "0 8px 24px rgba(0,0,0,.08)",
-            padding: 6,
-            zIndex: 5,
+            position: "absolute", top: "110%", right: 0, minWidth: 160,
+            background: "#fff", border: "1px solid #eee", borderRadius: 10,
+            boxShadow: "0 8px 24px rgba(0,0,0,.08)", padding: 6, zIndex: 5,
           }}
           onMouseLeave={() => setOpen(false)}
         >
@@ -98,20 +106,11 @@ function MoreMenu({ onEdit, onCancel, canEdit, disabledEdit }) {
             className="ff-menu-item"
             disabled={!canEdit || disabledEdit}
             title={disabledEdit ? "Đã chỉnh sửa 1 lần" : ""}
-            onClick={() => {
-              setOpen(false);
-              onEdit();
-            }}
+            onClick={() => { setOpen(false); onEdit(); }}
           >
             Sửa đơn
           </button>
-          <button
-            className="ff-menu-item"
-            onClick={() => {
-              setOpen(false);
-              onCancel();
-            }}
-          >
+          <button className="ff-menu-item" onClick={() => { setOpen(false); onCancel(); }}>
             Huỷ đơn
           </button>
         </div>
@@ -123,59 +122,29 @@ function MoreMenu({ onEdit, onCancel, canEdit, disabledEdit }) {
 function OrderCard({ order, onMove, onAskCancel, onEdit }) {
   const s = order.status || STATUS.NEW;
   const canEdit = s === STATUS.NEW || s === STATUS.ACCEPTED;
-  const disabledEdit = !!order.modified; // chỉ 1 lần sửa
+  const disabledEdit = !!order.modified;
 
   const actions = [];
-
   if (s === STATUS.NEW) {
     actions.push(
-      <button key="accept" className="ff-btn" onClick={() => onMove(order, STATUS.ACCEPTED)}>
-        Xác nhận
-      </button>,
-      <MoreMenu
-        key="more"
-        canEdit={canEdit}
-        disabledEdit={disabledEdit}
-        onEdit={() => onEdit(order)}
-        onCancel={() => onAskCancel(order)}
-      />
+      <button key="accept" className="ff-btn" onClick={() => onMove(order, STATUS.ACCEPTED)}>Xác nhận</button>,
+      <MoreMenu key="more" canEdit={canEdit} disabledEdit={disabledEdit} onEdit={() => onEdit(order)} onCancel={() => onAskCancel(order)} />
     );
   }
   if (s === STATUS.ACCEPTED) {
     actions.push(
-      <button key="ready" className="ff-btn" onClick={() => onMove(order, STATUS.READY)}>
-        Hoàn tất (đã xong món)
-      </button>,
-      <MoreMenu
-        key="more"
-        canEdit={canEdit}
-        disabledEdit={disabledEdit}
-        onEdit={() => onEdit(order)}
-        onCancel={() => onAskCancel(order)}
-      />
+      <button key="ready" className="ff-btn" onClick={() => onMove(order, STATUS.READY)}>Hoàn tất (đã xong món)</button>,
+      <MoreMenu key="more" canEdit={canEdit} disabledEdit={disabledEdit} onEdit={() => onEdit(order)} onCancel={() => onAskCancel(order)} />
     );
   }
   if (s === STATUS.READY) {
     actions.push(
-      <button key="deliver" className="ff-btn" onClick={() => onMove(order, STATUS.DELIVERING)}>
-        Giao bằng Drone
-      </button>,
-      <button
-        key="back"
-        className="ff-btn ff-btn--ghost"
-        onClick={() => onMove(order, STATUS.ACCEPTED)}
-        title="Trả về bước Đã xác nhận"
-      >
-        Trả về
-      </button>
+      <button key="deliver" className="ff-btn" onClick={() => onMove(order, STATUS.DELIVERING)}>Giao bằng Drone</button>,
+      <button key="back" className="ff-btn ff-btn--ghost" onClick={() => onMove(order, STATUS.ACCEPTED)} title="Trả về bước Đã xác nhận">Trả về</button>
     );
   }
   if (s === STATUS.DELIVERING) {
-    actions.push(
-      <button key="done" className="ff-btn" onClick={() => onMove(order, STATUS.COMPLETED)}>
-        Đánh dấu đã giao
-      </button>
-    );
+    actions.push(<button key="done" className="ff-btn" onClick={() => onMove(order, STATUS.COMPLETED)}>Đánh dấu đã giao</button>);
   }
 
   return (
@@ -197,24 +166,14 @@ function OrderCard({ order, onMove, onAskCancel, onEdit }) {
       </div>
 
       <div className="k-meta">
-        <div>
-          Món: <b>{order.items?.length ?? 0}</b>
-        </div>
-        <div>
-          Tổng: <b>{VND(order.finalTotal ?? order.total ?? 0)}</b>
-        </div>
-        <div className="muted">
-          {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}
-        </div>
+        <div> Món: <b>{order.items?.length ?? 0}</b></div>
+        <div> Tổng: <b>{VND(order.finalTotal ?? order.total ?? 0)}</b></div>
+        <div className="muted">{order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}</div>
       </div>
 
       <div className="act-row" style={{ marginTop: 10 }}>
-        {actions.filter(Boolean).length ? (
-          actions
-        ) : (
-          <button className="ff-btn ff-btn--disabled" disabled>
-            Không có thao tác
-          </button>
+        {actions.filter(Boolean).length ? actions : (
+          <button className="ff-btn ff-btn--disabled" disabled>Không có thao tác</button>
         )}
       </div>
     </div>
@@ -228,7 +187,6 @@ export default function RestaurantOrders() {
   // modals
   const [editOpen, setEditOpen] = useState(false);
   const [editOrder, setEditOrder] = useState(null);
-
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelOrderObj, setCancelOrderObj] = useState(null);
 
@@ -262,8 +220,6 @@ export default function RestaurantOrders() {
     .dark .col,.dark .card{background:#151515;border-color:#333}
     .dark .col-count{background:#1d1d1d;border-color:#333}
     .dark .muted{color:#aaa}
-
-    /* hỗ trợ canh hàng trong modal edit */
     .ff-modal .ff-edit-row{align-items:flex-start !important}
     .ff-modal .ff-edit-row .c3{display:grid;grid-template-rows:32px auto;align-items:start}
     .ff-modal .ff-edit-row .c3 input{height:32px}
@@ -311,63 +267,78 @@ export default function RestaurantOrders() {
     }
   }
 
-  // ====== NEW: helpers tạo mission tự động ======
-  const pickLatLng = (obj) => {
-    if (!obj) return null;
-    const lat = obj.lat ?? obj.latitude;
-    const lng = obj.lng ?? obj.longitude;
-    if (typeof lat === "number" && typeof lng === "number") return { lat, lng };
-    return null;
-  };
+  // ====== Tạo mission tự động khi chuyển sang DELIVERING ======
+  async function ensureMissionFor(ord) {
+    try {
+      // Nếu đã có missionId và còn tồn tại -> OK
+      if (ord.droneMissionId) {
+        const r = await fetch(`${API_BASE}/droneMissions/${encodeURIComponent(ord.droneMissionId)}`);
+        if (r.ok) return true;
+      }
 
-  async function ensureMissionFor(order) {
-    if (order.droneMissionId) return order.droneMissionId;
+      // Thiếu toạ độ -> báo và từ chối
+      if (!hasCoords(ord)) {
+        alert(
+          "Không đủ tọa độ (nhà hàng/khách) để tạo Drone Mission.\n" +
+          "Hãy bổ sung restaurantLocation và customerLocation cho đơn."
+        );
+        return false;
+      }
 
-    const restaurantPos =
-      pickLatLng(order.restaurantLocation) ||
-      pickLatLng(order.restaurant) ||
-      pickLatLng(order.merchantLocation) ||
-      null;
+      const origin = [ord.restaurantLocation.lat, ord.restaurantLocation.lng];
+      const dest   = [ord.customerLocation.lat,   ord.customerLocation.lng];
 
-    const customerPos =
-      pickLatLng(order.customerLocation) ||
-      pickLatLng(order.shippingLocation) ||
-      pickLatLng(order.geo) ||
-      null;
+      const speedKmh = 35;
+      const etaMin = Math.ceil((haversineKm(origin, dest) / speedKmh) * 60);
 
-    const depotPos =
-      pickLatLng(order.droneDepot) ||
-      pickLatLng(order.hubLocation) ||
-      null;
+      const payload = {
+        orderId: String(ord.id),
+        restaurantId: ord.restaurantId || null,
+        customerId: ord.customerId || null,
+        startTime: new Date().toISOString(),
+        status: "in_progress",
+        vehicle: "drone",
+        speedKmh,
+        eta: etaMin,
+        path: [origin, dest],
+        currentIndex: 0,
+      };
 
-    const points = [];
-    if (depotPos) points.push(depotPos);
-    if (restaurantPos) points.push(restaurantPos);
-    if (customerPos) points.push(customerPos);
+      // 1) tạo mission
+      const res = await fetch(`${API_BASE}/droneMissions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Tạo mission thất bại");
+      const mission = await res.json();
 
-    if (points.length < 2) {
-      throw new Error("Không đủ toạ độ (nhà hàng/khách) để tạo Drone Mission.");
+      // 2) gán vào order
+      await api.patch(`/orders/${ord.id}`, {
+        droneMissionId: mission.id,
+        deliveryMode: "DRONE",
+        updatedAt: new Date().toISOString(),
+      });
+
+      // 3) ghi điểm xuất phát (optional)
+      try {
+        await fetch(`${API_BASE}/dronePositions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            missionId: mission.id,
+            lat: origin[0], lng: origin[1],
+            speed: 0, heading: 0, timestamp: Date.now(),
+          }),
+        });
+      } catch {}
+
+      return true;
+    } catch (e) {
+      console.error("ensureMissionFor error", e);
+      alert("Không thể tạo mission tự động cho đơn này.");
+      return false;
     }
-
-    const payload = {
-      orderId: order.id,
-      restaurantId: order.restaurantId,
-      customerId: order.customerId,
-      startedAt: new Date().toISOString(),
-      status: "in_progress",
-      path: points.map((p) => [p.lat, p.lng]),
-      currentIndex: 0,
-      vehicle: "drone",
-      speedKmh: 35,
-      etaMinutes: 12,
-    };
-
-    const { data: mission } = await api.post("/droneMissions", payload);
-    const missionId = mission?.id;
-    if (!missionId) throw new Error("Không lấy được ID của mission mới.");
-
-    await api.patch(`/orders/${order.id}`, { droneMissionId: missionId });
-    return missionId;
   }
 
   async function moveStatus(order, target) {
@@ -387,21 +358,23 @@ export default function RestaurantOrders() {
     if (target === STATUS.COMPLETED) patch.deliveredAt = nowIso;
 
     try {
-      // 1) cập nhật trạng thái
-      await api.patch(`/orders/${order.id}`, patch);
-
-      // 2) auto tạo mission khi sang DELIVERING
       if (target === STATUS.DELIVERING) {
-        try {
-          const missionId = await ensureMissionFor({ ...order, ...patch });
-          setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, droneMissionId: missionId } : o)));
-        } catch (e) {
-          console.error(e);
-          alert(
-            `Đơn đã chuyển sang Đang giao (Drone) nhưng chưa thể tạo Mission:\n${e.message}\n\nHãy kiểm tra toạ độ nhà hàng/khách.`
-          );
+        // Lấy bản order hiện tại nhất
+        const current = orders.find((o) => o.id === order.id) || order;
+
+        // Nếu thiếu toạ độ nhà hàng → gán mặc định
+        const hasRes = isNum(current?.restaurantLocation?.lat) && isNum(current?.restaurantLocation?.lng);
+        if (!hasRes) current.restaurantLocation = RESTAURANT_COORDS;
+
+        const ok = await ensureMissionFor(current);
+        if (!ok) {
+          // hoàn tác nếu không tạo được mission
+          setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, status: prev } : o)));
+          return;
         }
       }
+
+      await api.patch(`/orders/${order.id}`, patch);
     } catch (e) {
       setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, status: prev } : o)));
       console.error(e);
@@ -420,17 +393,10 @@ export default function RestaurantOrders() {
     const ord = editOrder;
     setEditOpen(false);
     patch.modified = true;
-
     setOrders((list) => list.map((o) => (o.id === ord.id ? { ...o, ...patch } : o)));
-    try {
-      await patchOrder(ord.id, patch);
-    } catch (e) {
-      console.error(e);
-      alert("Lưu chỉnh sửa thất bại. Đã hoàn tác.");
-      fetchOrders();
-    } finally {
-      setEditOrder(null);
-    }
+    try { await patchOrder(ord.id, patch); }
+    catch (e) { console.error(e); alert("Lưu chỉnh sửa thất bại. Đã hoàn tác."); fetchOrders(); }
+    finally { setEditOrder(null); }
   }
 
   // === Cancel handlers ===
@@ -459,8 +425,7 @@ export default function RestaurantOrders() {
 
       if (reason === "out_of_stock") {
         if (window.confirm("Huỷ do hết món. Bạn có muốn cập nhật món tạm hết hàng trên menu không?")) {
-          // TODO: điều hướng sang menu/inventory
-          // window.location.href = "/merchant/menu";
+          // TODO: điều hướng sang trang menu/inventory của merchant
         }
       } else if (reason === "closed") {
         alert("Đã huỷ do quán đóng cửa. Hãy cập nhật trạng thái quán để tránh khách đặt nhầm.");
@@ -474,28 +439,17 @@ export default function RestaurantOrders() {
     }
   }
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  useEffect(() => { fetchOrders(); }, []);
   useEffect(() => {
     const onFocus = () => fetchOrders();
-    const onVis = () => {
-      if (document.visibilityState === "visible") fetchOrders();
-    };
+    const onVis = () => { if (document.visibilityState === "visible") fetchOrders(); };
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVis);
-    return () => {
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVis);
-    };
+    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
-  function onDragEnter(e) {
-    e.currentTarget.classList.add("drag-over");
-  }
-  function onDragLeave(e) {
-    e.currentTarget.classList.remove("drag-over");
-  }
+  function onDragEnter(e) { e.currentTarget.classList.add("drag-over"); }
+  function onDragLeave(e) { e.currentTarget.classList.remove("drag-over"); }
   function onDropCol(e, targetStatus) {
     e.preventDefault();
     e.currentTarget.classList.remove("drag-over");
@@ -514,9 +468,7 @@ export default function RestaurantOrders() {
 
       <div className="top">
         <h2 className="title">Quản lý đơn hàng</h2>
-        <button className="ff-btn" onClick={fetchOrders}>
-          Làm mới
-        </button>
+        <button className="ff-btn" onClick={fetchOrders}>Làm mới</button>
       </div>
 
       {loading ? (
@@ -553,10 +505,7 @@ export default function RestaurantOrders() {
       <OrderEditModal
         open={editOpen}
         order={editOrder}
-        onClose={() => {
-          setEditOpen(false);
-          setEditOrder(null);
-        }}
+        onClose={() => { setEditOpen(false); setEditOrder(null); }}
         onSave={handleSaveEdit}
       />
 
@@ -564,10 +513,7 @@ export default function RestaurantOrders() {
       <CancelOrderModal
         open={cancelOpen}
         order={cancelOrderObj}
-        onClose={() => {
-          setCancelOpen(false);
-          setCancelOrderObj(null);
-        }}
+        onClose={() => { setCancelOpen(false); setCancelOrderObj(null); }}
         onConfirm={handleConfirmCancel}
       />
     </div>

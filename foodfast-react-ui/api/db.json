@@ -146,10 +146,11 @@
       ],
       "total": 218000,
       "createdAt": 1758038147022,
-      "status": "accepted",
+      "status": "ready",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-15T14:27:44.092Z",
-      "acceptedAt": "2025-10-15T14:27:44.092Z"
+      "updatedAt": "2025-10-16T12:21:21.887Z",
+      "acceptedAt": "2025-10-15T14:27:44.092Z",
+      "readyAt": "2025-10-16T12:21:21.887Z"
     },
     {
       "id": "05e9",
@@ -189,7 +190,7 @@
         "lat": 10.800976,
         "lng": 106.653238
       },
-      "droneMissionId": "369e"
+      "droneMissionId": "DM-002"
     },
     {
       "id": "9s39",
@@ -229,43 +230,6 @@
       "status": "new"
     },
     {
-      "id": "bcmc",
-      "userId": 1,
-      "userEmail": "lienchivo04@gmail.com",
-      "customerName": "ksdjasd",
-      "phone": "1212321",
-      "address": "23123",
-      "items": [
-        {
-          "id": "sg-3",
-          "name": "Fried Chicken",
-          "qty": 1,
-          "price": 52000,
-          "image": "/assets/images/menu/friedchicken.webp"
-        },
-        {
-          "id": "sg-1",
-          "name": "Beef Burger",
-          "qty": 1,
-          "price": 45000,
-          "image": "/assets/images/menu/beefburger.jpg"
-        },
-        {
-          "id": "sg-2",
-          "name": "Cheese Burger",
-          "qty": 1,
-          "price": 52000,
-          "image": "/assets/images/menu/cheeseburger.webp"
-        }
-      ],
-      "total": 149000,
-      "discount": 0,
-      "finalTotal": 149000,
-      "couponCode": "",
-      "createdAt": 1758215933926,
-      "status": "new"
-    },
-    {
       "id": "cr3y",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
@@ -295,8 +259,9 @@
       "createdAt": 1758552940632,
       "status": "accepted",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-15T14:26:46.033Z",
-      "acceptedAt": "2025-10-15T14:26:46.033Z"
+      "updatedAt": "2025-10-16T12:50:32.021Z",
+      "acceptedAt": "2025-10-16T12:50:32.021Z",
+      "readyAt": "2025-10-16T08:03:12.417Z"
     },
     {
       "id": "i8uk",
@@ -369,37 +334,6 @@
       "status": "new",
       "payment_status": "unpaid",
       "updatedAt": "2025-09-28T05:47:48.842Z"
-    },
-    {
-      "id": "qasx",
-      "sessionId": "4bf5",
-      "userId": 1,
-      "userEmail": "lienchivo04@gmail.com",
-      "customerName": "lienchivo04",
-      "phone": "0123456789",
-      "address": "1",
-      "items": [
-        {
-          "id": "sg-1",
-          "name": "Beef Burger",
-          "qty": 1,
-          "price": 45000,
-          "image": "/assets/images/menu/beefburger.jpg"
-        }
-      ],
-      "total": 45000,
-      "discount": 0,
-      "finalTotal": 45000,
-      "couponCode": "",
-      "payment": "ONLINE",
-      "createdAt": 1759203702877,
-      "status": "delivering",
-      "payment_status": "unpaid",
-      "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-16T04:53:25.650Z",
-      "acceptedAt": "2025-10-15T14:26:02.565Z",
-      "readyAt": "2025-10-15T14:27:39.527Z",
-      "pickedAt": "2025-10-16T04:53:25.650Z"
     },
     {
       "id": "3g04",
@@ -485,43 +419,6 @@
       "cancelledAt": "2025-10-15T14:26:57.383Z"
     },
     {
-      "id": "sejp",
-      "sessionId": "14f7",
-      "userId": 1,
-      "userEmail": "lienchivo04@gmail.com",
-      "customerName": "chi",
-      "phone": "0965988542",
-      "address": "hcm",
-      "deliveryMode": "DRIVER",
-      "items": [
-        {
-          "id": "sg-2",
-          "name": "Cheese Burger",
-          "qty": 1,
-          "price": 52000,
-          "image": "/assets/images/menu/cheeseburger.webp"
-        },
-        {
-          "id": "sg-3",
-          "name": "Fried Chicken",
-          "qty": 1,
-          "price": 52000,
-          "image": "/assets/images/menu/friedchicken.webp"
-        }
-      ],
-      "total": 104000,
-      "discount": 10400,
-      "finalTotal": 93600,
-      "couponCode": "FF10",
-      "payment": "COD",
-      "createdAt": 1760285849138,
-      "status": "cancelled",
-      "payment_status": "unpaid",
-      "cancelReason": "merchant_cancelled",
-      "cancelledAt": "2025-10-15T09:55:17.154Z",
-      "updatedAt": "2025-10-15T09:55:17.154Z"
-    },
-    {
       "id": "wbr8",
       "sessionId": "ba32",
       "userId": 1,
@@ -596,7 +493,138 @@
       "updatedAt": "2025-10-15T12:13:20.430Z",
       "acceptedAt": "2025-10-15T09:55:00.212Z",
       "readyAt": "2025-10-15T09:55:07.620Z",
-      "pickedAt": "2025-10-15T12:13:20.430Z"
+      "pickedAt": "2025-10-15T12:13:20.430Z",
+      "droneMissionId": "DM-001"
+    },
+    {
+      "id": "h7fe",
+      "sessionId": "ed0e",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "ngọc anh",
+      "phone": "+84912345678",
+      "address": "số 3 Bà Huyện Thanh Quan quận 3",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "cb-1",
+          "name": "Combo1 Burger + Coke",
+          "qty": 1,
+          "price": 59000,
+          "image": "/assets/images/menu/combo1.webp"
+        },
+        {
+          "id": "cb-2",
+          "name": "Combo2 Chicken + Fries",
+          "qty": 1,
+          "price": 69000,
+          "image": "/assets/images/menu/combo2.webp"
+        },
+        {
+          "id": "cb-3",
+          "name": "Combo3 Pizza + Coke",
+          "qty": 1,
+          "price": 99000,
+          "image": "/assets/images/menu/combo3.jpg"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 2,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        }
+      ],
+      "total": 331000,
+      "discount": 50000,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 301000,
+      "couponCode": "SAVE50K",
+      "payment": "COD",
+      "createdAt": 1760614906694,
+      "status": "ready",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-10-16T12:22:06.464Z",
+      "acceptedAt": "2025-10-16T12:21:20.913Z",
+      "readyAt": "2025-10-16T12:22:06.464Z"
+    },
+    {
+      "id": "yklp",
+      "sessionId": "ed0e",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "ngọc",
+      "phone": "+84912345677",
+      "address": "số 3 Trương Định quận 3",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "cb-1",
+          "name": "Combo1 Burger + Coke",
+          "qty": 1,
+          "price": 59000,
+          "image": "/assets/images/menu/combo1.webp"
+        },
+        {
+          "id": "cb-2",
+          "name": "Combo2 Chicken + Fries",
+          "qty": 1,
+          "price": 69000,
+          "image": "/assets/images/menu/combo2.webp"
+        },
+        {
+          "id": "cb-3",
+          "name": "Combo3 Pizza + Coke",
+          "qty": 1,
+          "price": 99000,
+          "image": "/assets/images/menu/combo3.jpg"
+        },
+        {
+          "id": "sg-6",
+          "name": "Cola",
+          "qty": 1,
+          "price": 15000,
+          "image": "/assets/images/menu/cocacola.jpg"
+        },
+        {
+          "id": "sg-5",
+          "name": "Cheese Pizza (slice)",
+          "qty": 1,
+          "price": 39000,
+          "image": "/assets/images/menu/cheesepizza.webp"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        }
+      ],
+      "total": 310000,
+      "discount": 50000,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 280000,
+      "couponCode": "SAVE50K",
+      "payment": "COD",
+      "createdAt": 1760618991037,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.784,
+        "lng": 106.684
+      },
+      "status": "delivering",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-10-16T12:50:38.497Z",
+      "acceptedAt": "2025-10-16T12:50:29.689Z",
+      "readyAt": "2025-10-16T12:50:35.444Z",
+      "droneMissionId": "d321",
+      "pickedAt": "2025-10-16T12:50:38.497Z"
     }
   ],
   "sessions": [
@@ -675,6 +703,11 @@
       "id": "ba32",
       "status": "open",
       "startedAt": "2025-10-12T16:30:57.075Z"
+    },
+    {
+      "id": "ed0e",
+      "status": "open",
+      "startedAt": "2025-10-16T11:41:46.549Z"
     }
   ],
   "payments": [
@@ -723,25 +756,12 @@
       ]
     },
     {
-      "id": "cbb8",
-      "status": "simulating",
-      "origin": {
-        "lat": 10.777642,
-        "lng": 106.695242
-      },
-      "destination": {
-        "lat": 10.800976,
-        "lng": 106.653238
-      },
-      "createdAt": "2025-10-16T05:13:18.094Z"
-    },
-    {
-      "id": "369e",
+      "id": "DM-002",
       "orderId": "05e9",
-      "restaurantId": null,
-      "customerId": null,
-      "startedAt": "2025-10-16T05:14:47.800Z",
-      "status": "in_progress",
+      "status": "delivering",
+      "startTime": "2025-10-15T12:13:20.430Z",
+      "endTime": null,
+      "droneMissionId": "DM-002",
       "path": [
         [
           10.776889,
@@ -756,12 +776,41 @@
       "vehicle": "drone",
       "speedKmh": 35,
       "etaMinutes": 12
+    },
+    {
+      "id": "d321",
+      "orderId": "yklp",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-10-16T12:50:38.498Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 4,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.784,
+          106.684
+        ]
+      ],
+      "currentIndex": 0
     }
   ],
   "dronePositions": [
     {
       "id": "1",
       "missionId": "DM-001",
+      "lat": 10.776,
+      "lng": 106.7,
+      "timestamp": 1760588000430
+    },
+    {
+      "id": "2",
+      "missionId": "DM-002",
       "lat": 10.776,
       "lng": 106.7,
       "timestamp": 1760588000430
@@ -855,6 +904,15 @@
       "heading": -60.94701735065347,
       "speed": 12,
       "timestamp": 1760591616174
+    },
+    {
+      "id": "119f",
+      "missionId": "d321",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1760619038571
     }
   ]
 }

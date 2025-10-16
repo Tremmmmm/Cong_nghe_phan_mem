@@ -93,6 +93,21 @@ async function findMissionByOrderId(orderId) {
   }
 }
 
+/* ====================== Status helpers ====================== */
+const normalizeStatus = (s = "") => {
+  const x = s.toLowerCase();
+  if (["delivering"].includes(x)) return "delivery";
+  if (["delivered", "completed", "done"].includes(x)) return "done";
+  if (["cancelled", "canceled"].includes(x)) return "cancelled";
+  if (["accepted", "preparing", "ready"].includes(x)) return "processing";
+  if (["new", "pending", "confirmed"].includes(x)) return "order";
+  return "order";
+};
+
+// Chỉ cho phép theo dõi khi đang giao & có mission
+const canTrack = (order, mission) =>
+  normalizeStatus(order?.status) === "delivery" && !!mission?.id;
+
 /* ====================== Small UI helpers ====================== */
 const BADGE = {
   queued: { bg: "#f3f4f6", br: "#e5e7eb", tx: "#111827", label: "Queued" },
@@ -133,7 +148,11 @@ function CoordText({ lat, lng }) {
     return <span className="mini">Chưa có tọa độ</span>;
   }
   const s = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-  return <span className="mini" title={s}>{s}</span>;
+  return (
+    <span className="mini" title={s}>
+      {s}
+    </span>
+  );
 }
 
 /* ====================== Main ====================== */
@@ -326,6 +345,7 @@ export default function DroneOrders() {
               );
 
               const hasMission = !!m?.id;
+              const trackable = canTrack(o, m);
 
               return (
                 <tr key={o.id} className="row">
@@ -385,25 +405,45 @@ export default function DroneOrders() {
                   </td>
                   <td className="cell">{m?.eta != null ? `${m.eta} phút` : "—"}</td>
 
-                  {/* Toạ độ dạng chữ + nút Copy */}
+                  {/* Toạ độ dạng chữ */}
                   <td className="cell">
                     <CoordText lat={lat} lng={lng} />
                   </td>
 
-                  {/* Nút Xem hành trình: luôn cho phép vào, căn đẹp */}
+                  {/* Nút Xem hành trình: chỉ bật khi trackable */}
                   <td className="cell right">
-                    <Link
-                      to={`/orders/${orderParam}/tracking`}
-                      className="btn"
-                      style={{ textDecoration: "none", minWidth: 140, textAlign: "center" }}
-                      title={
-                        hasMission
-                          ? "Xem hành trình"
-                          : "Chưa có mission – vào để tạo mission demo"
-                      }
-                    >
-                      Xem hành trình
-                    </Link>
+                    {trackable ? (
+                      <Link
+                        to={`/orders/${orderParam}/tracking`}
+                        className="btn"
+                        style={{
+                          textDecoration: "none",
+                          minWidth: 140,
+                          textAlign: "center",
+                        }}
+                        title="Xem hành trình"
+                      >
+                        Xem hành trình
+                      </Link>
+                    ) : (
+                      <button
+                        className="btn"
+                        disabled
+                        style={{
+                          minWidth: 140,
+                          background: "#d1d5db",
+                          color: "#6b7280",
+                          cursor: "not-allowed",
+                        }}
+                        title={
+                          !hasMission
+                            ? "Chưa có mission"
+                            : "Đơn chưa ở trạng thái đang giao"
+                        }
+                      >
+                        Xem hành trình
+                      </button>
+                    )}
                   </td>
                 </tr>
               );

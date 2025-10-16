@@ -1,4 +1,3 @@
-// src/pages/DroneTracker.jsx
 // Leaflet + OSM (không cần Google key)
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -12,6 +11,17 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5181';
 const normalizeOrderId = (raw) => String(decodeURIComponent(raw || '')).replace(/^#/, '');
+
+// ====== Status helper: chỉ cho phép khi Delivering ======
+const normalizeStatus = (s='') => {
+  const x = s.toLowerCase();
+  if (['delivering'].includes(x)) return 'delivery';
+  if (['delivered','completed','done'].includes(x)) return 'done';
+  if (['cancelled','canceled'].includes(x)) return 'cancelled';
+  if (['accepted','preparing','ready'].includes(x)) return 'processing';
+  if (['new','pending','confirmed'].includes(x)) return 'order';
+  return 'order';
+};
 
 // ====== Leaflet loader (CDN) ======
 function ensureLeaflet() {
@@ -120,7 +130,7 @@ export default function DroneTracker() {
     return arr?.[0] || null;
   }, []);
 
-  // ===== Load order + mission =====
+  // ===== Load order + mission (CHẶN nếu chưa Delivering / chưa có mission) =====
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -130,12 +140,21 @@ export default function DroneTracker() {
         if (!alive) return;
         setOrder(o);
 
+        // Chỉ cho xem khi đang giao
+        if (normalizeStatus(o?.status) !== 'delivery') {
+          setErr('❌ Đơn này chưa ở trạng thái đang giao nên không thể xem hành trình.');
+          setMission(null);
+          setLoading(false);
+          return;
+        }
+
         const m = o?.droneMissionId ? await getMissionById(o.droneMissionId) : await findMissionByOrderId(orderId);
         if (!alive) return;
 
         if (!m?.id) {
           setMission(null);
-          setErr('Đơn này chưa có drone mission nên chưa thể theo dõi hành trình.');
+          setErr('❌ Đơn đang giao nhưng chưa có drone mission.');
+          setLoading(false);
           return;
         }
         setMission(m);
@@ -172,7 +191,7 @@ export default function DroneTracker() {
 
   useEffect(() => { if (mission?.id) startPolling(mission.id); }, [mission?.id, startPolling]);
 
-  // ===== Simulator (optional) =====
+  // ===== Simulator (optional, hiện đã bị chặn bởi điều kiện trên) =====
   const startSimulator = useCallback(async () => {
     if (simRef.current) return;
     const origin = { lat: 10.777642, lng: 106.695242 };     // Bến Thành
@@ -246,7 +265,7 @@ export default function DroneTracker() {
         mapRef.current = map;
       }
 
-      // mission path (xanh) — có thể comment nếu muốn ẩn
+      // mission path (xanh)
       if (!missionPathRef.current && mission?.path?.length >= 2 && mapRef.current) {
         const latlngs = (mission.path || []).map(toLL).filter(isLL);
         if (latlngs.length >= 2) {
@@ -316,6 +335,22 @@ export default function DroneTracker() {
 
   if (loading) return <div className="p-6">Đang tải dữ liệu…</div>;
 
+  // Nếu không hợp lệ, chỉ hiển thị thông báo + nút quay lại
+  if (err) {
+    return (
+      <section className="ff-container wrap">
+        <style>{styles}</style>
+        <div className="hdr">
+          <h2 style={{margin:0}}>Theo dõi Drone</h2>
+          <Link to="/admin/drone" className="btn secondary" style={{textDecoration:'none'}}>← Về danh sách Drone</Link>
+        </div>
+        <div className="card" style={{borderColor:'#f9c7c7',background:'#fde8e8',color:'#b80d0d'}}>
+          {err}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="ff-container wrap">
       <style>{styles}</style>
@@ -331,12 +366,11 @@ export default function DroneTracker() {
           )}
         </div>
         <div style={{display:'flex',gap:8}}>
-          {!mission?.id && <button className="btn" onClick={startSimulator}>Tạo mission demo</button>}
+          {/* Giữ simulator cho dev, nhưng page này sẽ không vào được nếu chưa Delivering */}
+          {/* {!mission?.id && <button className="btn" onClick={startSimulator}>Tạo mission demo</button>} */}
           <Link to="/admin/drone" className="btn secondary" style={{textDecoration:'none'}}>← Về danh sách Drone</Link>
         </div>
       </div>
-
-      {err && <div className="card" style={{borderColor:'#f9c7c7',background:'#fde8e8',color:'#b80d0d'}}>❌ {err}</div>}
 
       <div className="grid">
         {/* Map + hành động hữu ích cho tọa độ */}
@@ -367,13 +401,11 @@ export default function DroneTracker() {
             <div id="drone-map" style={{height:'100%', width:'100%'}} />
           </div>
 
-          {/* === Cách B: Hành động hữu ích thay vì copy đơn thuần === */}
+          {/* Hành động hữu ích */}
           <div className="text-sm" style={{marginTop:8, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
             {isLL(lastPos) ? (
               <>
                 <>Vị trí hiện tại: <b>{lastPos[0].toFixed(6)}, {lastPos[1].toFixed(6)}</b></>
-
-                {/* Mở trên Google Maps */}
                 <a
                   className="btn ghost"
                   href={`https://www.google.com/maps?q=${lastPos[0]},${lastPos[1]}`}
@@ -382,8 +414,6 @@ export default function DroneTracker() {
                 >
                   Mở Google Maps
                 </a>
-
-                {/* Mở trên OSM */}
                 <a
                   className="btn ghost"
                   href={`https://www.openstreetmap.org/?mlat=${lastPos[0]}&mlon=${lastPos[1]}#map=17/${lastPos[0]}/${lastPos[1]}`}
@@ -392,8 +422,6 @@ export default function DroneTracker() {
                 >
                   Mở OSM
                 </a>
-
-                {/* Đi đến tọa độ… (dán lat,lng) */}
                 <button
                   className="btn ghost"
                   onClick={() => {

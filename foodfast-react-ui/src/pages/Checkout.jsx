@@ -16,6 +16,51 @@ function VND(n){ return formatVND(n) }
 const DELIVERY_MODE = 'DRONE'
 const PAYMENT_METHOD = 'COD'
 
+// ====== Toạ độ cho Drone Mission ======
+// Toạ độ mặc định của nhà hàng (ví dụ Bến Thành)
+const DEFAULT_RESTAURANT_LL = { lat: 10.776889, lng: 106.700806 }
+
+// Thử parse "lat,lng" nếu người dùng dán trực tiếp
+function parseLatLngFromText(text) {
+  const m = String(text || '').match(/(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)/)
+  if (!m) return null
+  const lat = parseFloat(m[1])
+  const lng = parseFloat(m[3])
+  if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+    return { lat, lng }
+  }
+  return null
+}
+
+// Đoán nhanh theo từ khoá quận/huyện (demo – không cần API geocode)
+function guessLatLngFromAddress(addr) {
+  const s = String(addr || '').toLowerCase()
+
+  // Ưu tiên: nếu user dán "lat,lng" vào địa chỉ → dùng luôn
+  const fromText = parseLatLngFromText(s)
+  if (fromText) return fromText
+
+  if (s.includes('quận 1') || s.includes('q1') || s.includes('bến thành')) {
+    return { lat: 10.776889, lng: 106.700806 }
+  }
+  if (s.includes('quận 3') || s.includes('q3')) {
+    return { lat: 10.784000, lng: 106.684000 }
+  }
+  if (s.includes('bình thạnh')) {
+    return { lat: 10.808000, lng: 106.700000 }
+  }
+  if (s.includes('thủ đức') || s.includes('thu duc')) {
+    return { lat: 10.850000, lng: 106.769000 }
+  }
+  if (s.includes('quận 7') || s.includes('q7') || s.includes('phú mỹ hưng')) {
+    return { lat: 10.737000, lng: 106.721000 }
+  }
+
+  // fallback: một điểm hợp lệ quanh trung tâm TP.HCM để không bị thiếu toạ độ
+  const jitter = () => (Math.random() - 0.5) * 0.01 // ~1km
+  return { lat: 10.78 + jitter(), lng: 106.69 + jitter() }
+}
+
 // key lưu địa chỉ gần đây
 const REC_ADDR_KEY = 'ff_recent_addresses'
 
@@ -142,7 +187,8 @@ export default function Checkout(){
         customerName: name.trim(),
         phone: String(phone).trim(),
         address: address.trim(),
-        deliveryMode: DELIVERY_MODE,
+
+        deliveryMode: DELIVERY_MODE,      // Drone
         items: items.map(i => ({
           id: i.id,
           name: i.name,
@@ -150,24 +196,34 @@ export default function Checkout(){
           price: i.price,
           image: i.image || i.img || i.photo || ''
         })),
+
         total: subtotal,
         discount,
         shippingFee,
         shippingDiscount,
         finalTotal,
         couponCode: appliedCode,
-        payment: PAYMENT_METHOD,
+
+        payment: PAYMENT_METHOD,          // COD
         createdAt: Date.now(),
-        status: 'pending',
+
+        // ⬇️ Thêm tọa độ để tạo Drone Mission không bị thiếu
+        restaurantLocation: DEFAULT_RESTAURANT_LL,
+        customerLocation: guessLatLngFromAddress(address),
+
+        // ✅ luôn là "new" (không còn pending)
+        status: 'new',
         payment_status: 'unpaid'
       }
 
       const created = await placeOrder(order)
       clear()
       setState('success')
+
       const oid = created?.id || order.id
       try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
       try { sessionStorage.setItem('lastDeliveryMode', DELIVERY_MODE) } catch {}
+
       // nhớ thông tin người nhận cho lần sau
       try {
         localStorage.setItem('lastName', name.trim())
@@ -201,6 +257,7 @@ export default function Checkout(){
     }
   }
 
+  // ====== styles & helpers ======
   const css = `
     .co-wrap{max-width:900px;margin:24px auto;padding:0 16px}
     .co-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
@@ -226,7 +283,6 @@ export default function Checkout(){
     .sugg{position:absolute;left:0;right:120px;top:44px;z-index:10;background:#fff;border:1px solid #eee;border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.08)}
     .sugg-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;cursor:pointer;color:#222}
     .sugg-item:hover,.sugg-item.active{background:#ffefe9}
-    /* ép nền sáng kể cả dark mode (tránh đen thui) */
     .dark .sugg{background:#fff;border-color:#eee}
     .dark .sugg-item:hover,.dark .sugg-item.active{background:#ffefe9}
 
@@ -252,7 +308,6 @@ export default function Checkout(){
   const exists = formatOK && Object.prototype.hasOwnProperty.call(coupons, codeNormalized)
   const minOk = exists ? (subtotal >= (coupons[codeNormalized].min || 0)) : false
 
-  // Bật nút khi mã hợp lệ & tồn tại (không cần đủ min ở bước này)
   const canApply = !appliedCode && formatOK && exists
 
   const all = Object.entries(coupons).map(([code, info]) => ({ code, ...info }))
@@ -278,7 +333,6 @@ export default function Checkout(){
       setSuggIndex(i => (i - 1 + suggestions.length) % suggestions.length)
     } else if (e.key === 'Enter') {
       if (suggIndex >= 0) {
-        // Chọn gợi ý -> chỉ gán vào input, không auto-apply
         e.preventDefault()
         const pick = suggestions[suggIndex]
         setCouponCode(pick.code)
@@ -291,14 +345,10 @@ export default function Checkout(){
   }
 
   const onPickSuggestion = (code) => {
-    // Chỉ điền mã + đóng dropdown, để người dùng bấm "Áp dụng"
     setCouponCode(code)
     setSuggOpen(false)
     setSuggIndex(-1)
   }
-
-  // hiển thị “Khuyến mãi” chỉ khi mã giảm tiền (không phải FREESHIP)
-  const showDiscountLine = appliedCode && appliedCode !== 'FREESHIP' && discount > 0
 
   return (
     <section className="co-wrap">
@@ -327,7 +377,6 @@ export default function Checkout(){
             <input className="inp" autoComplete="street-address" value={address} onChange={e=>setAddress(e.target.value)} />
             {errors.address && <span className="err">{errors.address}</span>}
 
-            {/* địa chỉ gần đây */}
             {recentAddr.length > 0 && (
               <div className="addr-recent">
                 <span className="muted" style={{marginRight:6}}>Gần đây:</span>
@@ -345,14 +394,12 @@ export default function Checkout(){
               </div>
             )}
 
-            {/* Checkbox lưu mặc định */}
             <label style={{display:'flex',gap:8,alignItems:'center',marginTop:6,fontSize:13,opacity:.9}}>
               <input type="checkbox" checked={saveAsDefault} onChange={e=>setSaveAsDefault(e.target.checked)} />
               Lưu thông tin nhận hàng (tên, SĐT, địa chỉ)
             </label>
           </div>
 
-          {/* Phương thức giao hàng (cố định: Drone) */}
           <div className="field">
             <label>Phương thức giao hàng</label>
             <div className="chip" title="Giao nhanh bằng drone (cố định)">
@@ -361,7 +408,6 @@ export default function Checkout(){
             </div>
           </div>
 
-          {/* Phương thức thanh toán (cố định: COD) */}
           <div className="field">
             <label>Phương thức thanh toán</label>
             <div className="chip" title="Thanh toán khi nhận hàng (cố định)">
@@ -370,6 +416,7 @@ export default function Checkout(){
             </div>
           </div>
 
+          {/* Coupon */}
           <div className="field">
             <label>Mã khuyến mãi</label>
             <div className="coupon-row">
@@ -383,45 +430,34 @@ export default function Checkout(){
                 onKeyDown={onCouponKeyDown}
                 style={{flex:1}}
               />
-
               <button
                 type="button"
                 className="btn-primary"
                 onClick={()=>onApplyCoupon()}
-                disabled={!canApply}
-                title={
-                  !codeNormalized ? 'Nhập/Chọn một mã để áp dụng'
-                  : (!formatOK ? 'Mã chỉ gồm chữ & số'
-                  : (!exists ? 'Mã không tồn tại' : ''))}
+                disabled={!(!appliedCode && !!normalizeCode(couponCode) && CODE_PATTERN.test(normalizeCode(couponCode)) && Object.prototype.hasOwnProperty.call(coupons, normalizeCode(couponCode)))}
               >
                 Áp dụng
               </button>
 
-              {suggOpen && suggestions.length > 0 && (
+              {suggOpen && (
                 <div className="sugg">
-                  {suggestions.slice(0, 6).map((s, idx) => (
+                  {Object.entries(coupons).map(([code, info])=>(
                     <div
-                      key={s.code}
-                      className={`sugg-item ${idx===suggIndex ? 'active':''}`}
-                      onMouseEnter={()=>setSuggIndex(idx)}
-                      onMouseDown={(e)=>{ e.preventDefault(); onPickSuggestion(s.code); }}
-                      title={s.label}
+                      key={code}
+                      className="sugg-item"
+                      onMouseDown={(e)=>{ e.preventDefault(); onPickSuggestion(code); }}
+                      title={info.label}
                     >
                       <div>
-                        <div className="sugg-code">{s.code}</div>
-                        <div className="sugg-meta">{s.label}</div>
+                        <div className="sugg-code">{code}</div>
+                        <div className="sugg-meta">{info.label}</div>
                       </div>
-                      <div className="sugg-min">{s.min ? `≥ ${VND(s.min)}` : 'Không yêu cầu tối thiểu'}</div>
+                      <div className="sugg-min">{info.min ? `≥ ${VND(info.min)}` : 'Không yêu cầu tối thiểu'}</div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* gợi ý lỗi nhanh khi CHƯA áp mã */}
-            {!appliedCode && codeNormalized && !formatOK && <span className="err">Mã chỉ gồm chữ và số.</span>}
-            {!appliedCode && formatOK && !exists && <span className="err">Mã không tồn tại.</span>}
-            {!appliedCode && exists && !minOk && <span className="err">Đơn tối thiểu {VND(coupons[codeNormalized].min)} để dùng mã này.</span>}
           </div>
 
           <button className="btn" type="submit" disabled={loading || !items.length}>
@@ -433,7 +469,6 @@ export default function Checkout(){
           <h3>Tóm tắt đơn</h3>
           <div className="row"><span>Tạm tính</span><span>{VND(subtotal)}</span></div>
 
-          {/* Khuyến mãi chỉ hiện khi không phải FREESHIP */}
           {appliedCode && appliedCode !== 'FREESHIP' && discount > 0 && (
             <div className="row">
               <span>Khuyến mãi ({appliedCode})</span>
@@ -444,33 +479,13 @@ export default function Checkout(){
           <div className="row"><span>Giao hàng</span><span>Drone (nhanh)</span></div>
 
           <div className="row">
-            <span>
-              Vận chuyển
-              {isFreeShip && (
-                <span className="badge" style={{
-                  fontSize:12,padding:'2px 8px',borderRadius:999,marginLeft:8,
-                  background:'#ffefe9',fontWeight:800
-                }}>FREESHIP</span>
-              )}
-            </span>
-            <span>
-              {isFreeShip ? (
-                <>
-                  <span style={{marginRight:8}}><s>{VND(shippingFee)}</s></span>
-                  <strong>{VND(0)}</strong>
-                </>
-              ) : VND(shippingFee)}
-            </span>
+            <span>Vận chuyển</span>
+            <span>{isFreeShip ? (<><span style={{marginRight:8}}><s>{VND(shippingFee)}</s></span><strong>0 ₫</strong></>) : VND(shippingFee)}</span>
           </div>
 
           <div className="row sum"><span>Thanh toán</span><span>{VND(finalTotal)}</span></div>
           <hr/>
-          {items.map((i)=>(
-            <div key={i.id} className="row">
-              <span>{i.name} ×{i.qty}</span>
-              <span>{VND((i.price||0)*(i.qty||0))}</span>
-            </div>
-          ))}
+          {items.map((i)=>(<div key={i.id} className="row"><span>{i.name} ×{i.qty}</span><span>{VND((i.price||0)*(i.qty||0))}</span></div>))}
         </div>
       </div>
     </section>
