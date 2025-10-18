@@ -54,7 +54,7 @@ export default function AdminLayout(){
           </NavLink>
 
           <NavLink to="/admin/restaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Khu nhà hàng (PoC)
+            Quản lý đơn hàng
           </NavLink>
         </nav>
       </aside>

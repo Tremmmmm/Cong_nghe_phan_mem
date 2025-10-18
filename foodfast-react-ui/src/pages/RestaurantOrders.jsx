@@ -133,7 +133,7 @@ function OrderCard({ order, onMove, onAskCancel, onEdit }) {
   }
   if (s === STATUS.ACCEPTED) {
     actions.push(
-      <button key="ready" className="ff-btn" onClick={() => onMove(order, STATUS.READY)}>Hoàn tất (đã xong món)</button>,
+      <button key="ready" className="ff-btn" onClick={() => onMove(order, STATUS.READY)}>Sẵn sàng</button>,
       <MoreMenu key="more" canEdit={canEdit} disabledEdit={disabledEdit} onEdit={() => onEdit(order)} onCancel={() => onAskCancel(order)} />
     );
   }

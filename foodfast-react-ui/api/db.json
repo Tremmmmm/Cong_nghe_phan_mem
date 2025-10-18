@@ -94,10 +94,11 @@
       ],
       "total": 198000,
       "createdAt": 1758036847213,
-      "status": "accepted",
+      "status": "ready",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-16T16:11:29.080Z",
-      "acceptedAt": "2025-10-16T16:11:29.080Z"
+      "updatedAt": "2025-10-18T07:54:13.591Z",
+      "acceptedAt": "2025-10-16T16:11:29.080Z",
+      "readyAt": "2025-10-18T07:54:13.591Z"
     },
     {
       "id": "e7c6",
@@ -259,10 +260,10 @@
       "finalTotal": 276000,
       "couponCode": "FREESHIP",
       "createdAt": 1758552940632,
-      "status": "ready",
+      "status": "accepted",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-16T16:10:24.384Z",
-      "acceptedAt": "2025-10-16T12:50:32.021Z",
+      "updatedAt": "2025-10-17T01:37:24.997Z",
+      "acceptedAt": "2025-10-17T01:37:24.997Z",
       "readyAt": "2025-10-16T16:10:24.384Z",
       "modified": true,
       "modification": {
@@ -624,13 +625,14 @@
         "lat": 10.7819293586051,
         "lng": 106.68590251677055
       },
-      "status": "delivering",
+      "status": "completed",
       "payment_status": "unpaid",
-      "updatedAt": "2025-10-16T16:10:39.782Z",
+      "updatedAt": "2025-10-18T07:51:40.364Z",
       "acceptedAt": "2025-10-16T16:10:08.714Z",
       "readyAt": "2025-10-16T16:10:36.633Z",
       "droneMissionId": "27d6",
-      "pickedAt": "2025-10-16T16:10:39.782Z"
+      "pickedAt": "2025-10-16T16:10:39.782Z",
+      "deliveredAt": "2025-10-18T07:51:40.364Z"
     },
     {
       "id": "3erh",
@@ -750,6 +752,90 @@
       "readyAt": "2025-10-16T16:17:50.370Z",
       "droneMissionId": "64bc",
       "pickedAt": "2025-10-16T16:17:52.422Z"
+    },
+    {
+      "id": "nlcb",
+      "sessionId": "908e",
+      "userId": 0,
+      "userEmail": "admin@foodfast.com",
+      "customerName": "Admin",
+      "phone": "0924545454",
+      "address": "số 5 nguyễn trãi",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 45000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 65000,
+      "couponCode": "",
+      "payment": "COD",
+      "createdAt": 1760664393187,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.77814273031675,
+        "lng": 106.69208449514083
+      },
+      "status": "delivering",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-10-17T01:29:13.177Z",
+      "acceptedAt": "2025-10-17T01:27:45.437Z",
+      "readyAt": "2025-10-17T01:28:24.297Z",
+      "droneMissionId": "07c8",
+      "pickedAt": "2025-10-17T01:29:13.177Z"
+    },
+    {
+      "id": "p3ah",
+      "sessionId": "908e",
+      "userId": 0,
+      "userEmail": "admin@foodfast.com",
+      "customerName": "Admin",
+      "phone": "0924545454",
+      "address": "số 6 nguyễn trãi",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 45000,
+      "discount": 4500,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 60500,
+      "couponCode": "FF10",
+      "payment": "COD",
+      "createdAt": 1760773639676,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.78470694854349,
+        "lng": 106.68552611861097
+      },
+      "status": "delivering",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-10-18T08:08:16.376Z",
+      "acceptedAt": "2025-10-18T08:06:29.606Z",
+      "readyAt": "2025-10-18T08:06:31.106Z",
+      "droneMissionId": "b182",
+      "pickedAt": "2025-10-18T08:08:16.376Z"
     }
   ],
   "sessions": [
@@ -833,6 +919,11 @@
       "id": "ed0e",
       "status": "open",
       "startedAt": "2025-10-16T11:41:46.549Z"
+    },
+    {
+      "id": "908e",
+      "status": "open",
+      "startedAt": "2025-10-17T01:26:33.118Z"
     }
   ],
   "payments": [
@@ -989,6 +1080,50 @@
         ]
       ],
       "currentIndex": 0
+    },
+    {
+      "id": "07c8",
+      "orderId": "nlcb",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-10-17T01:29:13.178Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 2,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.77814273031675,
+          106.69208449514083
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "b182",
+      "orderId": "p3ah",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-10-18T08:08:16.376Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 4,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.78470694854349,
+          106.68552611861097
+        ]
+      ],
+      "currentIndex": 0
     }
   ],
   "dronePositions": [
@@ -1131,6 +1266,24 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1760631472490
+    },
+    {
+      "id": "23f7",
+      "missionId": "07c8",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1760664553229
+    },
+    {
+      "id": "8082",
+      "missionId": "b182",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1760774896415
     }
   ]
 }
