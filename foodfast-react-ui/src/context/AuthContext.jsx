@@ -7,9 +7,21 @@ const LS_ACC_IDX = 'ff_account_idx_v1'   // { [usernameLower]: email }
 
 const AuthCtx = createContext(null)
 
-// hardcode admin demo
-const ADMIN_EMAIL = 'admin@foodfast.com'
-const ADMIN_PASS  = '123456'
+// hardcode accounts demo
+const ADMIN_ACCOUNTS = {
+  server_admin: {
+    email: '  ',
+    password: '123',
+    name: 'Server Admin',
+    role: 'server_admin'
+  },
+  restaurant_admin: {
+    email: 'resadmin@foodfast.com',
+    password: '123',
+    name: 'Restaurant Admin',
+    role: 'restaurant_admin'
+  }
+}
 
 // helper
 const isEmail = (s) => /\S+@\S+\.\S+/.test(String(s||''))
@@ -75,11 +87,22 @@ export function AuthProvider({ children }) {
   const signIn = async ({ email, password }) => {
     const identifier = String(email || '').trim()
 
-    // admin demo
-    if (identifier === ADMIN_EMAIL && password === ADMIN_PASS) {
-      const u = { id: 0, name: 'Admin', email: ADMIN_EMAIL, isAdmin: true }
-      setUser(u)
-      return { user: u }
+    // check admin accounts
+    for (const role in ADMIN_ACCOUNTS) {
+      const account = ADMIN_ACCOUNTS[role];
+      if (identifier === account.email && password === account.password) {
+        const u = { 
+          id: 0, 
+          name: account.name, 
+          email: account.email, 
+          role: account.role,
+          isAdmin: true,
+          isServerAdmin: role === 'server_admin',
+          isRestaurantAdmin: role === 'restaurant_admin'
+        }
+        setUser(u)
+        return { user: u }
+      }
     }
 
     // resolve email khi login bằng username
@@ -158,7 +181,33 @@ export function RequireAuth({ children }) {
   return children
 }
 
-// Guard: bắt buộc là admin
+// Guard: bắt buộc là server admin
+export function RequireServerAdmin({ children }) {
+  const { user } = useAuth()
+  const location = useLocation()
+  if (!user) {
+    return <Navigate to="/admin/login" replace state={{ from: location }} />
+  }
+  if (!user.isServerAdmin) {
+    return <Navigate to="/" replace />
+  }
+  return children
+}
+
+// Guard: bắt buộc là restaurant admin
+export function RequireRestaurantAdmin({ children }) {
+  const { user } = useAuth()
+  const location = useLocation()
+  if (!user) {
+    return <Navigate to="/restaurant/login" replace state={{ from: location }} />
+  }
+  if (!user.isRestaurantAdmin) {
+    return <Navigate to="/" replace />
+  }
+  return children
+}
+
+// Guard: bắt buộc là admin (cả server và restaurant)
 export function RequireAdmin({ children }) {
   const { user } = useAuth()
   const location = useLocation()

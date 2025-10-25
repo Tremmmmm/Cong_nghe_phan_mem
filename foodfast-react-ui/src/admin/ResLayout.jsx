@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { useEffect, useMemo } from "react"; 
-export default function AdminLayout(){
+import { useEffect, useMemo } from "react";
+
+export default function ResLayout(){
   const css = useMemo(()=>`
     .admin-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;max-width:1200px;margin:16px auto;padding:0 16px}
     .aside{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;height:max-content;position:sticky;top:72px}
@@ -35,15 +36,16 @@ export default function AdminLayout(){
       <aside className="aside">
         <div className="a-title">Trang quản trị</div>
         <nav className="a-nav">
-            <NavLink to="/admin/dashboard" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Dashboard
-          </NavLink>
           <NavLink to="/admin/users" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Người dùng
           </NavLink>
 
-          <NavLink to="/admin/restaurant_managerment" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Quản lý cửa hàng
+          <NavLink to="/admin/dashboard" className={({isActive})=>`a-link ${isActive?'active':''}`}>
+            Dashboard
+          </NavLink>
+
+          <NavLink to="/admin/orders" className={({isActive})=>`a-link ${isActive?'active':''}`}>
+            Lịch sử đơn hàng
           </NavLink>
 
           {/* Drone: route riêng để NavLink match chính xác */}
@@ -52,7 +54,7 @@ export default function AdminLayout(){
           </NavLink>
 
           <NavLink to="/admin/restaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Quản lý đơn hàng 
+            Quản lý đơn hàng
           </NavLink>
         </nav>
       </aside>

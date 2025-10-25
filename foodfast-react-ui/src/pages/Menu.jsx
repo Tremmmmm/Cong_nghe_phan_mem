@@ -1,11 +1,23 @@
-import { useEffect, useMemo } from "react";
-import MENU_ALL, { SINGLES, COMBOS } from "../data/menuData";
+import { useEffect, useMemo, useState } from "react"; 
+import MENU_ALL, { SINGLES, COMBOS } from "../data/menuData.js";
 import { useCart } from "../context/CartContext.jsx";
 import { useFav } from "../context/FavContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
-import { formatVND } from "../utils/format";
+import { formatVND } from "../utils/format.js";
+// Thêm hook useAuth để kiểm tra quyền Admin
+import { useAuth } from "../context/AuthContext.jsx"; 
 
 export default function Menu() {
+  // Thêm useAuth để lấy thông tin user
+  const { user } = useAuth();
+  // Kiểm tra user có phải Admin không
+  const isAdmin = user?.isAdmin; 
+
+  // 1. STATE để quản lý trạng thái cửa hàng
+  // Tình trạng này vẫn nên được quản lý ở Global State/Context nếu nhiều trang cần dùng
+  // nhưng ở đây ta để tạm cục bộ.
+  const [isStoreOpen, setIsStoreOpen] = useState(true); 
+
   const styles = useMemo(
     () => `
     .menu-wrap{max-width:1140px;margin:24px auto;padding:0 16px}
@@ -13,7 +25,7 @@ export default function Menu() {
     .menu-head h2{margin:0;font-size:22px}
     .menu-sub{color:#666;margin-bottom:18px}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-    .card{border:1px solid #eee;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+    .card{border:1px solid #eee;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column;position:relative}
     .thumb{aspect-ratio:16/10;background:#f6f6f6;display:block;width:100%;object-fit:cover}
     .body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
     .name{font-weight:700}
@@ -32,8 +44,8 @@ export default function Menu() {
     .dark .desc{color:#aaa}
     .dark .ghost,.dark .heart{background:#111;border-color:#555;color:#eee}
     .dark .heart.active{background:#331717;border-color:#aa5555}
-     .hero{position:relative;overflow:hidden;padding:46px 0 34px;background:#f4f4f6;
-      background-image:url("data:image/svg+xml;utf8,${encodeURIComponent(`
+    .hero{position:relative;overflow:hidden;padding:46px 0 34px;background:#f4f4f6;
+    background-image:url("data:image/svg+xml;utf8,${encodeURIComponent(`
         <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' opacity='0.16'>
           <defs><pattern id='p' width='160' height='120' patternUnits='userSpaceOnUse'>
             <g fill='none' stroke='#cfcfd6' stroke-width='1.2'>
@@ -60,6 +72,13 @@ export default function Menu() {
     @media (max-width:540px){ .h1{font-size:34px}}
     .dark .hero{background:#121214}.dark .h1{color:#f3f3f7}.dark .sub{color:#c9c9cf}
     .dark .cap h4{color:#f0f0f4}.dark .cap p{color:#bdbdc5}
+    
+    /* STYLE CHO QUẢN LÝ VÀ THÔNG BÁO KHÓA CỬA HÀNG */
+    .manager-controls{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin:0 16px 20px auto;max-width:1140px;}
+    .closed-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:10;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:24px;text-align:center;padding:10px}
+    .closed-overlay p{margin:0}
+    .dark .closed-overlay{background:rgba(0,0,0,0.85)}
+    .closed-banner{padding:10px;background:#fef3c7;color:#92400e;border-radius:8px;font-weight:600;margin-bottom:20px;text-align:center;max-width:1140px;margin-left:auto;margin-right:auto}
     `,
     []
   );
@@ -88,6 +107,11 @@ export default function Menu() {
     );
 
   const handleAddCart = (item) => {
+    // LOGIC: KHÔNG CHO THÊM VÀO GIỎ KHI CỬA HÀNG ĐÓNG
+    if (!isStoreOpen) {
+      toast.show('Cửa hàng đang tạm nghỉ, không thể thêm món.', 'error');
+      return;
+    }
     cart.add({ id: item.id, name: item.name, price: item.price, image: item.image });
     toast.show(`Đã thêm ${item.name} vào giỏ`, 'success');
   };
@@ -98,10 +122,31 @@ export default function Menu() {
     toast.show(wasFav ? `Đã bỏ lưu ${item.name}` : `Đã lưu ${item.name}`, 'info');
   };
 
+  // Xử lý logic chuyển trạng thái cửa hàng
+  const handleToggleStoreOpen = () => {
+    if (!isAdmin) {
+        // Lớp bảo vệ bổ sung, mặc dù nút đã bị ẩn
+        toast.show('Bạn không có quyền thực hiện hành động này.', 'error');
+        return;
+    }
+    setIsStoreOpen(prev => !prev);
+    if (isStoreOpen) {
+      toast.show('Cửa hàng đã tạm khóa.', 'warning');
+    } else {
+      toast.show('Cửa hàng đã mở lại.', 'success');
+    }
+  };
+
   const Card = (item) => {
     const isFav = fav.has(item.id);
     return (
       <div key={item.id} className="card">
+        {/* HIỂN THỊ LỚP PHỦ KHI CỬA HÀNG ĐÓNG */}
+        {!isStoreOpen && (
+          <div className="closed-overlay">
+            <p>Tạm Khóa Đặt Hàng</p>
+          </div>
+        )}
         <img className="thumb" src={item.image || ph} alt={item.name} />
         <div className="body">
           <div className="name">{item.name}</div>
@@ -109,7 +154,13 @@ export default function Menu() {
           <div className="row">
             <div className="price">{formatVND(item.price || 0)}</div>
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn ghost" onClick={() => handleAddCart(item)}>
+              {/* VÔ HIỆU HÓA NÚT KHI CỬA HÀNG ĐÓNG */}
+              <button
+                className="btn ghost"
+                onClick={() => handleAddCart(item)}
+                disabled={!isStoreOpen}
+                style={!isStoreOpen ? { cursor: 'not-allowed', opacity: 0.5 } : {}}
+              >
                 Thêm vào giỏ
               </button>
               <button
@@ -155,6 +206,31 @@ export default function Menu() {
           </div>
         </div>
       </section>
+
+      {/* KHU VỰC QUẢN LÝ: CHỈ HIỂN THỊ NẾU LÀ ADMIN */}
+      {isAdmin && (
+        <div className="manager-controls">
+          <div style={{fontWeight: 700, color: isStoreOpen ? '#10b981' : '#dc2626'}}>
+              Trạng thái Cửa hàng: {isStoreOpen ? 'Đang Mở' : 'Đã Khóa'}
+          </div>
+          <button
+            className="btn"
+            style={{ background: isStoreOpen ? '#dc2626' : '#10b981' }}
+            onClick={handleToggleStoreOpen}
+          >
+            {isStoreOpen ? '❌ Khóa cửa hàng tạm thời' : '✅ Mở cửa hàng lại'}
+          </button>
+        </div>
+      )}
+      
+      {/* THÔNG BÁO CHO KHÁCH HÀNG KHI ĐÓNG CỬA */}
+      {!isStoreOpen && (
+          <div className="closed-banner">
+              Hiện cửa hàng đang tạm nghỉ, vui lòng quay lại sau. Bạn vẫn có thể xem menu và lưu món yêu thích.
+          </div>
+      )}
+      {/* HẾT KHU VỰC QUẢN LÝ */}
+
       <div className="menu-wrap">
         <div className="menu-head">
           <h2>Thực đơn</h2>

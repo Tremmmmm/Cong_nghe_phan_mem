@@ -1,3 +1,4 @@
+// src/App.jsx
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 
 // Layout
@@ -12,8 +13,7 @@ import Cart from './pages/Cart.jsx'
 import SearchResults from './pages/SearchResults.jsx'
 import Confirmation from './pages/Confirmation.jsx'
 import DetailsHistory from './pages/DetailsHistory.jsx'
-import Profile from './pages/Profile.jsx'
-import ConfirmCloseSession from './pages/ConfirmCloseSession.jsx'
+import Profile from './pages/Profile.jsx'            // Settings/Profile (user)
 
 // Auth pages
 import SignIn from './pages/SignIn.jsx'
@@ -21,28 +21,16 @@ import SignUp from './pages/SignUp.jsx'
 
 // Feature pages
 import Checkout from './pages/Checkout.jsx'
-import Orders from './pages/Orders.jsx'
+import Orders from './pages/Orders.jsx'              // My Orders (user)
 
-// Admin pages (nội dung)
+// Admin pages
 import AdminOrders from './pages/AdminOrders.jsx'
-import AdminSignIn from './pages/AdminSignIn.jsx'
-import AdminDashboard from './pages/AdminDashboard.jsx'
-import AdminUsers from './admin/AdminUsers.jsx'
-
-// Admin shell layout (sidebar)
-import AdminLayout from './admin/AdminLayout.jsx'
-
-// Restaurant (Kitchen)
-import RestaurantOrders from './pages/RestaurantOrders.jsx'
-
-// NEW: Drone pages
-import DroneOrders from './pages/DroneOrders.jsx'
-import DroneTracker from './pages/DroneTracker.jsx'
+import AdminSignIn from './pages/AdminSignIn.jsx'    // nếu bạn có trang này
 
 // Guards
 import { RequireAuth, RequireAdmin } from './context/AuthContext.jsx'
 
-// layout giữ Header/Footer cố định
+// Simple layout to keep Header/Footer persistent
 function AppLayout() {
   return (
     <>
@@ -56,6 +44,7 @@ function AppLayout() {
 export default function App() {
   return (
     <Routes>
+      {/* Wrap everything with a layout that shows Header/Footer once */}
       <Route element={<AppLayout />}>
         {/* Public */}
         <Route path="/" element={<Home />} />
@@ -66,18 +55,11 @@ export default function App() {
         <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/history" element={<DetailsHistory />} />
         <Route path="/profile" element={<Profile />} />
-        <Route
-          path="/checkout/confirm"
-          element={
-            <RequireAuth>
-              <ConfirmCloseSession />
-            </RequireAuth>
-          }
-        />
 
         {/* Auth (user) */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+
         <Route
           path="/checkout"
           element={
@@ -87,7 +69,7 @@ export default function App() {
           }
         />
         <Route
-          path="/orders"
+          path="/orders"   // <-- My Orders (dropdown)
           element={
             <RequireAuth>
               <Orders />
@@ -95,32 +77,19 @@ export default function App() {
           }
         />
 
-        {/* Admin login (nếu có) */}
+        {/* Admin */}
         <Route path="/admin/login" element={<AdminSignIn />} />
-
-        {/* Admin Panel (nested dưới AdminLayout) */}
         <Route
-          path="/admin"
+          path="/admin/orders"
           element={
             <RequireAdmin>
-              <AdminLayout />
+              <AdminOrders />
             </RequireAdmin>
           }
-        >
-          <Route path="users" element={<AdminUsers />} />
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="orders" element={<AdminOrders />} />
-          {/* NEW: danh sách Drone chuyên biệt */}
-          <Route path="drone" element={<DroneOrders />} />
-          <Route path="restaurant" element={<RestaurantOrders />} />
-        </Route>
+        />
+        <Route path="/admin" element={<Navigate to="/admin/orders" replace />} />
 
-        {/* NEW: Trang theo dõi chi tiết 1 đơn Drone */}
-        <Route path="/orders/:id/tracking" element={<DroneTracker />}  />
-
-        {/* Fallbacks */}
-        <Route path="/admin*" element={<Navigate to="/admin/dashboard" replace />} />
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

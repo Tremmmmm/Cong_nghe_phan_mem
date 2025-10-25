@@ -2,7 +2,13 @@ const KEY = "ff_users_v1";
 
 /**
  * Cấu trúc mỗi user:
- * { email, name, phone, role: 'user'|'restaurant'|'admin', active: true }
+ * { 
+ *   email, 
+ *   name, 
+ *   phone, 
+ *   role: 'user'|'restaurant_admin'|'server_admin',  // 3 roles: user thường, admin nhà hàng, admin server
+ *   active: true 
+ * }
  */
 
 export function listUsers() {
