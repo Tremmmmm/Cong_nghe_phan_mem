@@ -190,15 +190,41 @@ export default function RestaurantOrders() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelOrderObj, setCancelOrderObj] = useState(null);
 
-  const columns = [STATUS.NEW, STATUS.ACCEPTED, STATUS.READY, STATUS.DELIVERING, STATUS.COMPLETED, STATUS.CANCELLED];
-
+  const mainColumns = [STATUS.NEW, STATUS.ACCEPTED, STATUS.READY, STATUS.DELIVERING];
+    const bottomColumns = [STATUS.COMPLETED, STATUS.CANCELLED];
+    const allColumns = [...mainColumns, ...bottomColumns];
   const css = `
     .od-wrap{max-width:1200px;margin:24px auto;padding:0 16px}
     .top{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
     .title{font-size:24px;font-weight:800;margin:0}
-    .board{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
-    @media (max-width:1220px){ .board{grid-template-columns:repeat(3,1fr)} }
-    @media (max-width:820px){ .board{grid-template-columns:1fr} }
+    .bottom-board {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 2 cột dưới */
+        gap: 16px;margin-bottom: 16px;
+    }
+        .board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr); /* MUST define 4 columns here */
+      gap: 16px;
+      margin-bottom: 16px;
+  }
+
+    /* Điều chỉnh responsive */
+    @media (max-width: 1320px) {
+        .board { display: grid;
+        grid-template-columns: repeat(4, 1fr); /* This creates 4 equal columns */
+        gap: 16px;
+        margin-bottom: 16px; }
+        .bottom-board { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
+        .board { grid-template-columns: repeat(2, 1fr); } 
+        .bottom-board { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+        .board { grid-template-columns: 1fr; }
+        .bottom-board { grid-template-columns: 1fr; } /* Stack 2 cột dưới */
+    }
     .col{background:#fff;border:1px solid #eee;border-radius:14px;padding:14px;min-height:140px;transition:border-color .2s, box-shadow .2s}
     .col.drag-over{border-color:#ffb199; box-shadow:0 0 0 3px #ffe8e0}
     .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -226,10 +252,10 @@ export default function RestaurantOrders() {
   `;
 
   const grouped = useMemo(() => {
-    const by = Object.fromEntries(columns.map((c) => [c, []]));
-    for (const o of orders) (by[o.status || STATUS.NEW] || by[STATUS.NEW]).push(o);
-    return by;
-  }, [orders]);
+        const by = Object.fromEntries(allColumns.map((c) => [c, []]));
+        for (const o of orders) (by[o.status || STATUS.NEW] || by[STATUS.NEW]).push(o);
+        return by;
+    }, [orders]);
 
   function toTs(v) {
     if (!v) return 0;
@@ -463,43 +489,72 @@ export default function RestaurantOrders() {
   }
 
   return (
-    <div className="od-wrap">
-      <style>{css}</style>
+        <div className="od-wrap">
+            <style>{css}</style>
 
-      <div className="top">
-        <h2 className="title">Quản lý đơn hàng</h2>
-        <button className="ff-btn" onClick={fetchOrders}>Làm mới</button>
-      </div>
+            <div className="top">
+                <h2 className="title">Quản lý đơn hàng</h2>
+                <button className="ff-btn" onClick={fetchOrders}>Làm mới</button>
+            </div>
 
-      {loading ? (
-        <div>Đang tải…</div>
-      ) : (
-        <div className="board">
-          {columns.map((col) => (
-            <section
-              key={col}
-              className="col"
-              onDragOver={(e) => e.preventDefault()}
-              onDragEnter={onDragEnter}
-              onDragLeave={onDragLeave}
-              onDrop={(e) => onDropCol(e, col)}
-            >
-              <div className="col-head">
-                <div className="col-title">{STATUS_LABEL[col]}</div>
-                <span className="col-count">{grouped[col]?.length || 0}</span>
-              </div>
+            {loading ? (
+                <div>Đang tải…</div>
+            ) : (
+                <> {/* Sử dụng Fragment để chứa 2 board */}
+                    {/* Hàng trên: 4 cột chính */}
+                    <div className="board">
+                        {mainColumns.map((col) => (
+                            <section
+                                key={col}
+                                className="col"
+                                onDragOver={(e) => e.preventDefault()}
+                                onDragEnter={onDragEnter}
+                                onDragLeave={onDragLeave}
+                                onDrop={(e) => onDropCol(e, col)}
+                            >
+                                <div className="col-head">
+                                    <div className="col-title">{STATUS_LABEL[col]}</div>
+                                    <span className="col-count">{grouped[col]?.length || 0}</span>
+                                </div>
+                                {grouped[col]?.length ? (
+                                    grouped[col].map((o) => (
+                                        <OrderCard key={o.id} order={o} onMove={moveStatus} onEdit={onEdit} onAskCancel={onAskCancel} />
+                                    ))
+                                ) : (
+                                    <div className="muted">Không có đơn</div>
+                                )}
+                            </section>
+                        ))}
+                    </div>
 
-              {grouped[col]?.length ? (
-                grouped[col].map((o) => (
-                  <OrderCard key={o.id} order={o} onMove={moveStatus} onEdit={onEdit} onAskCancel={onAskCancel} />
-                ))
-              ) : (
-                <div className="muted">Không có đơn</div>
-              )}
-            </section>
-          ))}
-        </div>
-      )}
+                    {/* Hàng dưới: 2 cột phụ */}
+                    <div className="bottom-board">
+                        {bottomColumns.map((col) => (
+                            <section
+                                key={col}
+                                className="col"
+                                onDragOver={(e) => e.preventDefault()}
+                                onDragEnter={onDragEnter}
+                                onDragLeave={onDragLeave}
+                                onDrop={(e) => onDropCol(e, col)} // Vẫn cho phép kéo thả vào đây nếu cần
+                            >
+                                <div className="col-head">
+                                    <div className="col-title">{STATUS_LABEL[col]}</div>
+                                    <span className="col-count">{grouped[col]?.length || 0}</span>
+                                </div>
+                                {grouped[col]?.length ? (
+                                    grouped[col].map((o) => (
+                                        // Card ở đây có thể có ít action hơn hoặc không có drag
+                                        <OrderCard key={o.id} order={o} onMove={moveStatus} onEdit={onEdit} onAskCancel={onAskCancel} />
+                                    ))
+                                ) : (
+                                    <div className="muted">Không có đơn</div>
+                                )}
+                            </section>
+                        ))}
+                    </div>
+                </>
+            )}
 
       {/* Modal sửa đơn */}
       <OrderEditModal

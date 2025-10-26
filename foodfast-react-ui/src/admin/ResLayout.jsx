@@ -34,15 +34,12 @@ export default function ResLayout(){
   return (
     <div className="admin-layout">
       <aside className="aside">
-        <div className="a-title">Trang quản trị</div>
-        <nav className="a-nav">
-          <NavLink to="/admin/users" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Người dùng
-          </NavLink>
+        <div className="a-title">Trang quản trị cửa hàng</div>
+        <nav className="a-nav"> 
 
           <NavLink to="/admin/dashboard" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Dashboard
-          </NavLink>
+          </NavLink> 
 
           <NavLink to="/admin/orders" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Lịch sử đơn hàng

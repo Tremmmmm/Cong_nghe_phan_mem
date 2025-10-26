@@ -1,4 +1,3 @@
-// src/App.jsx
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 
 // Layout
@@ -13,7 +12,8 @@ import Cart from './pages/Cart.jsx'
 import SearchResults from './pages/SearchResults.jsx'
 import Confirmation from './pages/Confirmation.jsx'
 import DetailsHistory from './pages/DetailsHistory.jsx'
-import Profile from './pages/Profile.jsx'            // Settings/Profile (user)
+import Profile from './pages/Profile.jsx'
+import ConfirmCloseSession from './pages/ConfirmCloseSession.jsx'
 
 // Auth pages
 import SignIn from './pages/SignIn.jsx'
@@ -21,16 +21,27 @@ import SignUp from './pages/SignUp.jsx'
 
 // Feature pages
 import Checkout from './pages/Checkout.jsx'
-import Orders from './pages/Orders.jsx'              // My Orders (user)
+import Orders from './pages/Orders.jsx'
 
-// Admin pages
+// Admin pages (nội dung)
 import AdminOrders from './pages/AdminOrders.jsx'
-import AdminSignIn from './pages/AdminSignIn.jsx'    // nếu bạn có trang này
+import AdminSignIn from './pages/AdminSignIn.jsx'
+import AdminDashboard from './pages/AdminDashboard.jsx' 
+
+// Admin shell layout (sidebar)
+import ResLayout from './admin/ResLayout.jsx'
+
+// Restaurant (Kitchen)
+import RestaurantOrders from './pages/RestaurantOrders.jsx'
+
+// NEW: Drone pages
+import DroneOrders from './pages/DroneOrders.jsx'
+import DroneTracker from './pages/DroneTracker.jsx'
 
 // Guards
 import { RequireAuth, RequireAdmin } from './context/AuthContext.jsx'
 
-// Simple layout to keep Header/Footer persistent
+// layout giữ Header/Footer cố định
 function AppLayout() {
   return (
     <>
@@ -44,7 +55,6 @@ function AppLayout() {
 export default function App() {
   return (
     <Routes>
-      {/* Wrap everything with a layout that shows Header/Footer once */}
       <Route element={<AppLayout />}>
         {/* Public */}
         <Route path="/" element={<Home />} />
@@ -55,11 +65,18 @@ export default function App() {
         <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/history" element={<DetailsHistory />} />
         <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/checkout/confirm"
+          element={
+            <RequireAuth>
+              <ConfirmCloseSession />
+            </RequireAuth>
+          }
+        />
 
         {/* Auth (user) */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-
         <Route
           path="/checkout"
           element={
@@ -69,7 +86,7 @@ export default function App() {
           }
         />
         <Route
-          path="/orders"   // <-- My Orders (dropdown)
+          path="/orders"
           element={
             <RequireAuth>
               <Orders />
@@ -77,19 +94,31 @@ export default function App() {
           }
         />
 
-        {/* Admin */}
+        {/* Admin login (nếu có) */}
         <Route path="/admin/login" element={<AdminSignIn />} />
+
+        {/* Admin Panel (nested dưới ResLayout) */}
         <Route
-          path="/admin/orders"
+          path="/admin"
           element={
             <RequireAdmin>
-              <AdminOrders />
+              <ResLayout />
             </RequireAdmin>
           }
-        />
-        <Route path="/admin" element={<Navigate to="/admin/orders" replace />} />
+        > 
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="orders" element={<AdminOrders />} />
+          {/* NEW: danh sách Drone chuyên biệt */}
+          <Route path="drone" element={<DroneOrders />} />
+          <Route path="restaurant" element={<RestaurantOrders />} />
+        </Route>
 
-        {/* Fallback */}
+        {/* NEW: Trang theo dõi chi tiết 1 đơn Drone */}
+        <Route path="/orders/:id/tracking" element={<DroneTracker />}  />
+
+        {/* Fallbacks */}
+        <Route path="/admin*" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

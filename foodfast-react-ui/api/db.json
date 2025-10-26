@@ -94,10 +94,10 @@
       ],
       "total": 198000,
       "createdAt": 1758036847213,
-      "status": "ready",
+      "status": "accepted",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-18T07:54:13.591Z",
-      "acceptedAt": "2025-10-16T16:11:29.080Z",
+      "updatedAt": "2025-10-26T16:22:43.087Z",
+      "acceptedAt": "2025-10-26T16:22:43.087Z",
       "readyAt": "2025-10-18T07:54:13.591Z"
     },
     {
@@ -260,9 +260,9 @@
       "finalTotal": 276000,
       "couponCode": "FREESHIP",
       "createdAt": 1758552940632,
-      "status": "accepted",
+      "status": "cancelled",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-17T01:37:24.997Z",
+      "updatedAt": "2025-10-26T16:20:13.399Z",
       "acceptedAt": "2025-10-17T01:37:24.997Z",
       "readyAt": "2025-10-16T16:10:24.384Z",
       "modified": true,
@@ -271,7 +271,11 @@
         "priceChanges": [],
         "note": null,
         "adjustedAt": "2025-10-16T16:10:22.185Z"
-      }
+      },
+      "cancelReason": "closed",
+      "cancelBy": "merchant",
+      "cancelNote": null,
+      "cancelledAt": "2025-10-26T16:20:13.399Z"
     },
     {
       "id": "i8uk",
@@ -452,11 +456,11 @@
       "couponCode": "FF10",
       "payment": "COD",
       "createdAt": 1760286657105,
-      "status": "new",
+      "status": "ready",
       "payment_status": "unpaid",
-      "updatedAt": "2025-10-15T09:58:05.010Z",
-      "acceptedAt": "2025-10-15T09:58:05.010Z",
-      "readyAt": "2025-10-15T09:55:09.551Z"
+      "updatedAt": "2025-10-26T16:16:55.218Z",
+      "acceptedAt": "2025-10-26T16:16:53.080Z",
+      "readyAt": "2025-10-26T16:16:55.218Z"
     },
     {
       "id": "w6hv",
@@ -576,13 +580,14 @@
         "lat": 10.784,
         "lng": 106.684
       },
-      "status": "delivering",
+      "status": "completed",
       "payment_status": "unpaid",
-      "updatedAt": "2025-10-16T12:50:38.497Z",
+      "updatedAt": "2025-10-26T16:20:04.662Z",
       "acceptedAt": "2025-10-16T12:50:29.689Z",
       "readyAt": "2025-10-16T12:50:35.444Z",
       "droneMissionId": "d321",
-      "pickedAt": "2025-10-16T12:50:38.497Z"
+      "pickedAt": "2025-10-16T12:50:38.497Z",
+      "deliveredAt": "2025-10-26T16:20:04.662Z"
     },
     {
       "id": "c7i1",
@@ -696,13 +701,14 @@
         "lat": 10.77947394341482,
         "lng": 106.6926617773556
       },
-      "status": "delivering",
+      "status": "completed",
       "payment_status": "unpaid",
-      "updatedAt": "2025-10-16T16:13:29.285Z",
+      "updatedAt": "2025-10-26T16:20:03.721Z",
       "acceptedAt": "2025-10-16T16:13:23.940Z",
       "readyAt": "2025-10-16T16:13:27.730Z",
       "droneMissionId": "d5d1",
-      "pickedAt": "2025-10-16T16:13:29.285Z"
+      "pickedAt": "2025-10-16T16:13:29.285Z",
+      "deliveredAt": "2025-10-26T16:20:03.721Z"
     },
     {
       "id": "cicb",
@@ -745,13 +751,14 @@
         "lat": 10.784,
         "lng": 106.684
       },
-      "status": "delivering",
+      "status": "completed",
       "payment_status": "unpaid",
-      "updatedAt": "2025-10-16T16:17:52.422Z",
+      "updatedAt": "2025-10-26T16:22:46.003Z",
       "acceptedAt": "2025-10-16T16:17:48.400Z",
       "readyAt": "2025-10-16T16:17:50.370Z",
       "droneMissionId": "64bc",
-      "pickedAt": "2025-10-16T16:17:52.422Z"
+      "pickedAt": "2025-10-16T16:17:52.422Z",
+      "deliveredAt": "2025-10-26T16:22:46.003Z"
     },
     {
       "id": "nlcb",
@@ -1284,6 +1291,48 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1760774896415
+    }
+  ],
+  "merchants": [
+    {
+      "id": "m001",
+      "name": "Burger King Fast Food",
+      "status": "Active",
+      "ordersToday": 45,
+      "owner": "admin@foodfast.com",
+      "phone": "0901234567",
+      "address": "123 Đường A, Quận 1",
+      "contract": "2023-01-01 / 2024-12-31"
+    },
+    {
+      "id": "m002",
+      "name": "Phở Lý Quốc Sư",
+      "status": "Active",
+      "ordersToday": 0,
+      "owner": "pho.ls@gmail.com",
+      "phone": "0907654321",
+      "address": "456 Đường B, Quận 3",
+      "contract": "2022-05-15 / 2024-05-15"
+    },
+    {
+      "id": "m003",
+      "name": "Trà Sữa KOI",
+      "status": "Pending",
+      "ordersToday": 12,
+      "owner": "koi@milk.com",
+      "phone": "0988998899",
+      "address": "789 Đường C, Quận 5",
+      "contract": "N/A"
+    },
+    {
+      "id": "m004",
+      "name": "Cơm Tấm Cali",
+      "status": "Active",
+      "ordersToday": 88,
+      "owner": "tam.cali@corp.com",
+      "phone": "0912121212",
+      "address": "101 Đường D, Quận 10",
+      "contract": "2023-11-01 / 2025-11-01"
     }
   ]
 }

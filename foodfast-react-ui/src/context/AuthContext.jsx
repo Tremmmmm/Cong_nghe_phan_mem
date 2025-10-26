@@ -10,13 +10,13 @@ const AuthCtx = createContext(null)
 // hardcode accounts demo
 const ADMIN_ACCOUNTS = {
   server_admin: {
-    email: '  ',
+    email: 'svadmin',
     password: '123',
     name: 'Server Admin',
     role: 'server_admin'
   },
   restaurant_admin: {
-    email: 'resadmin@foodfast.com',
+    email: 'resadmin',
     password: '123',
     name: 'Restaurant Admin',
     role: 'restaurant_admin'
