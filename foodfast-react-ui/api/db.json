@@ -231,10 +231,11 @@
       "finalTotal": 231000,
       "couponCode": "FREESHIP",
       "createdAt": 1758215459583,
-      "status": "accepted",
+      "status": "ready",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-16T16:11:25.516Z",
-      "acceptedAt": "2025-10-16T16:11:25.516Z"
+      "updatedAt": "2025-10-27T06:53:00.502Z",
+      "acceptedAt": "2025-10-16T16:11:25.516Z",
+      "readyAt": "2025-10-27T06:53:00.502Z"
     },
     {
       "id": "cr3y",
@@ -456,10 +457,10 @@
       "couponCode": "FF10",
       "payment": "COD",
       "createdAt": 1760286657105,
-      "status": "ready",
+      "status": "accepted",
       "payment_status": "unpaid",
-      "updatedAt": "2025-10-26T16:16:55.218Z",
-      "acceptedAt": "2025-10-26T16:16:53.080Z",
+      "updatedAt": "2025-10-27T06:52:59.067Z",
+      "acceptedAt": "2025-10-27T06:52:59.067Z",
       "readyAt": "2025-10-26T16:16:55.218Z"
     },
     {
@@ -843,6 +844,43 @@
       "readyAt": "2025-10-18T08:06:31.106Z",
       "droneMissionId": "b182",
       "pickedAt": "2025-10-18T08:08:16.376Z"
+    },
+    {
+      "id": "e8yv",
+      "sessionId": "908e",
+      "userId": 0,
+      "userEmail": "resadmin",
+      "customerName": "Restaurant Admin",
+      "phone": "0924545454",
+      "address": "số 51 nguyễn trãi",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 45000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 65000,
+      "couponCode": "",
+      "payment": "COD",
+      "createdAt": 1761549208709,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.777850856532352,
+        "lng": 106.68729768525567
+      },
+      "status": "new",
+      "payment_status": "unpaid"
     }
   ],
   "sessions": [
@@ -1334,5 +1372,103 @@
       "address": "101 Đường D, Quận 10",
       "contract": "2023-11-01 / 2025-11-01"
     }
-  ]
+  ],
+  "restaurantSettings": {
+    "item": {
+      "item": {
+        "item": {
+          "item": {
+            "item": {
+              "item": {
+                "item": {
+                  "item": {
+                    "item": {
+                      "item": {
+                        "id": "main_settings",
+                        "storeName": "Cửa hàng FastFood Mặc định",
+                        "address": "123 Đường ABC, Quận 1, TP. HCM",
+                        "phone": "0901234567",
+                        "isManuallyClosed": false,
+                        "operatingHours": {
+                          "mon": {
+                            "open": 9,
+                            "close": 22
+                          },
+                          "tue": {
+                            "open": 9,
+                            "close": 22
+                          },
+                          "wed": {
+                            "open": 9,
+                            "close": 22
+                          },
+                          "thu": {
+                            "open": 9,
+                            "close": 22
+                          },
+                          "fri": {
+                            "open": 9,
+                            "close": 23
+                          },
+                          "sat": {
+                            "open": 10,
+                            "close": 23
+                          },
+                          "sun": {
+                            "open": 10,
+                            "close": 21
+                          }
+                        }
+                      },
+                      "isManuallyClosed": true
+                    },
+                    "isManuallyClosed": false
+                  },
+                  "isManuallyClosed": true
+                },
+                "isManuallyClosed": false
+              },
+              "isManuallyClosed": true
+            },
+            "isManuallyClosed": false
+          },
+          "isManuallyClosed": true
+        },
+        "isManuallyClosed": false
+      },
+      "isManuallyClosed": true
+    },
+    "isManuallyClosed": false,
+    "operatingHours": {
+      "mon": {
+        "open": 7,
+        "close": 20
+      },
+      "tue": {
+        "open": 7,
+        "close": 20
+      },
+      "wed": {
+        "open": 7,
+        "close": 20
+      },
+      "thu": {
+        "open": 7,
+        "close": 20
+      },
+      "fri": {
+        "open": 7,
+        "close": 20
+      },
+      "sat": {
+        "open": 7,
+        "close": 20
+      },
+      "sun": {
+        "open": 7,
+        "close": 18
+      }
+    },
+    "id": "main_settings"
+  }
 }

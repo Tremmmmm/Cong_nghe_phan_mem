@@ -27,6 +27,8 @@ import Orders from './pages/Orders.jsx'
 import AdminOrders from './pages/AdminOrders.jsx'
 import AdminSignIn from './pages/AdminSignIn.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx' 
+import SettingRestaurant from './pages/RestaurantSettings.jsx' 
+
 
 // Admin shell layout (sidebar)
 import ResLayout from './admin/ResLayout.jsx'
@@ -112,6 +114,8 @@ export default function App() {
           {/* NEW: danh sách Drone chuyên biệt */}
           <Route path="drone" element={<DroneOrders />} />
           <Route path="restaurant" element={<RestaurantOrders />} />
+          <Route path="settingrestaurant" element={<SettingRestaurant />} />
+
         </Route>
 
         {/* NEW: Trang theo dõi chi tiết 1 đơn Drone */}
