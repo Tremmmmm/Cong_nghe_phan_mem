@@ -1,6 +1,7 @@
+// src/pages/DroneTracker.jsx
 // Leaflet + OSM (không cần Google key)
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import {
   getOrder as apiGetOrder,
   getMissionById,
@@ -81,6 +82,9 @@ function haversineKm([lat1, lng1], [lat2, lng2]) {
 export default function DroneTracker() {
   const { id: rawId } = useParams();
   const orderId = normalizeOrderId(rawId);
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+  const backHref = isAdmin ? '/admin/drone' : '/orders';
 
   // data state
   const [order, setOrder] = useState(null);
@@ -342,7 +346,7 @@ export default function DroneTracker() {
         <style>{styles}</style>
         <div className="hdr">
           <h2 style={{margin:0}}>Theo dõi Drone</h2>
-          <Link to="/admin/drone" className="btn secondary" style={{textDecoration:'none'}}>← Về danh sách Drone</Link>
+          <Link to={backHref} className="btn secondary" style={{textDecoration:'none'}}>← Về danh sách Drone</Link>
         </div>
         <div className="card" style={{borderColor:'#f9c7c7',background:'#fde8e8',color:'#b80d0d'}}>
           {err}
@@ -366,9 +370,7 @@ export default function DroneTracker() {
           )}
         </div>
         <div style={{display:'flex',gap:8}}>
-          {/* Giữ simulator cho dev, nhưng page này sẽ không vào được nếu chưa Delivering */}
-          {/* {!mission?.id && <button className="btn" onClick={startSimulator}>Tạo mission demo</button>} */}
-          <Link to="/admin/drone" className="btn secondary" style={{textDecoration:'none'}}>← Về danh sách Drone</Link>
+          <Link to={backHref} className="btn secondary" style={{textDecoration:'none'}}>← Về danh sách Drone</Link>
         </div>
       </div>
 

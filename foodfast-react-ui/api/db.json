@@ -881,6 +881,55 @@
       },
       "status": "new",
       "payment_status": "unpaid"
+    },
+    {
+      "id": "7ehy",
+      "sessionId": "ed0e",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "+84912345677",
+      "address": "số 3 Trương Định quận 3",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 45000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        }
+      ],
+      "total": 97000,
+      "discount": 9700,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 107300,
+      "couponCode": "FF10",
+      "payment": "COD",
+      "createdAt": 1761636669824,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.784,
+        "lng": 106.684
+      },
+      "status": "delivering",
+      "payment_status": "unpaid",
+      "updatedAt": "2025-10-28T07:31:24.008Z",
+      "acceptedAt": "2025-10-28T07:31:19.926Z",
+      "readyAt": "2025-10-28T07:31:21.676Z",
+      "droneMissionId": "b32a",
+      "pickedAt": "2025-10-28T07:31:24.008Z"
     }
   ],
   "sessions": [
@@ -1169,6 +1218,28 @@
         ]
       ],
       "currentIndex": 0
+    },
+    {
+      "id": "b32a",
+      "orderId": "7ehy",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-10-28T07:31:24.009Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 4,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.784,
+          106.684
+        ]
+      ],
+      "currentIndex": 0
     }
   ],
   "dronePositions": [
@@ -1329,6 +1400,15 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1760774896415
+    },
+    {
+      "id": "892d",
+      "missionId": "b32a",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1761636684056
     }
   ],
   "merchants": [

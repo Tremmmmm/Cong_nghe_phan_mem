@@ -1,17 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
 import { myOrders } from "../utils/api";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext.jsx";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import MENU_ALL from "../data/menuData.js";
-import { estimateETA, etaWindowLabel, formatCountdown } from "../utils/eta"; // ★ NEW
+import { estimateETA, etaWindowLabel, formatCountdown } from "../utils/eta";
 
 function VND(n){ return (n||0).toLocaleString('vi-VN') + '₫' }
 const FALLBACK = "/assets/images/Delivery.png";
 
+// chuẩn hoá trạng thái để bật nút theo dõi
+const normalizeStatus = (s="") => {
+  const x = String(s).toLowerCase();
+  if (["delivering"].includes(x)) return "delivery";
+  if (["delivered","completed","done"].includes(x)) return "done";
+  if (["cancelled","canceled"].includes(x)) return "cancelled";
+  if (["accepted","preparing","ready"].includes(x)) return "processing";
+  if (["new","pending","confirmed"].includes(x)) return "order";
+  return "order";
+};
+
 export default function Orders() {
   const { user } = useAuth();
-  // const { add, addItem, addToCart } = useCart?.() || {}; // ⛔️ bỏ dùng reorder
   const navigate = useNavigate();
   const [sp] = useSearchParams();
   const focusId = sp.get("focus");
@@ -78,9 +87,20 @@ export default function Orders() {
     return () => clearTimeout(t);
   }, [justClosed]);
 
+  // Lọc theo user & SẮP XẾP MỚI NHẤT LÊN TRÊN
   const my = useMemo(() => {
-    if (!user?.email) return orders;
-    return orders.filter(o => o.userEmail === user.email);
+    const arr = user?.email ? orders.filter(o => o.userEmail === user.email) : orders.slice();
+    // sort: createdAt desc; fallback theo id desc nếu thiếu createdAt
+    arr.sort((a,b) => {
+      const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (tb !== ta) return tb - ta;
+      // fallback theo id (chuỗi số) desc
+      const ia = Number(String(a?.id).replace(/\D/g,'')) || 0;
+      const ib = Number(String(b?.id).replace(/\D/g,'')) || 0;
+      return ib - ia;
+    });
+    return arr;
   }, [orders, user?.email]);
 
   const css = `
@@ -104,6 +124,9 @@ export default function Orders() {
                  background:#fff3e2; border:1px solid #ffc9a6; color:#c24a26}
     .muted{opacity:.75}
     .eta-line{opacity:.9}
+    .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .btn{height:32px;border:none;border-radius:10px;background:#111;color:#fff;padding:0 12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+    .btn[disabled]{background:#d1d5db;color:#6b7280}
     .dark .card{background:#151515;border-color:#333}
     .dark .label{color:#aaa}
   `;
@@ -111,16 +134,17 @@ export default function Orders() {
   const getItemImage = (it) =>
     it.image || menuMap[it.id]?.image || FALLBACK;
 
-  // ★ NEW: component ETA có countdown (dùng riêng cho từng đơn)
+  // ETA badge + countdown
   function EtaBadge({ order }) {
     const st = String(order.status || '').toLowerCase();
     if (['done','delivered','cancelled'].includes(st)) return null;
 
     const eta = useMemo(() => estimateETA({
-      deliveryMode: order.deliveryMode || 'DRIVER',
+      // Bạn chỉ dùng Drone nên set cố định 'DRONE'
+      deliveryMode: 'DRONE',
       itemCount: order.items?.length || 1,
       createdAt: order.createdAt
-    }), [order.deliveryMode, order.items?.length, order.createdAt]);
+    }), [order.items?.length, order.createdAt]);
 
     const [cd, setCd] = useState('');
     useEffect(() => {
@@ -137,13 +161,31 @@ export default function Orders() {
     );
   }
 
+  // Nút theo dõi Drone (chỉ hiện khi đang giao)
+  const TrackBtn = ({ order }) => {
+    const show = normalizeStatus(order?.status) === "delivery";
+    if (!show) return null;
+    const orderParam = encodeURIComponent(String(order?.id ?? "").replace(/^#/, ""));
+    return (
+      <Link
+        to={`/orders/${orderParam}/tracking`}
+        className="btn"
+        style={{textDecoration: "none",background: "#ff7a59",color: "#fff",border: "none",borderRadius: "10px",fontWeight: "600",padding: "6px 14px",
+       }}
+        aria-label={`Xem hành trình đơn #${order?.id}`}
+      >
+        Xem hành trình
+      </Link>
+    );
+  };
+
   return (
     <div className="od-wrap">
       <style>{css}</style>
 
       <div className="top">
         <h2 className="title">Đơn hàng của bạn</h2>
-        <button className="ff-btn" onClick={fetchOrders}>Refresh</button>
+        <button className="btn" onClick={fetchOrders}>Refresh</button>
       </div>
 
       {justClosed && (
@@ -154,7 +196,7 @@ export default function Orders() {
         <div className="banner-warn">
           🔒 Bạn vừa đặt xong đơn.
           <button
-            className="ff-btn"
+            className="btn"
             style={{ marginLeft: 8, height: 28, borderRadius: 14 }}
             onClick={() => navigate(`/checkout/confirm?orderId=${encodeURIComponent(focusId || "")}`)}
           >
@@ -183,8 +225,8 @@ export default function Orders() {
               <div className="label">Người nhận:</div>
               <div><strong>{o.customerName}</strong> • {o.phone}</div>
               <div>{o.address}</div>
-              <div className="muted">Giao bằng: {o.deliveryMode === 'DRONE' ? 'Drone' : 'Tài xế'}</div>
-              {/* ★ NEW: ETA + countdown */}
+              {/* Bạn chỉ dùng Drone */}
+              <div className="muted">Giao bằng: <b>Drone</b></div>
               <div className="muted"><EtaBadge order={o} /></div>
             </div>
 
@@ -206,6 +248,10 @@ export default function Orders() {
               <div>Phải trả: <strong>{VND(o.finalTotal ?? o.total ?? 0)}</strong></div>
             </div>
 
+            {/* hành động */}
+            <div className="actions">
+              <TrackBtn order={o} />
+            </div>
           </div>
         ))
       )}
