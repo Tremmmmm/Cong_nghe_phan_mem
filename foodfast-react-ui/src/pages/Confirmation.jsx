@@ -13,6 +13,14 @@ function useQuery() {
   return useMemo(() => new URLSearchParams(search), [search]);
 }
 
+function payMethodLabel(order) {
+  const m = String(order?.payment || "").toUpperCase();
+  if (m === "MOMO") return "MoMo";
+  if (m === "VNPAY") return "VNPay";
+  if (m === "COD") return "COD";
+  return m || "—";
+}
+
 export default function Confirmation() {
   const q = useQuery();
   const paramId = (q.get("id") || "").trim();
@@ -47,7 +55,8 @@ export default function Confirmation() {
         } else {
           setOrder(data);
           const e = estimateETA({
-            deliveryMode: data.deliveryMode || "DRIVER",
+            // luôn dùng Drone
+            deliveryMode: data.deliveryMode || "DRONE",
             itemCount: data.items?.length || 1,
             createdAt: data.createdAt
           });
@@ -126,7 +135,7 @@ export default function Confirmation() {
                 Mã đơn: <b>#{order.id}</b><br/>
                 Thời gian: {order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}<br/>
                 Trạng thái: <b>{order.status || "new"}</b><br/>
-                Thanh toán: <b>{order.payment === 'ONLINE' ? 'Online (mock)' : 'COD'}</b><br/>
+                Thanh toán: <b>{payMethodLabel(order)}</b><br/>
                 Giao bằng: <b>{order.deliveryMode === 'DRONE' ? 'Drone' : 'Tài xế'}</b>
               </p>
 
@@ -139,7 +148,7 @@ export default function Confirmation() {
               )}
 
               <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-                <Link className="btn" to="/history">Xem lịch sử đơn</Link>
+                <Link className="btn" to="/orders">Xem lịch sử đơn</Link>
                 <Link className="btn alt" to="/menu">Tiếp tục đặt món</Link>
               </div>
             </div>

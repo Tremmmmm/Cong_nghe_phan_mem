@@ -1,8 +1,9 @@
+// src/pages/DetailsHistory.jsx
 import { useEffect, useMemo, useState } from 'react'
 import { myOrders, getMenu } from '../utils/api'
 import { useAuth } from '../context/AuthContext.jsx'
-import { useCart } from '../context/CartContext.jsx'            // ← NEW
-import { useNavigate } from 'react-router-dom'                  // ← NEW
+import { useCart } from '../context/CartContext.jsx'
+import { useNavigate } from 'react-router-dom'
 import MENU_ALL from '../data/menuData.js'
 
 const FALLBACK = '/assets/images/Delivery.png'
@@ -33,16 +34,16 @@ function StatusBadge({ s }) {
   return (
     <span style={{
       display:'inline-block', padding:'2px 10px', borderRadius:999,
-      background:t.bg, border:`1px solid ${t.bd}`, color:t.c, textTransform:'capitalize',
-      fontWeight:700
+      background:t.bg, border:`1px solid ${t.bd}`, color:t.c,
+      textTransform:'capitalize', fontWeight:700
     }}>{t.label}</span>
   )
 }
 
 export default function DetailsHistory(){
   const { user } = useAuth()
-  const cartCtx = useCart?.() || {}                              // ← NEW
-  const navigate = useNavigate()                                 // ← NEW
+  const cartCtx = useCart?.() || {}
+  const navigate = useNavigate()
 
   const [orders, setOrders] = useState([])
   const [menu, setMenu] = useState([])
@@ -72,7 +73,7 @@ export default function DetailsHistory(){
 
   useEffect(()=>{ load() }, [])
 
-  // ✅ Revalidate khi cửa sổ/Tab lấy lại focus
+  // revalidate khi quay lại tab/cửa sổ
   useEffect(() => {
     const onFocus = () => load()
     const onVis = () => { if (document.visibilityState === 'visible') load() }
@@ -118,8 +119,47 @@ export default function DetailsHistory(){
     .right{text-align:right}
     .sum{font-weight:900}
 
-    .btn{height:32px;border:none;border-radius:16px;padding:0 12px;background:#f4f4f6;cursor:pointer}
-    .btn.primary{background:#ff7a59;color:#fff}
+    /* Luôn bám lề trái, tránh thừa CSS từ page khác */
+    .actions{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-start;   /* ← bám lề trái */
+      align-items:center;
+      text-align:left;
+    }
+
+    /* Scoped button styles để không bị "sáng" khi đổi route */
+    .dh-wrap .btn{
+      height:32px;
+      border:none;
+      border-radius:16px;
+      padding:0 12px;
+      background:#f4f4f6;
+      cursor:pointer;
+      color:#111;
+      appearance:none;
+      box-shadow:none;
+      filter:none;
+      margin:0 !important;          /* ← chặn margin:auto từ global */
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:all .1s ease-in-out;
+    }
+    .dh-wrap .btn.primary{
+      background:#ff7a59;
+      color:#fff;
+      appearance:none;
+      box-shadow:none;
+      filter:none;
+      margin:0 !important;
+    }
+    .dh-wrap .btn:hover{filter:brightness(.98)}
+    .dh-wrap .btn:active{transform:translateY(1px)}
+    .dh-wrap .btn:disabled{opacity:.6;cursor:not-allowed}
+
     .items{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
     .it{display:flex;gap:10px;align-items:center;border:1px dashed #eee;border-radius:12px;padding:8px}
     .thumb{width:56px;height:56px;border-radius:10px;object-fit:cover;background:#f6f6f6}
@@ -129,7 +169,7 @@ export default function DetailsHistory(){
   const getItemImage = (it) => it.image || menuMap[it.id]?.image || FALLBACK
   const toggle = (id) => setOpen(v => ({ ...v, [id]: !v[id] }))
 
-  // ← NEW: thêm lại đơn vào giỏ & chuyển qua /cart
+  // Đặt lại giỏ hàng từ order
   const reorder = (order) => {
     const { add, addItem, addToCart } = cartCtx
     const tryAdd = (p, q) => {
@@ -146,11 +186,9 @@ export default function DetailsHistory(){
       if (r !== false) usedContext = true
     }
 
-    // fallback: nếu CartContext không có hàm add*, đệm qua sessionStorage
     if (!usedContext) {
       try { sessionStorage.setItem('ff_reorder_buffer', JSON.stringify(order.items || [])) } catch {}
     }
-
     navigate('/cart')
   }
 
@@ -205,11 +243,11 @@ export default function DetailsHistory(){
                   </div>
                 </div>
 
-                <div style={{marginTop:10,display:'flex',gap:8,flexWrap:'wrap'}}>
+                {/* Hàng nút: luôn bám lề trái */}
+                <div className="actions">
                   <button className="btn" onClick={()=>toggle(o.id)}>
                     {open[o.id] ? 'Ẩn món' : `Xem món (${items.length})`}
                   </button>
-                  {/* NEW: nút Đặt lại */}
                   {items.length > 0 && (
                     <button className="btn primary" onClick={()=>reorder(o)}>
                       Đặt lại

@@ -1,5 +1,5 @@
 // src/pages/Checkout.jsx
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useNavigate } from 'react-router-dom'
@@ -12,12 +12,10 @@ import { isPhoneVN } from '../utils/validators'
 
 function VND(n){ return formatVND(n) }
 
-// cố định mode giao & thanh toán
+// cố định mode giao
 const DELIVERY_MODE = 'DRONE'
-const PAYMENT_METHOD = 'COD'
 
 // ====== Toạ độ cho Drone Mission ======
-// Toạ độ mặc định của nhà hàng (ví dụ Bến Thành)
 const DEFAULT_RESTAURANT_LL = { lat: 10.776889, lng: 106.700806 }
 
 // Thử parse "lat,lng" nếu người dùng dán trực tiếp
@@ -118,6 +116,14 @@ export default function Checkout(){
   // === Tổng thanh toán
   const finalTotal = Math.max(0, subtotal - discount + shippingFee - shippingDiscount)
 
+  // ----- PAYMENT METHOD (COD / VNPay / MoMo) -----
+  const [paymentMethod, setPaymentMethod] = useState('COD') // 'COD' | 'VNPAY' | 'MOMO'
+
+  // Mock payment modal state
+  const [showPayModal, setShowPayModal] = useState(false)
+  const payResolveRef = useRef(null)
+  const payTimerRef = useRef(null)
+
   // auto hủy mã khi sửa input khác mã đang áp
   useEffect(() => {
     const code = normalizeCode(couponCode)
@@ -167,6 +173,27 @@ export default function Checkout(){
     else show(`Áp dụng mã ${code} thành công. Giảm ${VND(off)}.`, 'success')
   }
 
+  // ===== MOCK PAYMENT =====
+  function openMockPayment() {
+    return new Promise((resolve) => {
+      payResolveRef.current = resolve
+      setShowPayModal(true)
+      // auto success sau 6s để demo mượt
+      payTimerRef.current = setTimeout(() => {
+        resolve({ ok: true, txnId: 'MOCK' + Math.random().toString(36).slice(2, 8).toUpperCase() })
+        setShowPayModal(false)
+      }, 6000)
+    })
+  }
+  function closeMockPayment(result) {
+    if (payTimerRef.current) { clearTimeout(payTimerRef.current); payTimerRef.current = null }
+    if (payResolveRef.current) {
+      payResolveRef.current(result)
+      payResolveRef.current = null
+    }
+    setShowPayModal(false)
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     if (loading) return
@@ -179,8 +206,10 @@ export default function Checkout(){
 
       const session = await ensureSession()
 
-      const order = {
-        id: Math.random().toString(36).slice(2,6),
+      // Tạo khung order (chưa gửi lên nếu là online)
+      const localId = Math.random().toString(36).slice(2,6)
+      const baseOrder = {
+        id: localId,
         sessionId: session?.id || null,
         userId: user?.id ?? null,
         userEmail: user?.email ?? null,
@@ -204,16 +233,71 @@ export default function Checkout(){
         finalTotal,
         couponCode: appliedCode,
 
-        payment: PAYMENT_METHOD,          // COD
         createdAt: Date.now(),
 
-        // ⬇️ Thêm tọa độ để tạo Drone Mission không bị thiếu
+        // toạ độ để mission không thiếu
         restaurantLocation: DEFAULT_RESTAURANT_LL,
         customerLocation: guessLatLngFromAddress(address),
 
-        // ✅ luôn là "new" (không còn pending)
         status: 'new',
-        payment_status: 'unpaid'
+      }
+
+      // 1) COD: giữ nguyên như cũ
+      if (paymentMethod === 'COD') {
+        const order = {
+          ...baseOrder,
+          payment: 'COD',
+          payment_status: 'unpaid',
+        }
+
+        const created = await placeOrder(order)
+        clear()
+        setState('success')
+
+        const oid = created?.id || order.id
+        try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
+        try { sessionStorage.setItem('lastDeliveryMode', DELIVERY_MODE) } catch {}
+
+        // nhớ thông tin người nhận cho lần sau
+        try {
+          localStorage.setItem('lastName', name.trim())
+          localStorage.setItem('lastPhone', String(phone).trim())
+          localStorage.setItem('lastAddress', address.trim())
+        } catch {}
+
+        if (user && saveAsDefault && typeof updateUser === 'function') {
+          updateUser({ name: name.trim(), phone: String(phone).trim(), address: address.trim() })
+        }
+
+        try {
+          const cur = JSON.parse(localStorage.getItem(REC_ADDR_KEY) || '[]') || []
+          const norm = address.trim()
+          const next = [norm, ...cur.filter(x => x && x !== norm)].slice(0, 3)
+          localStorage.setItem(REC_ADDR_KEY, JSON.stringify(next))
+          setRecentAddr(next)
+        } catch {}
+
+        markOrderAsCurrent(oid)
+        show(`Đặt hàng thành công! Mã đơn: ${oid}`, 'success')
+        nav(`/confirmation?id=${encodeURIComponent(oid)}`, { replace: true })
+        return
+      }
+
+      // 2) Online (VNPay / MoMo): mở modal mock
+      const gateway = paymentMethod // 'VNPAY' | 'MOMO'
+      const payRes = await openMockPayment()
+      if (!payRes?.ok) {
+        setState('error')
+        show('Thanh toán thất bại hoặc bị hủy.', 'error')
+        return
+      }
+
+      // Nếu thanh toán OK → tạo order đã "paid"
+      const order = {
+        ...baseOrder,
+        payment: gateway,
+        payment_status: 'paid',
+        payment_txn_id: payRes.txnId || 'MOCK-TXN',
       }
 
       const created = await placeOrder(order)
@@ -223,6 +307,7 @@ export default function Checkout(){
       const oid = created?.id || order.id
       try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
       try { sessionStorage.setItem('lastDeliveryMode', DELIVERY_MODE) } catch {}
+      try { sessionStorage.setItem('lastPaymentMethod', gateway) } catch {}
 
       // nhớ thông tin người nhận cho lần sau
       try {
@@ -231,12 +316,10 @@ export default function Checkout(){
         localStorage.setItem('lastAddress', address.trim())
       } catch {}
 
-      // cập nhật hồ sơ nếu tick lưu
       if (user && saveAsDefault && typeof updateUser === 'function') {
         updateUser({ name: name.trim(), phone: String(phone).trim(), address: address.trim() })
       }
 
-      // cập nhật "địa chỉ gần đây"
       try {
         const cur = JSON.parse(localStorage.getItem(REC_ADDR_KEY) || '[]') || []
         const norm = address.trim()
@@ -246,8 +329,9 @@ export default function Checkout(){
       } catch {}
 
       markOrderAsCurrent(oid)
-      show(`Đặt hàng thành công! Mã đơn: ${oid}`, 'success')
+      show(`Thanh toán thành công! Mã đơn: ${oid}`, 'success')
       nav(`/confirmation?id=${encodeURIComponent(oid)}`, { replace: true })
+
     } catch (err) {
       console.error(err)
       setState('error')
@@ -301,6 +385,15 @@ export default function Checkout(){
     .addr-chip{background:#fafafa;border:1px solid #e6e6ea}
     .addr-chip:hover{background:#ffefe9}
     .dark .addr-chip{background:#222;border-color:#444;color:#eee}
+
+    /* Mock payment modal */
+    .pm-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+    .pm-card{background:#fff;border-radius:16px;border:1px solid #eee;max-width:520px;width:92%;padding:16px}
+    .pm-title{font-weight:900;font-size:18px;margin:0 0 8px}
+    .pm-row{display:flex;justify-content:space-between;margin:6px 0}
+    .pm-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+    .btn-ok{height:38px;border:none;border-radius:10px;background:#059669;color:#fff;padding:0 12px;font-weight:700;cursor:pointer}
+    .btn-cancel{height:38px;border:1px solid #e5e7eb;border-radius:10px;background:#f3f4f6;color:#111;padding:0 12px;font-weight:700;cursor:pointer}
   `
 
   const codeNormalized = normalizeCode(couponCode)
@@ -408,11 +501,37 @@ export default function Checkout(){
             </div>
           </div>
 
+          {/* PAYMENT METHODS */}
           <div className="field">
             <label>Phương thức thanh toán</label>
-            <div className="chip" title="Thanh toán khi nhận hàng (cố định)">
-              <input type="radio" checked readOnly />
-              Thanh toán khi nhận hàng (COD)
+            <div className="radio-row">
+              <label className="chip" title="Thanh toán khi nhận hàng">
+                <input
+                  type="radio"
+                  name="pm"
+                  checked={paymentMethod === 'COD'}
+                  onChange={()=>setPaymentMethod('COD')}
+                />
+                COD
+              </label>
+              <label className="chip" title="Thanh toán online qua VNPay (mô phỏng)">
+                <input
+                  type="radio"
+                  name="pm"
+                  checked={paymentMethod === 'VNPAY'}
+                  onChange={()=>setPaymentMethod('VNPAY')}
+                />
+                VNPay <span className="muted">mock</span>
+              </label>
+              <label className="chip" title="Thanh toán online qua MoMo (mô phỏng)">
+                <input
+                  type="radio"
+                  name="pm"
+                  checked={paymentMethod === 'MOMO'}
+                  onChange={()=>setPaymentMethod('MOMO')}
+                />
+                MoMo <span className="muted">mock</span>
+              </label>
             </div>
           </div>
 
@@ -461,7 +580,7 @@ export default function Checkout(){
           </div>
 
           <button className="btn" type="submit" disabled={loading || !items.length}>
-            {loading ? 'Đang đặt hàng…' : 'Đặt hàng'}
+            {loading ? 'Đang đặt hàng…' : (paymentMethod === 'COD' ? 'Đặt hàng (COD)' : 'Thanh toán & đặt hàng')}
           </button>
         </form>
 
@@ -488,6 +607,22 @@ export default function Checkout(){
           {items.map((i)=>(<div key={i.id} className="row"><span>{i.name} ×{i.qty}</span><span>{VND((i.price||0)*(i.qty||0))}</span></div>))}
         </div>
       </div>
+
+      {/* MOCK PAYMENT MODAL */}
+      {showPayModal && (
+        <div className="pm-backdrop" role="dialog" aria-modal="true">
+          <div className="pm-card">
+            <h3 className="pm-title">Thanh toán {paymentMethod === 'VNPAY' ? 'VNPay' : 'MoMo'} (mock)</h3>
+            <div className="pm-row"><span>Số tiền</span><b>{VND(finalTotal)}</b></div>
+            <div className="pm-row"><span>Thời gian giữ phiên</span><span>~ 60s</span></div>
+            <div className="pm-row"><span>Mô phỏng</span><span>Hệ thống sẽ tự xác nhận sau ~6s</span></div>
+            <div className="pm-actions">
+              <button className="btn-cancel" onClick={()=>closeMockPayment({ ok:false })}>Giả lập thất bại</button>
+              <button className="btn-ok" onClick={()=>closeMockPayment({ ok:true, txnId:'MOCK-' + Date.now() })}>Giả lập thành công</button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
