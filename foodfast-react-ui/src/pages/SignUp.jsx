@@ -133,7 +133,7 @@ export default function SignUp() {
           {errors.pass2 && <div className="err">{errors.pass2}</div>}
 
           <button className="btn" type="submit" disabled={loading}>
-            {loading ? "Signing Up..." : "Sign Up"}
+            {loading ? "Signing Up..." : "Đăng Ký"}
           </button>
         </form>
 
