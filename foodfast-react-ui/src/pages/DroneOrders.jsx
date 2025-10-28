@@ -1,3 +1,4 @@
+// src/pages/DroneOrders.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { myOrders } from "../utils/api";
@@ -7,12 +8,9 @@ const VND = (n) => formatVND(n);
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5181";
 
 /* ====================== Telemetry helpers ====================== */
-// Lấy điểm telemetry mới nhất từ /dronePositions
-// Ưu tiên missionId; nếu DB cũ dùng droneId thì fallback.
 async function getLatestTelemetry(missionId) {
   if (!missionId) return null;
 
-  // 1) chuẩn theo missionId
   try {
     const qs = new URLSearchParams({
       missionId: String(missionId),
@@ -27,16 +25,13 @@ async function getLatestTelemetry(missionId) {
         const t = arr[0];
         return {
           ...t,
-          ts:
-            typeof t.timestamp === "string"
-              ? Date.parse(t.timestamp)
-              : t.timestamp,
+          ts: typeof t.timestamp === "string" ? Date.parse(t.timestamp) : t.timestamp,
         };
       }
     }
   } catch {}
 
-  // 2) fallback theo droneId (tương thích DB cũ)
+  // Fallback DB cũ theo droneId (nếu cần)
   try {
     const qs = new URLSearchParams({
       droneId: String(missionId),
@@ -51,10 +46,7 @@ async function getLatestTelemetry(missionId) {
         const t = arr[0];
         return {
           ...t,
-          ts:
-            typeof t.timestamp === "string"
-              ? Date.parse(t.timestamp)
-              : t.timestamp,
+          ts: typeof t.timestamp === "string" ? Date.parse(t.timestamp) : t.timestamp,
         };
       }
     }
@@ -66,9 +58,7 @@ async function getLatestTelemetry(missionId) {
 async function getMission(missionId) {
   if (!missionId) return null;
   try {
-    const res = await fetch(
-      `${API_BASE}/droneMissions/${encodeURIComponent(missionId)}`
-    );
+    const res = await fetch(`${API_BASE}/droneMissions/${encodeURIComponent(missionId)}`);
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -103,23 +93,21 @@ const normalizeStatus = (s = "") => {
   if (["new", "pending", "confirmed"].includes(x)) return "order";
   return "order";
 };
-
-// Chỉ cho phép theo dõi khi đang giao & có mission
 const canTrack = (order, mission) =>
   normalizeStatus(order?.status) === "delivery" && !!mission?.id;
 
 /* ====================== Small UI helpers ====================== */
 const BADGE = {
-  queued: { bg: "#f3f4f6", br: "#e5e7eb", tx: "#111827", label: "Queued" },
-  preflight: { bg: "#fff7cd", br: "#ffeaa1", tx: "#7a5a00", label: "Preflight" },
-  takeoff: { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Takeoff" },
-  enroute: { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "En route" },
-  descending: { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Descending" },
-  dropoff: { bg: "#dcfce7", br: "#bbf7d0", tx: "#166534", label: "Drop-off" },
-  returning: { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Returning" },
-  landed: { bg: "#dcfce7", br: "#bbf7d0", tx: "#166534", label: "Landed" },
-  failed: { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Failed" },
-  cancelled: { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Cancelled" },
+  queued:      { bg: "#f3f4f6", br: "#e5e7eb", tx: "#111827", label: "Queued" },
+  preflight:   { bg: "#fff7cd", br: "#ffeaa1", tx: "#7a5a00", label: "Preflight" },
+  takeoff:     { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Takeoff" },
+  enroute:     { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "En route" },
+  descending:  { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Descending" },
+  dropoff:     { bg: "#dcfce7", br: "#bbf7d0", tx: "#166534", label: "Drop-off" },
+  returning:   { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Returning" },
+  landed:      { bg: "#dcfce7", br: "#bbf7d0", tx: "#166534", label: "Landed" },
+  failed:      { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Failed" },
+  cancelled:   { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Cancelled" },
 };
 function StatusPill({ status }) {
   const k = (status || "queued").toLowerCase();
@@ -136,31 +124,38 @@ function StatusPill({ status }) {
         fontWeight: 700,
         fontSize: 12,
       }}
-      title={k}
     >
       {c.label}
     </span>
   );
 }
 
+// ⬇️ Toạ độ 2 dòng, chữ nhỏ & mờ (mini)
 function CoordText({ lat, lng }) {
-  if (!(Number.isFinite(lat) && Number.isFinite(lng))) {
-    return <span className="mini">Chưa có tọa độ</span>;
+  const has = Number.isFinite(lat) && Number.isFinite(lng);
+  if (!has) {
+    return (
+      <div className="coord">
+        <span className="coord-line mini">—</span>
+        <span className="coord-line mini">—</span>
+      </div>
+    );
   }
-  const s = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   return (
-    <span className="mini" title={s}>
-      {s}
-    </span>
+    <div className="coord" title={`${lat}, ${lng}`}>
+      <span className="coord-line mini">{lat.toFixed(6)}</span>
+      <span className="coord-line mini">{lng.toFixed(6)}</span>
+    </div>
   );
 }
+
+const Dash = () => <span className="mini">—</span>;
 
 /* ====================== Main ====================== */
 export default function DroneOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // missions indexed by missionId & by orderId
   const [missionById, setMissionById] = useState({});
   const [missionByOrderId, setMissionByOrderId] = useState({});
   const [teleByMission, setTeleByMission] = useState({});
@@ -170,37 +165,38 @@ export default function DroneOrders() {
     .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
     .btn{height:36px;border:none;border-radius:10px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:600}
     .btn:hover{filter:brightness(0.95)}
-    .btn-ghost{background:#f3f4f6;color:#111;border:1px solid #e5e7eb}
     .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
     .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
     .title{font-weight:800;margin:0 0 6px}
     .val{font-size:22px;font-weight:900}
-    .table{width:100%;border-collapse:separate;border-spacing:0 8px}
+
+    /* === bảng & ô === */
+    .table{width:100%;border-collapse:separate;border-spacing:0 8px;table-layout:fixed;font-variant-numeric:tabular-nums}
     .row{background:#fff;border:1px solid #eee;border-radius:12px}
-    .cell{padding:10px 12px;vertical-align:top}
+    .cell{padding:10px 12px;vertical-align:middle}
     .cell.right{text-align:right}
-    .row > .cell.right{display:flex;align-items:center;justify-content:flex-end}
+    .cell.center{text-align:center}
+    .cell.money {text-align: center;padding-left: 0;padding-right: 0;display: flex;justify-content: center;align-items: center;}
+    .money-val {display: inline-block;width: 100%;text-align: center;font-variant-numeric: tabular-nums;}
+    .cell.customer{text-align:center}
+    .cell.coord{white-space:normal;text-align:center}
+    .coord{font-variant-numeric:tabular-nums;line-height:1.2}
+    .coord-line{display:block}
+
     .header{font-size:12px;color:#666;padding-bottom:6px}
     .mini{font-size:12px;opacity:.75}
+    .cell .mini{display:block}
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#f7f7f7;border:1px solid #e8e8e8;text-transform:capitalize;font-weight:700}
     .badge.order{background:#fff0e9;border-color:#ffd8c6;color:#c24a26}
     .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
     .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
     .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
-    @media(max-width:1060px){ .table{display:block} .row{display:grid;grid-template-columns:1fr 1fr;gap:6px} .cell{padding:8px 10px}}
   `;
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await myOrders({
-        page: 1,
-        limit: 10000,
-        status: "all",
-        q: "",
-        sort: "createdAt",
-        order: "desc",
-      });
+      const res = await myOrders({ page: 1, limit: 10000, status: "all", q: "", sort: "createdAt", order: "desc" });
       const arr = Array.isArray(res) ? res : res?.rows || res?.data || [];
       const drones = arr.filter(
         (o) =>
@@ -210,12 +206,8 @@ export default function DroneOrders() {
       );
       setOrders(drones);
 
-      // Lấy mission: có droneMissionId -> theo id, không có -> tìm theo orderId
       const missionList = await Promise.all(
-        drones.map(async (o) => {
-          if (o.droneMissionId) return await getMission(o.droneMissionId);
-          return await findMissionByOrderId(o.id);
-        })
+        drones.map(async (o) => (o.droneMissionId ? await getMission(o.droneMissionId) : await findMissionByOrderId(o.id)))
       );
 
       const mMap = {};
@@ -229,15 +221,12 @@ export default function DroneOrders() {
       setMissionById(mMap);
       setMissionByOrderId(mOrderMap);
 
-      // Lấy telemetry
-      const teleList = await Promise.all(
-        missionList.map((m) => (m?.id ? getLatestTelemetry(m.id) : null))
-      );
+      const teleList = await Promise.all(missionList.map((m) => (m?.id ? getLatestTelemetry(m.id) : null)));
       const tMap = {};
       teleList.forEach((t) => {
         if (!t) return;
         if (t.missionId) tMap[t.missionId] = t;
-        else if (t.droneId) tMap[t.droneId] = t; // fallback DB cũ
+        else if (t.droneId) tMap[t.droneId] = t;
       });
       setTeleByMission(tMap);
     } finally {
@@ -252,16 +241,14 @@ export default function DroneOrders() {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
-  // Summary
+  // Summary thẻ nhỏ
   const summary = useMemo(() => {
     const counts = { active: 0, waiting: 0, landed: 0, error: 0 };
     for (const o of orders) {
-      const m =
-        missionById[o.droneMissionId] || missionByOrderId[String(o.id)] || null;
+      const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)] || null;
       const st = (m?.status || "queued").toLowerCase();
       if (["queued", "preflight"].includes(st)) counts.waiting++;
-      else if (["takeoff", "enroute", "descending", "returning"].includes(st))
-        counts.active++;
+      else if (["takeoff", "enroute", "descending", "returning"].includes(st)) counts.active++;
       else if (["dropoff", "landed"].includes(st)) counts.landed++;
       else if (["failed", "cancelled"].includes(st)) counts.error++;
     }
@@ -274,76 +261,55 @@ export default function DroneOrders() {
 
       <div className="topbar">
         <h2 style={{ margin: 0 }}>Drone (theo dõi)</h2>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn" onClick={load}>
-            Làm mới
-          </button>
-        </div>
+        <button className="btn" onClick={load}>Làm mới</button>
       </div>
 
-      {/* Cards */}
       <div className="grid">
-        <div className="card">
-          <div className="title">Tổng đơn Drone</div>
-          <div className="val">{summary.total}</div>
-        </div>
-        <div className="card">
-          <div className="title">Đang bay</div>
-          <div className="val">{summary.active}</div>
-        </div>
-        <div className="card">
-          <div className="title">Chờ cất cánh</div>
-          <div className="val">{summary.waiting}</div>
-        </div>
-        <div className="card">
-          <div className="title">Đã hạ cánh</div>
-          <div className="val">{summary.landed}</div>
-        </div>
-        <div className="card">
-          <div className="title">Lỗi/Huỷ</div>
-          <div className="val">{summary.error}</div>
-        </div>
+        <div className="card"><div className="title">Tổng đơn Drone</div><div className="val">{summary.total}</div></div>
+        <div className="card"><div className="title">Đang bay</div><div className="val">{summary.active}</div></div>
+        <div className="card"><div className="title">Chờ cất cánh</div><div className="val">{summary.waiting}</div></div>
+        <div className="card"><div className="title">Đã hạ cánh</div><div className="val">{summary.landed}</div></div>
+        <div className="card"><div className="title">Lỗi/Huỷ</div><div className="val">{summary.error}</div></div>
       </div>
 
-      {/* Bảng */}
       {loading ? (
         <div className="card">Đang tải…</div>
       ) : !orders.length ? (
         <div className="card">Không có đơn Drone.</div>
       ) : (
         <table className="table">
+          {/* Không có cột PIN – phân bổ lại % cho đủ 100 */}
+          <colgroup>
+            <col style={{ width: "16%" }} /> {/* Đơn */}
+            <col style={{ width: "18%" }} /> {/* Khách */}
+            <col style={{ width: "11%" }} /> {/* Số tiền */}
+            <col style={{ width: "16%" }} /> {/* Mission */}
+            <col style={{ width: "8%"  }} /> {/* Tốc độ */}
+            <col style={{ width: "8%"  }} /> {/* ETA */}
+            <col style={{ width: "15%" }} /> {/* Toạ độ */}
+            <col style={{ width: "8%"  }} /> {/* Thao tác */}
+          </colgroup>
+
           <thead>
             <tr className="row">
               <th className="cell header">Đơn</th>
               <th className="cell header">Khách</th>
-              <th className="cell header">Số tiền</th>
-              <th className="cell header">Mission</th>
-              <th className="cell header">Pin</th>
-              <th className="cell header">Tốc độ</th>
-              <th className="cell header">ETA</th>
-              <th className="cell header">Toạ độ</th>
+              <th className="cell header right">Số tiền</th>
+              <th className="cell header center">Mission</th>
+              <th className="cell header center">Tốc độ</th>
+              <th className="cell header center">ETA</th>
+              <th className="cell header center">Toạ độ</th>
               <th className="cell header right">Thao tác</th>
             </tr>
           </thead>
+
           <tbody>
             {orders.map((o) => {
-              const m =
-                missionById[o.droneMissionId] ||
-                missionByOrderId[String(o.id)] ||
-                null;
-              const t = m
-                ? teleByMission[m.id] || teleByMission[o.droneMissionId]
-                : null;
+              const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)] || null;
+              const t = m ? (teleByMission[m.id] || teleByMission[o.droneMissionId]) : null;
 
-              const ui = (o.status || "").toLowerCase();
-              const lat = t?.lat,
-                lng = t?.lng;
-
-              // Link id: bỏ dấu # + encode
-              const orderParam = encodeURIComponent(
-                String(o.id).replace(/^#/, "")
-              );
-
+              const lat = t?.lat, lng = t?.lng;
+              const orderParam = encodeURIComponent(String(o.id).replace(/^#/, ""));
               const hasMission = !!m?.id;
               const trackable = canTrack(o, m);
 
@@ -351,77 +317,52 @@ export default function DroneOrders() {
                 <tr key={o.id} className="row">
                   <td className="cell">
                     <div>
-                      <b>#{o.id}</b> &nbsp;
-                      <span
-                        className={`badge ${
-                          ui.includes("deliver")
-                            ? "delivery"
-                            : ui.includes("prepar") || ui.includes("accept")
-                            ? "processing"
-                            : ui.includes("done") || ui.includes("complete")
-                            ? "done"
-                            : "order"
-                        }`}
-                      >
+                      <b>#{o.id}</b>{" "}
+                      <span className={`badge ${
+                        (o.status || "").toLowerCase().includes("deliver")
+                          ? "delivery"
+                          : (o.status || "").toLowerCase().includes("accept") ||
+                            (o.status || "").toLowerCase().includes("ready")
+                          ? "processing"
+                          : (o.status || "").toLowerCase().includes("complete")
+                          ? "done"
+                          : "order"
+                      }`}>
                         {o.status || "order"}
                       </span>
                     </div>
-                    <div className="mini">
-                      {o.createdAt
-                        ? new Date(o.createdAt).toLocaleString("vi-VN")
-                        : "—"}
-                    </div>
+                    <span className="mini">
+                      {o.createdAt ? new Date(o.createdAt).toLocaleString("vi-VN") : "—"}
+                    </span>
                   </td>
 
-                  <td className="cell">
-                    <div>
-                      <b>{o.customerName}</b>
-                    </div>
-                    <div className="mini">{o.phone}</div>
+                  <td className="cell customer">
+                    <div><b>{o.customerName}</b></div>
+                    <span className="mini">{o.phone || "—"}</span>
                   </td>
 
-                  <td className="cell">{VND(o.finalTotal ?? o.total ?? 0)}</td>
-
-                  <td className="cell">
-                    {hasMission ? (
-                      <StatusPill status={m?.status} />
-                    ) : (
-                      <span className="mini">Chưa có mission</span>
-                    )}
-                    <div className="mini" style={{ marginTop: 2 }}>
-                      {t?.ts
-                        ? `Cập nhật: ${new Date(t.ts).toLocaleTimeString(
-                            "vi-VN"
-                          )}`
-                        : "—"}
-                    </div>
+                  <td className="cell money">
+                    <span className="money-val">{VND(o.finalTotal ?? o.total ?? 0)}</span>
                   </td>
 
-                  <td className="cell">
-                    {t?.battery != null ? `${t.battery}%` : "—"}
+                  <td className="cell center">
+                    {hasMission ? <StatusPill status={m?.status} /> : <span className="mini">Chưa có mission</span>}
+                    <span className="mini">{t?.ts ? `Cập nhật: ${new Date(t.ts).toLocaleTimeString("vi-VN")}` : "—"}</span>
                   </td>
-                  <td className="cell">
-                    {t?.speed != null ? `${t.speed} km/h` : "—"}
-                  </td>
-                  <td className="cell">{m?.eta != null ? `${m.eta} phút` : "—"}</td>
 
-                  {/* Toạ độ dạng chữ */}
-                  <td className="cell">
+                  <td className="cell center">{t?.speed != null ? `${t.speed} km/h` : <Dash />}</td>
+                  <td className="cell center">{m?.eta   != null ? `${m.eta} phút` : <Dash />}</td>
+
+                  <td className="cell coord">
                     <CoordText lat={lat} lng={lng} />
                   </td>
 
-                  {/* Nút Xem hành trình: chỉ bật khi trackable */}
                   <td className="cell right">
                     {trackable ? (
                       <Link
                         to={`/orders/${orderParam}/tracking`}
                         className="btn"
-                        style={{
-                          textDecoration: "none",
-                          minWidth: 140,
-                          textAlign: "center",
-                        }}
-                        title="Xem hành trình"
+                        style={{ textDecoration: "none", minWidth: 140 }}
                       >
                         Xem hành trình
                       </Link>
@@ -429,17 +370,7 @@ export default function DroneOrders() {
                       <button
                         className="btn"
                         disabled
-                        style={{
-                          minWidth: 140,
-                          background: "#d1d5db",
-                          color: "#6b7280",
-                          cursor: "not-allowed",
-                        }}
-                        title={
-                          !hasMission
-                            ? "Chưa có mission"
-                            : "Đơn chưa ở trạng thái đang giao"
-                        }
+                        style={{ minWidth: 140, background: "#d1d5db", color: "#6b7280" }}
                       >
                         Xem hành trình
                       </button>

@@ -1,5 +1,5 @@
 // src/pages/RestaurantOrders.jsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { api } from "../utils/api";
 import { formatVND } from "../utils/format";
 import OrderEditModal from "../components/OrderEditModal";
@@ -9,7 +9,7 @@ import { patchOrder } from "../utils/api";
 const VND = (n) => formatVND(n);
 
 // === Toạ độ mặc định của nhà hàng (đổi theo vị trí quán của bạn) ===
-const RESTAURANT_COORDS = { lat: 10.776889, lng: 106.700806 }; // ví dụ: gần chợ Bến Thành
+const RESTAURANT_COORDS = { lat: 10.776889, lng: 106.700806 };
 
 // ===== Config cho Drone Mission auto =====
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5181";
@@ -64,6 +64,14 @@ const BADGE_COLOR = {
   [STATUS.CANCELLED]: "#9e9e9e",
 };
 
+// ===== Quy tắc quyền hành động =====
+const canEditOrder = (o) =>
+  (o?.status === STATUS.NEW || o?.status === STATUS.ACCEPTED) && !o?.modified;
+
+// Cho phép huỷ ở NEW/ACCEPTED (nếu muốn thêm READY thì thêm vào dưới đây)
+const canCancelOrder = (o) =>
+  o?.status === STATUS.NEW || o?.status === STATUS.ACCEPTED;
+
 function SmallTag({ children }) {
   return (
     <span
@@ -86,70 +94,285 @@ function Badge({ status }) {
   );
 }
 
-function MoreMenu({ onEdit, onCancel, canEdit, disabledEdit }) {
-  const [open, setOpen] = useState(false);
+/* ===================== Order Detail Drawer (panel bên phải) ===================== */
+function Row({ label, children, muted }) {
   return (
-    <div style={{ position: "relative" }}>
-      <button className="ff-btn ff-btn--ghost" onClick={() => setOpen((v) => !v)}>
+    <div style={{display:"flex", justifyContent:"space-between", margin:"8px 0"}}>
+      <div style={{color: muted ? "#999" : "#333"}}>{label}</div>
+      <div style={{fontWeight:600}}>{children}</div>
+    </div>
+  );
+}
+
+function StatusPill({ text, color="#555" }) {
+  return (
+    <span style={{
+      display:"inline-block", padding:"4px 10px", borderRadius:999,
+      border:`1px solid ${color}`, color, background:"#fff", fontWeight:700, fontSize:12
+    }}>{text}</span>
+  );
+}
+
+function OrderDetailDrawer({
+  open, order, onClose, onEdit, onCancel, canEdit=false, canCancel=false,
+}) {
+  useEffect(() => {
+    function onEsc(e){ if(e.key === "Escape") onClose?.(); }
+    if(open) document.addEventListener("keydown", onEsc);
+    return () => document.removeEventListener("keydown", onEsc);
+  }, [open, onClose]);
+
+  if (!open || !order) return null;
+
+  const items = Array.isArray(order.items) ? order.items : [];
+  const qty = (it) => it.quantity ?? it.qty ?? 1;
+  const price = (it) => it.unitPrice ?? it.price ?? 0;
+  const name = (it) => it.name ?? it.title ?? "Món";
+  const subTotal = items.reduce((s, it) => s + qty(it)*price(it), 0);
+
+  const discount = order.discount ?? order.discountAmount ?? 0;
+  const shipping = order.deliveryFee ?? order.shippingFee ?? 0;
+  const finalTotal = order.finalTotal ?? order.total ?? (subTotal - discount + shipping);
+
+  const statusMap = {
+    new:     { text:"Đơn mới",          color:"#ff9800" },
+    accepted:{ text:"Đã xác nhận",      color:"#03a9f4" },
+    ready:   { text:"Đã sẵn sàng",      color:"#8bc34a" },
+    delivering:{ text:"Đang giao (Drone)", color:"#673ab7" },
+    completed:{ text:"Hoàn thành",      color:"#009688" },
+    cancelled:{ text:"Đã huỷ",          color:"#9e9e9e" },
+  };
+  const st = statusMap[(order.status || "new")];
+
+  return (
+    <div style={{
+      position:"fixed", inset:0, zIndex:3000,
+      background:"rgba(0,0,0,.35)", display:"flex", justifyContent:"flex-end"
+    }}
+      onClick={(e)=>{ if(e.target === e.currentTarget) onClose?.(); }}
+    >
+      <aside style={{
+        width:"380px", maxWidth:"100%", height:"100%", background:"#fff",
+        borderLeft:"1px solid #eee", boxShadow:"-8px 0 24px rgba(0,0,0,.08)",
+        padding:"16px 16px 24px 16px", overflowY:"auto"
+      }}>
+        {/* Header */}
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8}}>
+          <div style={{fontSize:18, fontWeight:800}}>Chi tiết đơn hàng</div>
+          <button
+            onClick={onClose}
+            style={{border:"1px solid #eee", background:"#fff", borderRadius:10, padding:"6px 10px", cursor:"pointer"}}
+          >Đóng</button>
+        </div>
+        <div style={{fontSize:13, color:"#777", marginBottom:12}}>
+          Mã đơn <b>#{order.code || order.id}</b>
+        </div>
+
+        {/* Trạng thái + drone */}
+        <div style={{display:"flex", gap:8, alignItems:"center", marginBottom:12}}>
+          <StatusPill text={st?.text || order.status} color={st?.color || "#555"} />
+          {!order.droneMissionId ? (
+            <span style={{
+              fontSize:12, padding:"4px 10px", borderRadius:999,
+              background:"#fffbe6", color:"#d48806", border:"1px solid #ffe58f"
+            }}>Chưa chỉ định drone</span>
+          ) : (
+            <span style={{
+              fontSize:12, padding:"4px 10px", borderRadius:999,
+              background:"#f6ffed", color:"#389e0d", border:"1px solid #b7eb8f"
+            }}>Mission: {String(order.droneMissionId).slice(0,8)}</span>
+          )}
+        </div>
+
+        {/* Khách đặt */}
+        <div style={{margin:"10px 0 14px", padding:"12px", border:"1px solid #eee", borderRadius:12}}>
+          <div style={{fontWeight:700, marginBottom:6}}>Khách đặt đơn</div>
+          <div style={{fontSize:14}}>{order.customerName || order.userEmail || "Khách"}</div>
+          {order.customerPhone ? (
+            <div style={{fontSize:13, color:"#666", marginTop:4}}>{order.customerPhone}</div>
+          ) : null}
+        </div>
+
+        {/* Danh sách món */}
+        <div style={{marginBottom:8, fontWeight:700}}>Món đã chọn</div>
+        <div style={{border:"1px solid #eee", borderRadius:12, overflow:"hidden"}}>
+          {items.length ? items.map((it, idx) => (
+            <div key={idx} style={{
+              display:"grid", gridTemplateColumns:"1fr auto auto", gap:8, alignItems:"center",
+              padding:"10px 12px", borderTop: idx ? "1px solid #f3f3f3" : "none", background:"#fff"
+            }}>
+              <div style={{fontWeight:600}}>{name(it)}</div>
+              <div style={{color:"#666"}}>x {qty(it)}</div>
+              <div style={{fontWeight:700}}>{VND(price(it)*qty(it))}</div>
+            </div>
+          )) : (
+            <div style={{padding:"12px"}}>—</div>
+          )}
+        </div>
+
+        {/* Tổng tiền (bỏ phí đóng gói & khách ghi chú) */}
+        <div style={{marginTop:14, padding:"12px", border:"1px solid #eee", borderRadius:12}}>
+          <Row label="Tổng tiền món (giá gốc)">{VND(subTotal)}</Row>
+          {discount ? <Row label="Chiết khấu">{VND(-discount)}</Row> : null}
+          <Row label="Phí giao hàng">{VND(shipping)}</Row>
+          <div style={{height:8}} />
+          <Row label={<span style={{fontWeight:800}}>Tổng tiền cần nhận</span>}>
+            <span style={{color:"#ff7a59"}}>{VND(finalTotal)}</span>
+          </Row>
+        </div>
+
+        {/* Thông tin khác ngắn gọn */}
+        <div style={{marginTop:14}}>
+          <div style={{fontSize:12, color:"#999", marginBottom:4}}>Thông tin</div>
+          <div style={{fontSize:13, color:"#444", lineHeight:1.8}}>
+            <div>Thời gian đặt: <b>{order.createdAt ? new Date(order.createdAt).toLocaleString("vi-VN") : "—"}</b></div>
+            {order.distanceKm ? <div>Khoảng cách: <b>{order.distanceKm} km</b></div> : null}
+            {order.etaMin ? <div>Thời gian lấy hàng dự kiến: <b>~ {order.etaMin} phút</b></div> : null}
+          </div>
+        </div>
+
+        {/* Hành động nhanh (ràng buộc trạng thái) */}
+        <div style={{display:"flex", gap:8, marginTop:18}}>
+          <button
+            onClick={onEdit}
+            disabled={!canEdit}
+            title={!canEdit ? "Chỉ sửa khi đơn ở trạng thái Mới/Đã xác nhận và chưa chỉnh sửa" : ""}
+            style={{
+              height:34, padding:"0 14px", borderRadius:17,
+              background: canEdit ? "#ff7a59" : "#f0f0f0",
+              color: canEdit ? "#fff" : "#999",
+              border:"none", cursor: canEdit ? "pointer" : "not-allowed"
+            }}
+          >Chỉnh sửa</button>
+          <button
+            onClick={onCancel}
+            disabled={!canCancel}
+            title={!canCancel ? "Chỉ huỷ khi đơn ở trạng thái Mới/Đã xác nhận" : ""}
+            style={{
+              height:34, padding:"0 14px", borderRadius:17,
+              background:"#fff",
+              color: canCancel ? "#c24a26" : "#aaa",
+              border:`1px solid ${canCancel ? "#ffb199" : "#e5e5e5"}`,
+              cursor: canCancel ? "pointer" : "not-allowed"
+            }}
+          >Huỷ đơn</button>
+        </div>
+      </aside>
+    </div>
+  );
+}
+/* ===================== End Drawer ===================== */
+
+function MoreMenu({ onEdit, onCancel, canEdit, disabledEdit, canCancel=true }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  const canEditAllowed = !!(canEdit && !disabledEdit);
+  const nothingAllowed = !canEditAllowed && !canCancel;
+
+  // đóng khi bấm ra ngoài / nhấn Esc
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!wrapRef.current) return;
+      if (!wrapRef.current.contains(e.target)) setOpen(false);
+    }
+    function onKey(e) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", onDocClick);
+      document.addEventListener("keydown", onKey);
+    }
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} className="ff-dropdown">
+      <button
+        className="ff-btn ff-btn--ghost"
+        onClick={() => setOpen(v => !v)}
+        disabled={nothingAllowed}
+        title={nothingAllowed ? "Không có thao tác khả dụng" : ""}
+      >
         Xem thêm ▾
       </button>
+
       {open && (
-        <div
-          style={{
-            position: "absolute", top: "110%", right: 0, minWidth: 160,
-            background: "#fff", border: "1px solid #eee", borderRadius: 10,
-            boxShadow: "0 8px 24px rgba(0,0,0,.08)", padding: 6, zIndex: 5,
-          }}
-          onMouseLeave={() => setOpen(false)}
-        >
-          <button
-            className="ff-menu-item"
-            disabled={!canEdit || disabledEdit}
-            title={disabledEdit ? "Đã chỉnh sửa 1 lần" : ""}
-            onClick={() => { setOpen(false); onEdit(); }}
-          >
-            Sửa đơn
-          </button>
-          <button className="ff-menu-item" onClick={() => { setOpen(false); onCancel(); }}>
-            Huỷ đơn
-          </button>
+        <div className="ff-menu" role="menu" aria-label="Thao tác đơn">
+          {canEditAllowed && (
+            <button
+              className="ff-menu-item"
+              onClick={() => { setOpen(false); onEdit(); }}
+            >
+              Sửa đơn
+            </button>
+          )}
+          {canEditAllowed && canCancel && <div className="ff-menu-sep" />}
+          {canCancel && (
+            <button
+              className="ff-menu-item ff-danger"
+              onClick={() => { setOpen(false); onCancel(); }}
+            >
+              Huỷ đơn
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function OrderCard({ order, onMove, onAskCancel, onEdit }) {
+function OrderCard({ order, onMove, onAskCancel, onEdit, onOpenDetail }) {
   const s = order.status || STATUS.NEW;
-  const canEdit = s === STATUS.NEW || s === STATUS.ACCEPTED;
+  const editable = s === STATUS.NEW || s === STATUS.ACCEPTED;
   const disabledEdit = !!order.modified;
+
+  const stop = (fn) => (e) => { e.stopPropagation(); fn?.(); };
 
   const actions = [];
   if (s === STATUS.NEW) {
     actions.push(
-      <button key="accept" className="ff-btn" onClick={() => onMove(order, STATUS.ACCEPTED)}>Xác nhận</button>,
-      <MoreMenu key="more" canEdit={canEdit} disabledEdit={disabledEdit} onEdit={() => onEdit(order)} onCancel={() => onAskCancel(order)} />
+      <button key="accept" className="ff-btn" onClick={stop(() => onMove(order, STATUS.ACCEPTED))}>Xác nhận</button>,
+      <MoreMenu
+        key="more"
+        canEdit={editable}
+        disabledEdit={disabledEdit}
+        canCancel={canCancelOrder(order)}
+        onEdit={stop(() => onEdit(order))}
+        onCancel={stop(() => onAskCancel(order))}
+      />
     );
   }
   if (s === STATUS.ACCEPTED) {
     actions.push(
-      <button key="ready" className="ff-btn" onClick={() => onMove(order, STATUS.READY)}>Sẵn sàng</button>,
-      <MoreMenu key="more" canEdit={canEdit} disabledEdit={disabledEdit} onEdit={() => onEdit(order)} onCancel={() => onAskCancel(order)} />
+      <button key="ready" className="ff-btn" onClick={stop(() => onMove(order, STATUS.READY))}>Sẵn sàng</button>,
+      <MoreMenu
+        key="more"
+        canEdit={editable}
+        disabledEdit={disabledEdit}
+        canCancel={canCancelOrder(order)}
+        onEdit={stop(() => onEdit(order))}
+        onCancel={stop(() => onAskCancel(order))}
+      />
     );
   }
   if (s === STATUS.READY) {
     actions.push(
-      <button key="deliver" className="ff-btn" onClick={() => onMove(order, STATUS.DELIVERING)}>Giao bằng Drone</button>,
-      <button key="back" className="ff-btn ff-btn--ghost" onClick={() => onMove(order, STATUS.ACCEPTED)} title="Trả về bước Đã xác nhận">Trả về</button>
+      <button key="deliver" className="ff-btn" onClick={stop(() => onMove(order, STATUS.DELIVERING))}>Giao bằng Drone</button>,
+      <button key="back" className="ff-btn ff-btn--ghost" onClick={stop(() => onMove(order, STATUS.ACCEPTED))} title="Trả về bước Đã xác nhận">Trả về</button>
     );
   }
   if (s === STATUS.DELIVERING) {
-    actions.push(<button key="done" className="ff-btn" onClick={() => onMove(order, STATUS.COMPLETED)}>Đánh dấu đã giao</button>);
+    actions.push(<button key="done" className="ff-btn" onClick={stop(() => onMove(order, STATUS.COMPLETED))}>Đánh dấu đã giao</button>);
   }
 
   return (
     <div
       className="card"
+      onClick={() => onOpenDetail(order)}          // mở chi tiết khi bấm card
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", String(order.id));
@@ -173,7 +396,7 @@ function OrderCard({ order, onMove, onAskCancel, onEdit }) {
 
       <div className="act-row" style={{ marginTop: 10 }}>
         {actions.filter(Boolean).length ? actions : (
-          <button className="ff-btn ff-btn--disabled" disabled>Không có thao tác</button>
+          <button className="ff-btn ff-btn--disabled" onClick={stop(()=>{})} disabled>Không có thao tác</button>
         )}
       </div>
     </div>
@@ -190,72 +413,107 @@ export default function RestaurantOrders() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelOrderObj, setCancelOrderObj] = useState(null);
 
+  // Drawer chi tiết
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailOrder, setDetailOrder] = useState(null);
+  const openDetail = (ord) => { setDetailOrder(ord); setDetailOpen(true); };
+
   const mainColumns = [STATUS.NEW, STATUS.ACCEPTED, STATUS.READY, STATUS.DELIVERING];
-    const bottomColumns = [STATUS.COMPLETED, STATUS.CANCELLED];
-    const allColumns = [...mainColumns, ...bottomColumns];
+  const bottomColumns = [STATUS.COMPLETED, STATUS.CANCELLED];
+  const allColumns = [...mainColumns, ...bottomColumns];
+
   const css = `
+    :root{
+      --ff-accent:#ff7a59;
+      --ff-accent-ghost:#ffb199;
+      --ff-bg:#fff;
+      --ff-border:#eee;
+      --ff-muted:#777;
+      --ff-shadow:0 8px 24px rgba(0,0,0,.08);
+      --ff-soft:#fff6f3;
+    }
     .od-wrap{max-width:1200px;margin:24px auto;padding:0 16px}
     .top{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
     .title{font-size:24px;font-weight:800;margin:0}
-    .bottom-board {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr); /* 2 cột dưới */
-        gap: 16px;margin-bottom: 16px;
-    }
-        .board {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr); /* MUST define 4 columns here */
-      gap: 16px;
-      margin-bottom: 16px;
-  }
+    .bottom-board{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
+    .board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
 
-    /* Điều chỉnh responsive */
-    @media (max-width: 1320px) {
-        .board { display: grid;
-        grid-template-columns: repeat(4, 1fr); /* This creates 4 equal columns */
-        gap: 16px;
-        margin-bottom: 16px; }
-        .bottom-board { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width:1320px){
+      .board{grid-template-columns:repeat(4,1fr)}
+      .bottom-board{grid-template-columns:repeat(2,1fr)}
     }
-    @media (max-width: 900px) {
-        .board { grid-template-columns: repeat(2, 1fr); } 
-        .bottom-board { grid-template-columns: repeat(2, 1fr); }
+    @media (max-width:900px){
+      .board{grid-template-columns:repeat(2,1fr)}
+      .bottom-board{grid-template-columns:repeat(2,1fr)}
     }
-    @media (max-width: 640px) {
-        .board { grid-template-columns: 1fr; }
-        .bottom-board { grid-template-columns: 1fr; } /* Stack 2 cột dưới */
+    @media (max-width:640px){
+      .board{grid-template-columns:1fr}
+      .bottom-board{grid-template-columns:1fr}
     }
-    .col{background:#fff;border:1px solid #eee;border-radius:14px;padding:14px;min-height:140px;transition:border-color .2s, box-shadow .2s}
+
+    .col{background:var(--ff-bg);border:1px solid var(--ff-border);border-radius:14px;padding:14px;min-height:140px;transition:border-color .2s, box-shadow .2s; overflow:visible}
     .col.drag-over{border-color:#ffb199; box-shadow:0 0 0 3px #ffe8e0}
     .col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
     .col-title{font-weight:800}
-    .col-count{font-size:12px;background:#f6f6f6;border:1px solid #eee;border-radius:999px;padding:2px 8px}
-    .card{background:#fff;border:1px solid #eee;border-radius:14px;padding:14px;margin-bottom:12px;transition:box-shadow .2s,border-color .2s}
+    .col-count{font-size:12px;background:#f6f6f6;border:1px solid var(--ff-border);border-radius:999px;padding:2px 8px}
+
+    .card{background:var(--ff-bg);border:1px solid var(--ff-border);border-radius:14px;padding:14px;margin-bottom:12px;transition:box-shadow .2s,border-color .2s; overflow:visible; position:relative}
     .card:hover{box-shadow:0 6px 16px rgba(0,0,0,.06)}
     .row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-    .muted{font-size:12px;color:#777}
+    .muted{font-size:12px;color:var(--ff-muted)}
     .act-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
     .badge{background:#fff;border:1px solid #ddd;border-radius:999px;padding:4px 10px;font-weight:700;font-size:12px}
-    .ff-btn{height:32px;border:none;border-radius:16px;background:#ff7a59;color:#fff;padding:0 12px;cursor:pointer}
-    .ff-btn--ghost{background:#fff;color:#c24a26;border:1px solid #ffb199}
+    .ff-btn{height:32px;border:none;border-radius:16px;background:var(--ff-accent);color:#fff;padding:0 12px;cursor:pointer}
+    .ff-btn--ghost{background:#fff;color:#c24a26;border:1px solid var(--ff-accent-ghost)}
     .ff-btn--disabled{background:#f0f0f0;color:#999;cursor:not-allowed}
     .ff-btn:hover{filter:brightness(0.98)}
     .ff-btn:active{transform:translateY(1px)}
-    .ff-menu-item{display:block;width:100%;text-align:left;background:#fff;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
-    .ff-menu-item:hover{background:#fafafa}
+
+    /* Dropdown tệp với tổng thể */
+    .ff-dropdown{ position:relative; }
+    .ff-menu{
+      position:absolute; right:0; top:calc(100% + 10px);
+      min-width:180px; background:#fff; border:1px solid var(--ff-border); border-radius:12px;
+      box-shadow:var(--ff-shadow); padding:6px; z-index:2000;
+      animation: ff-pop .12s ease-out;
+    }
+    .ff-menu:before{
+      content:""; position:absolute; right:18px; top:-8px;
+      width:14px; height:14px; transform:rotate(45deg);
+      background:#fff; border-left:1px solid var(--ff-border); border-top:1px solid var(--ff-border);
+    }
+    .ff-menu-item{
+      width:100%; text-align:left; background:#fff; border:none;
+      padding:9px 10px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    .ff-menu-item:hover{ background:var(--ff-soft); }
+    .ff-menu-item:active{ transform:translateY(1px); }
+    .ff-menu-item[disabled]{ opacity:.5; cursor:not-allowed; }
+    .ff-menu-sep{ height:6px; }
+    /* Huỷ đơn màu đen */
+    .ff-menu-item.ff-danger{ color:#111; }
+    .dark .ff-menu-item.ff-danger{ color:#eee; }
+
     .dark .col,.dark .card{background:#151515;border-color:#333}
     .dark .col-count{background:#1d1d1d;border-color:#333}
     .dark .muted{color:#aaa}
+    .dark .ff-menu{background:#1a1a1a; border-color:#333}
+    .dark .ff-menu:before{background:#1a1a1a; border-color:#333}
+    .dark .ff-menu-item{background:#1a1a1a}
+    .dark .ff-menu-item:hover{background:#202020}
+
     .ff-modal .ff-edit-row{align-items:flex-start !important}
     .ff-modal .ff-edit-row .c3{display:grid;grid-template-rows:32px auto;align-items:start}
     .ff-modal .ff-edit-row .c3 input{height:32px}
+
+    @keyframes ff-pop { from{ opacity:0; transform: translateY(-4px); } to{ opacity:1; transform:none; } }
   `;
 
   const grouped = useMemo(() => {
-        const by = Object.fromEntries(allColumns.map((c) => [c, []]));
-        for (const o of orders) (by[o.status || STATUS.NEW] || by[STATUS.NEW]).push(o);
-        return by;
-    }, [orders]);
+    const by = Object.fromEntries(allColumns.map((c) => [c, []]));
+    for (const o of orders) (by[o.status || STATUS.NEW] || by[STATUS.NEW]).push(o);
+    return by;
+  }, [orders]);
 
   function toTs(v) {
     if (!v) return 0;
@@ -296,18 +554,12 @@ export default function RestaurantOrders() {
   // ====== Tạo mission tự động khi chuyển sang DELIVERING ======
   async function ensureMissionFor(ord) {
     try {
-      // Nếu đã có missionId và còn tồn tại -> OK
       if (ord.droneMissionId) {
         const r = await fetch(`${API_BASE}/droneMissions/${encodeURIComponent(ord.droneMissionId)}`);
         if (r.ok) return true;
       }
-
-      // Thiếu toạ độ -> báo và từ chối
       if (!hasCoords(ord)) {
-        alert(
-          "Không đủ tọa độ (nhà hàng/khách) để tạo Drone Mission.\n" +
-          "Hãy bổ sung restaurantLocation và customerLocation cho đơn."
-        );
+        alert("Không đủ tọa độ (nhà hàng/khách) để tạo Drone Mission.\nHãy bổ sung restaurantLocation và customerLocation cho đơn.");
         return false;
       }
 
@@ -330,7 +582,6 @@ export default function RestaurantOrders() {
         currentIndex: 0,
       };
 
-      // 1) tạo mission
       const res = await fetch(`${API_BASE}/droneMissions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -339,14 +590,12 @@ export default function RestaurantOrders() {
       if (!res.ok) throw new Error("Tạo mission thất bại");
       const mission = await res.json();
 
-      // 2) gán vào order
       await api.patch(`/orders/${ord.id}`, {
         droneMissionId: mission.id,
         deliveryMode: "DRONE",
         updatedAt: new Date().toISOString(),
       });
 
-      // 3) ghi điểm xuất phát (optional)
       try {
         await fetch(`${API_BASE}/dronePositions`, {
           method: "POST",
@@ -385,16 +634,13 @@ export default function RestaurantOrders() {
 
     try {
       if (target === STATUS.DELIVERING) {
-        // Lấy bản order hiện tại nhất
         const current = orders.find((o) => o.id === order.id) || order;
 
-        // Nếu thiếu toạ độ nhà hàng → gán mặc định
         const hasRes = isNum(current?.restaurantLocation?.lat) && isNum(current?.restaurantLocation?.lng);
         if (!hasRes) current.restaurantLocation = RESTAURANT_COORDS;
 
         const ok = await ensureMissionFor(current);
         if (!ok) {
-          // hoàn tác nếu không tạo được mission
           setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, status: prev } : o)));
           return;
         }
@@ -410,7 +656,7 @@ export default function RestaurantOrders() {
 
   // === Edit handlers ===
   function onEdit(order) {
-    if (!((order.status === STATUS.NEW || order.status === STATUS.ACCEPTED) && !order.modified)) return;
+    if (!canEditOrder(order)) return;
     setEditOrder(order);
     setEditOpen(true);
   }
@@ -427,6 +673,7 @@ export default function RestaurantOrders() {
 
   // === Cancel handlers ===
   function onAskCancel(order) {
+    if (!canCancelOrder(order)) return;
     setCancelOrderObj(order);
     setCancelOpen(true);
   }
@@ -489,82 +736,104 @@ export default function RestaurantOrders() {
   }
 
   return (
-        <div className="od-wrap">
-            <style>{css}</style>
+    <div className="od-wrap">
+      <style>{css}</style>
 
-            <div className="top">
-                <h2 className="title">Quản lý đơn hàng</h2>
-                <button className="ff-btn" onClick={fetchOrders}>Làm mới</button>
-            </div>
+      <div className="top">
+        <h2 className="title">Quản lý đơn hàng</h2>
+        <button className="ff-btn" onClick={fetchOrders}>Làm mới</button>
+      </div>
 
-            {loading ? (
-                <div>Đang tải…</div>
-            ) : (
-                <> {/* Sử dụng Fragment để chứa 2 board */}
-                    {/* Hàng trên: 4 cột chính */}
-                    <div className="board">
-                        {mainColumns.map((col) => (
-                            <section
-                                key={col}
-                                className="col"
-                                onDragOver={(e) => e.preventDefault()}
-                                onDragEnter={onDragEnter}
-                                onDragLeave={onDragLeave}
-                                onDrop={(e) => onDropCol(e, col)}
-                            >
-                                <div className="col-head">
-                                    <div className="col-title">{STATUS_LABEL[col]}</div>
-                                    <span className="col-count">{grouped[col]?.length || 0}</span>
-                                </div>
-                                {grouped[col]?.length ? (
-                                    grouped[col].map((o) => (
-                                        <OrderCard key={o.id} order={o} onMove={moveStatus} onEdit={onEdit} onAskCancel={onAskCancel} />
-                                    ))
-                                ) : (
-                                    <div className="muted">Không có đơn</div>
-                                )}
-                            </section>
-                        ))}
-                    </div>
+      {loading ? (
+        <div>Đang tải…</div>
+      ) : (
+        <>
+          {/* Hàng trên: 4 cột chính */}
+          <div className="board">
+            {[STATUS.NEW, STATUS.ACCEPTED, STATUS.READY, STATUS.DELIVERING].map((col) => (
+              <section
+                key={col}
+                className="col"
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={onDragEnter}
+                onDragLeave={onDragLeave}
+                onDrop={(e) => onDropCol(e, col)}
+              >
+                <div className="col-head">
+                  <div className="col-title">{STATUS_LABEL[col]}</div>
+                  <span className="col-count">{grouped[col]?.length || 0}</span>
+                </div>
+                {grouped[col]?.length ? (
+                  grouped[col].map((o) => (
+                    <OrderCard
+                      key={o.id}
+                      order={o}
+                      onMove={moveStatus}
+                      onEdit={onEdit}
+                      onAskCancel={onAskCancel}
+                      onOpenDetail={openDetail}
+                    />
+                  ))
+                ) : (
+                  <div className="muted">Không có đơn</div>
+                )}
+              </section>
+            ))}
+          </div>
 
-                    {/* Hàng dưới: 2 cột phụ */}
-                    <div className="bottom-board">
-                        {bottomColumns.map((col) => (
-                            <section
-                                key={col}
-                                className="col"
-                                onDragOver={(e) => e.preventDefault()}
-                                onDragEnter={onDragEnter}
-                                onDragLeave={onDragLeave}
-                                onDrop={(e) => onDropCol(e, col)} // Vẫn cho phép kéo thả vào đây nếu cần
-                            >
-                                <div className="col-head">
-                                    <div className="col-title">{STATUS_LABEL[col]}</div>
-                                    <span className="col-count">{grouped[col]?.length || 0}</span>
-                                </div>
-                                {grouped[col]?.length ? (
-                                    grouped[col].map((o) => (
-                                        // Card ở đây có thể có ít action hơn hoặc không có drag
-                                        <OrderCard key={o.id} order={o} onMove={moveStatus} onEdit={onEdit} onAskCancel={onAskCancel} />
-                                    ))
-                                ) : (
-                                    <div className="muted">Không có đơn</div>
-                                )}
-                            </section>
-                        ))}
-                    </div>
-                </>
-            )}
+          {/* Hàng dưới: 2 cột phụ */}
+          <div className="bottom-board">
+            {[STATUS.COMPLETED, STATUS.CANCELLED].map((col) => (
+              <section
+                key={col}
+                className="col"
+                onDragOver={(e) => e.preventDefault()}
+                onDragEnter={onDragEnter}
+                onDragLeave={onDragLeave}
+                onDrop={(e) => onDropCol(e, col)}
+              >
+                <div className="col-head">
+                  <div className="col-title">{STATUS_LABEL[col]}</div>
+                  <span className="col-count">{grouped[col]?.length || 0}</span>
+                </div>
+                {grouped[col]?.length ? (
+                  grouped[col].map((o) => (
+                    <OrderCard
+                      key={o.id}
+                      order={o}
+                      onMove={moveStatus}
+                      onEdit={onEdit}
+                      onAskCancel={onAskCancel}
+                      onOpenDetail={openDetail}
+                    />
+                  ))
+                ) : (
+                  <div className="muted">Không có đơn</div>
+                )}
+              </section>
+            ))}
+          </div>
+        </>
+      )}
 
-      {/* Modal sửa đơn */}
+      {/* Drawer chi tiết: truyền quyền theo trạng thái */}
+      <OrderDetailDrawer
+        open={detailOpen}
+        order={detailOrder}
+        onClose={() => { setDetailOpen(false); setDetailOrder(null); }}
+        onEdit={() => { setDetailOpen(false); setEditOrder(detailOrder); setEditOpen(true); }}
+        onCancel={() => { setDetailOpen(false); setCancelOrderObj(detailOrder); setCancelOpen(true); }}
+        canEdit={detailOrder ? canEditOrder(detailOrder) : false}
+        canCancel={detailOrder ? canCancelOrder(detailOrder) : false}
+      />
+
+      {/* Modals sẵn có */}
       <OrderEditModal
         open={editOpen}
         order={editOrder}
         onClose={() => { setEditOpen(false); setEditOrder(null); }}
         onSave={handleSaveEdit}
       />
-
-      {/* Modal huỷ đơn có lý do */}
       <CancelOrderModal
         open={cancelOpen}
         order={cancelOrderObj}

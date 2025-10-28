@@ -231,10 +231,10 @@
       "finalTotal": 231000,
       "couponCode": "FREESHIP",
       "createdAt": 1758215459583,
-      "status": "ready",
+      "status": "accepted",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-27T06:53:00.502Z",
-      "acceptedAt": "2025-10-16T16:11:25.516Z",
+      "updatedAt": "2025-10-28T03:54:48.185Z",
+      "acceptedAt": "2025-10-28T03:54:48.185Z",
       "readyAt": "2025-10-27T06:53:00.502Z"
     },
     {
