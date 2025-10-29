@@ -17,8 +17,7 @@ import { OrderProvider } from './context/OrderContext.jsx'; // NEW
 //đối với admin server thì cần import sau
 //import { MerchantAdminProvider } from './context/MerchantAdminContext.jsx';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-
+ReactDOM.createRoot(document.getElementById('root')).render( 
     <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>

@@ -94,11 +94,11 @@
       ],
       "total": 198000,
       "createdAt": 1758036847213,
-      "status": "accepted",
+      "status": "ready",
       "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-26T16:22:43.087Z",
+      "updatedAt": "2025-10-29T07:40:36.323Z",
       "acceptedAt": "2025-10-26T16:22:43.087Z",
-      "readyAt": "2025-10-18T07:54:13.591Z"
+      "readyAt": "2025-10-29T07:40:36.323Z"
     },
     {
       "id": "e7c6",
@@ -879,8 +879,13 @@
         "lat": 10.777850856532352,
         "lng": 106.68729768525567
       },
-      "status": "new",
-      "payment_status": "unpaid"
+      "status": "cancelled",
+      "payment_status": "unpaid",
+      "cancelReason": "closed",
+      "cancelBy": "merchant",
+      "cancelNote": null,
+      "cancelledAt": "2025-10-29T07:40:15.747Z",
+      "updatedAt": "2025-10-29T07:40:15.747Z"
     },
     {
       "id": "7ehy",
@@ -930,6 +935,131 @@
       "readyAt": "2025-10-28T07:31:21.676Z",
       "droneMissionId": "b32a",
       "pickedAt": "2025-10-28T07:31:24.008Z"
+    },
+    {
+      "id": "we81",
+      "sessionId": "82ad",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "+84998635263",
+      "address": "số 6a Nguyễn Trãi, Quận 5",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        },
+        {
+          "id": "sg-5",
+          "name": "Cheese Pizza (slice)",
+          "qty": 1,
+          "price": 39000,
+          "image": "/assets/images/menu/cheesepizza.webp"
+        },
+        {
+          "id": "sg-6",
+          "name": "Cola",
+          "qty": 1,
+          "price": 15000,
+          "image": "/assets/images/menu/cocacola.jpg"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        },
+        {
+          "id": "cb-2",
+          "name": "Combo2 Chicken + Fries",
+          "qty": 2,
+          "price": 69000,
+          "image": "/assets/images/menu/combo2.webp"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        }
+      ],
+      "total": 325000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 345000,
+      "couponCode": "",
+      "createdAt": 1761726074489,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.781742092979162,
+        "lng": 106.685756926954
+      },
+      "status": "new",
+      "payment": "VNPAY",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCKA7KJOJ"
+    },
+    {
+      "id": "ztgd",
+      "sessionId": "908e",
+      "userId": 0,
+      "userEmail": "resadmin",
+      "customerName": "Restaurant Admin",
+      "phone": "0924545454",
+      "address": "số 51 nguyễn trãi",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "cb-2",
+          "name": "Combo2 Chicken + Fries",
+          "qty": 2,
+          "price": 69000,
+          "image": "/assets/images/menu/combo2.webp"
+        },
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        }
+      ],
+      "total": 219000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 239000,
+      "couponCode": "",
+      "createdAt": 1761726179389,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.779462460559436,
+        "lng": 106.68716883627258
+      },
+      "status": "new",
+      "payment": "VNPAY",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK4RQZ4N"
     }
   ],
   "sessions": [
@@ -1018,6 +1148,11 @@
       "id": "908e",
       "status": "open",
       "startedAt": "2025-10-17T01:26:33.118Z"
+    },
+    {
+      "id": "82ad",
+      "status": "open",
+      "startedAt": "2025-10-29T08:21:14.464Z"
     }
   ],
   "payments": [
@@ -1464,39 +1599,75 @@
                   "item": {
                     "item": {
                       "item": {
-                        "id": "main_settings",
-                        "storeName": "Cửa hàng FastFood Mặc định",
-                        "address": "123 Đường ABC, Quận 1, TP. HCM",
-                        "phone": "0901234567",
+                        "item": {
+                          "id": "main_settings",
+                          "storeName": "Foodfast",
+                          "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
+                          "phone": "0909090909",
+                          "isManuallyClosed": false,
+                          "operatingHours": {
+                            "mon": {
+                              "open": 7,
+                              "close": 22
+                            },
+                            "tue": {
+                              "open": 7,
+                              "close": 22
+                            },
+                            "wed": {
+                              "open": 7,
+                              "close": 22
+                            },
+                            "thu": {
+                              "open": 7,
+                              "close": 22
+                            },
+                            "fri": {
+                              "open": 7,
+                              "close": 22
+                            },
+                            "sat": {
+                              "open": 7,
+                              "close": 22
+                            },
+                            "sun": {
+                              "open": 7,
+                              "close": 22
+                            }
+                          }
+                        },
                         "isManuallyClosed": false,
+                        "storeName": "Fastfood",
+                        "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
+                        "phone": "0909090909",
                         "operatingHours": {
                           "mon": {
-                            "open": 9,
+                            "open": 7,
                             "close": 22
                           },
                           "tue": {
-                            "open": 9,
+                            "open": 7,
                             "close": 22
                           },
                           "wed": {
-                            "open": 9,
+                            "open": 7,
                             "close": 22
                           },
                           "thu": {
-                            "open": 9,
+                            "open": 7,
                             "close": 22
                           },
                           "fri": {
-                            "open": 9,
-                            "close": 23
+                            "open": 7,
+                            "close": 22
                           },
                           "sat": {
-                            "open": 10,
-                            "close": 23
+                            "open": 7,
+                            "close": 22
                           },
                           "sun": {
-                            "open": 10,
-                            "close": 21
+                            "open": 7,
+                            "close": 22
                           }
                         }
                       },
@@ -1506,11 +1677,79 @@
                   },
                   "isManuallyClosed": true
                 },
-                "isManuallyClosed": false
+                "isManuallyClosed": false,
+                "storeName": "Fastfood",
+                "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
+                "phone": "0909090909",
+                "operatingHours": {
+                  "mon": {
+                    "open": 7,
+                    "close": 22
+                  },
+                  "tue": {
+                    "open": 7,
+                    "close": 22
+                  },
+                  "wed": {
+                    "open": 7,
+                    "close": 22
+                  },
+                  "thu": {
+                    "open": 7,
+                    "close": 22
+                  },
+                  "fri": {
+                    "open": 7,
+                    "close": 22
+                  },
+                  "sat": {
+                    "open": 7,
+                    "close": 22
+                  },
+                  "sun": {
+                    "open": 7,
+                    "close": 22
+                  }
+                },
+                "id": "main_settings"
               },
               "isManuallyClosed": true
             },
-            "isManuallyClosed": false
+            "isManuallyClosed": false,
+            "storeName": "Fastfood",
+            "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
+            "phone": "0909090909",
+            "operatingHours": {
+              "mon": {
+                "open": 7,
+                "close": 22
+              },
+              "tue": {
+                "open": 7,
+                "close": 22
+              },
+              "wed": {
+                "open": 7,
+                "close": 22
+              },
+              "thu": {
+                "open": 7,
+                "close": 22
+              },
+              "fri": {
+                "open": 7,
+                "close": 22
+              },
+              "sat": {
+                "open": 7,
+                "close": 22
+              },
+              "sun": {
+                "open": 7,
+                "close": 22
+              }
+            },
+            "id": "main_settings"
           },
           "isManuallyClosed": true
         },
@@ -1518,37 +1757,117 @@
       },
       "isManuallyClosed": true
     },
-    "isManuallyClosed": false,
-    "operatingHours": {
-      "mon": {
-        "open": 7,
-        "close": 20
-      },
-      "tue": {
-        "open": 7,
-        "close": 20
-      },
-      "wed": {
-        "open": 7,
-        "close": 20
-      },
-      "thu": {
-        "open": 7,
-        "close": 20
-      },
-      "fri": {
-        "open": 7,
-        "close": 20
-      },
-      "sat": {
-        "open": 7,
-        "close": 20
-      },
-      "sun": {
-        "open": 7,
-        "close": 18
-      }
+    "isManuallyClosed": false
+  },
+  "menuItems": [
+    {
+      "id": "sg-1",
+      "name": "Beef Burger",
+      "price": 35000,
+      "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
+      "image": "http://localhost:5182/beefburger.jpg",
+      "category": "single",
+      "status": "pending",
+      "description": ""
     },
-    "id": "main_settings"
-  }
+    {
+      "id": "sg-2",
+      "name": "Cheese Burger",
+      "price": 52000,
+      "desc": "Burger bò phô mai béo ngậy.",
+      "image": "/assets/images/menu/cheeseburger.webp",
+      "category": "single",
+      "status": "approved"
+    },
+    {
+      "id": "sg-3",
+      "name": "Fried Chicken",
+      "price": 52000,
+      "desc": "Gà rán giòn rụm, vị cay nhẹ.",
+      "image": "/assets/images/menu/friedchicken.webp",
+      "category": "single",
+      "status": "approved"
+    },
+    {
+      "id": "sg-4",
+      "name": "French Fries",
+      "price": 29000,
+      "desc": "Khoai tây chiên giòn, muối nhẹ.",
+      "image": "/assets/images/menu/frenchfries.jpg",
+      "category": "single",
+      "status": "approved"
+    },
+    {
+      "id": "sg-5",
+      "name": "Cheese Pizza (slice)",
+      "price": 39000,
+      "desc": "Pizza phô mai lát, nướng lò.",
+      "image": "/assets/images/menu/cheesepizza.webp",
+      "category": "single",
+      "status": "approved"
+    },
+    {
+      "id": "sg-6",
+      "name": "Cola",
+      "price": 15000,
+      "desc": "Nước ngọt có ga 330ml.",
+      "image": "/assets/images/menu/cocacola.jpg",
+      "category": "single",
+      "status": "approved"
+    },
+    {
+      "id": "cb-1",
+      "name": "Combo1 Burger + Coke",
+      "price": 59000,
+      "desc": "Burger bò + Cola 330ml.",
+      "image": "/assets/images/menu/combo1.webp",
+      "category": "combo",
+      "status": "approved"
+    },
+    {
+      "id": "cb-2",
+      "name": "Combo2 Chicken + Fries",
+      "price": 69000,
+      "desc": "2 miếng gà rán + Khoai tây chiên.",
+      "image": "/assets/images/menu/combo2.webp",
+      "category": "combo",
+      "status": "approved"
+    },
+    {
+      "id": "cb-3",
+      "name": "Combo3 Pizza + Coke",
+      "price": 99000,
+      "desc": "Pizza phô mai (m) + Cola 330ml.",
+      "image": "/assets/images/menu/combo3.jpg",
+      "category": "combo",
+      "status": "approved"
+    },
+    {
+      "id": "73fa",
+      "name": "test thử nhé",
+      "description": "",
+      "price": 10000,
+      "image": "http://localhost:5182/friedchicken.webp",
+      "category": "single",
+      "status": "approved"
+    },
+    {
+      "id": "dd1b",
+      "name": "test xóa thử nhé",
+      "desc": "",
+      "price": 124000,
+      "image": "http://localhost:5182/frenchfries.jpg",
+      "category": "single",
+      "status": "rejected"
+    },
+    {
+      "id": "8b7a",
+      "name": "Bánh Crepe chuối",
+      "desc": "Trái cây kết hợp lớp bánh crepe tạo vị ngon mới lạ",
+      "price": 35000,
+      "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg",
+      "category": "single",
+      "status": "approved"
+    }
+  ]
 }
