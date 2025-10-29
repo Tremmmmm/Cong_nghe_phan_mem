@@ -18,7 +18,22 @@ const DAYS_OF_WEEK = [
 
 export default function RestaurantSettings() {
     // 💡 State ban đầu là null hoặc một object rỗng chờ load
-    const [settings, setSettings] = useState(null); 
+    //const [settings, setSettings] = useState(null); 
+    const [settings, setSettings] = useState({
+        storeName: '',
+        address: '',
+        phone: '',
+        isManuallyClosed: false,
+        operatingHours: {
+            mon: { open: null, close: null },
+            tue: { open: null, close: null },
+            wed: { open: null, close: null },
+            thu: { open: null, close: null },
+            fri: { open: null, close: null },
+            sat: { open: null, close: null },
+            sun: { open: null, close: null }
+        }
+    }); 
     const [isLoading, setIsLoading] = useState(true); // Bắt đầu là true để load
     const [isSaving, setIsSaving] = useState(false); // State riêng cho nút Save
     const toast = useToast();
@@ -104,25 +119,34 @@ export default function RestaurantSettings() {
         const newState = !settings.isManuallyClosed;
         setIsSaving(true); // Dùng isSaving cho nút này
         try {
-            // 💡 Gọi API PATCH chỉ cập nhật trạng thái này
-            const updated = await patchSettings({ isManuallyClosed: newState });
-            setSettings(updated); // Cập nhật state với dữ liệu từ API
+            // 1. Gọi API PATCH chỉ cập nhật trạng thái này
+            await patchSettings({ isManuallyClosed: newState }); // Vẫn gọi API
+
+            // 2. ✅ CẬP NHẬT STATE CỤC BỘ ĐÚNG CÁCH:
+            //    Không dùng kết quả trả về từ API nữa.
+            //    Giữ lại toàn bộ state cũ, chỉ thay đổi isManuallyClosed.
+            setSettings(prev => ({
+                ...prev, // Giữ lại storeName, address, operatingHours,...
+                isManuallyClosed: newState // Chỉ cập nhật lại isManuallyClosed
+            }));
+
             toast.show(newState ? '🟠 Cửa hàng đã TẠM ĐÓNG.' : '🟢 Cửa hàng đã MỞ LẠI.', 'info');
         } catch (error) {
             toast.show('❌ Lỗi cập nhật trạng thái đóng/mở.', 'error');
+            // Nếu API lỗi, state settings sẽ không bị thay đổi
         } finally {
             setIsSaving(false);
         }
     };
 
-    // --- Xử lý Lưu Tổng (GỌI API PUT) ---
+    // --- Xử lý Lưu Tổng (GỌI API PUT - Giữ nguyên logic này) ---
     const handleSaveSettings = async () => {
         if (!settings) return;
         setIsSaving(true);
         try {
-            // 💡 Gọi API PUT để lưu toàn bộ cài đặt
+            // Khi lưu tổng, dùng PUT và cập nhật toàn bộ state với response là hợp lý
             const updated = await updateSettings(settings);
-            setSettings(updated); // Cập nhật state với dữ liệu từ API (đảm bảo đồng bộ)
+            setSettings(updated); 
             toast.show('✅ Đã lưu cài đặt thành công!', 'success');
         } catch (error) {
             toast.show('❌ Lỗi! Không thể lưu cài đặt.', 'error');
@@ -169,14 +193,14 @@ const styles = useMemo(() => {
                 <h2 style={styles.sectionTitle}>Trạng thái Hoạt động</h2>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <p style={{ margin: 0, color: settings.isManuallyClosed ? '#e74c3c' : '#27ae60', fontWeight: 'bold' }}>
-                        {settings.isManuallyClosed ? '🔴 ĐANG TẠM ĐÓNG CỬA (Ghi đè lịch)' : '🟢 Đang hoạt động theo lịch'}
+                        {settings.isManuallyClosed ? '🔴 ĐANG TẠM ĐÓNG CỬA  ' : '🟢 Đang hoạt động theo lịch'}
                     </p>
                 <button
-                        style={{ ...styles.button, ...styles.closeButton }}
+                        style={{ ...styles.button, ...styles.closeButton   }} //Xóa ,display: 'none' nếu muốn hiển thị button này
                         onClick={handleToggleManualClose}
-                        disabled={isLoading}
+                        disabled={isSaving}
                     >
-                        {isLoading ? 'Đang xử lý...' : (settings.isManuallyClosed ? 'Mở cửa lại' : 'Tạm đóng cửa')}
+                        {isSaving ? 'Đang xử lý...' : (settings.isManuallyClosed ? 'Mở cửa lại' : 'Tạm đóng cửa')}
                     </button>
                 </div>
                 <p style={{ fontSize: 13, color: '#666', marginTop: 5 }}>

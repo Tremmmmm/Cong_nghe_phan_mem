@@ -28,7 +28,7 @@ import AdminOrders from './pages/AdminOrders.jsx'
 import AdminSignIn from './pages/AdminSignIn.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx' 
 import SettingRestaurant from './pages/RestaurantSettings.jsx' 
-
+import RestaurantMenu from './pages/RestaurantMenuManager.jsx'
 
 // Admin shell layout (sidebar)
 import ResLayout from './admin/ResLayout.jsx'
@@ -115,6 +115,8 @@ export default function App() {
           <Route path="drone" element={<DroneOrders />} />
           <Route path="restaurant" element={<RestaurantOrders />} />
           <Route path="settingrestaurant" element={<SettingRestaurant />} />
+          <Route path="settingmenu" element={<RestaurantMenu />} />
+
 
         </Route>
 

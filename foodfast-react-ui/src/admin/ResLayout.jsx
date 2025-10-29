@@ -56,6 +56,9 @@ export default function ResLayout(){
           <NavLink to="/admin/settingrestaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Cài đặt cửa hàng 
           </NavLink>
+          <NavLink to="/admin/settingmenu" className={({isActive})=>`a-link ${isActive?'active':''}`}>
+            Menu 
+          </NavLink>
         </nav>
       </aside>
 
