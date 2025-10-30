@@ -1,5 +1,5 @@
 // File: src/pages/RestaurantMenuManager.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '../context/ToastContext.jsx';
 import {
     fetchMenuItems,
@@ -175,7 +175,12 @@ export default function RestaurantMenuManager() {
     const [editingItem, setEditingItem] = useState(null); // Item đang được sửa
     const toast = useToast();
 
-    // --- Load Menu Items ---
+// 💡 --- State MỚI cho Lọc và Phân trang ---
+    const [filterCategory, setFilterCategory] = useState('all'); // 'all', 'single', 'combo'
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10; // Số sản phẩm mỗi trang
+
+// --- Load Menu Items ---
     const loadMenuItems = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -284,6 +289,42 @@ export default function RestaurantMenuManager() {
 //         }
 //     };
 
+// 💡 --- Logic Lọc và Phân trang ---
+    // 1. Lọc danh sách món ăn dựa trên filterCategory
+    const filteredItems = useMemo(() => {
+        if (filterCategory === 'all') {
+            return menuItems; // Trả về tất cả nếu filter là 'all'
+        }
+        return menuItems.filter(item => item.category === filterCategory);
+    }, [menuItems, filterCategory]); // Tính toán lại khi menuItems hoặc filter thay đổi
+
+    // 2. Tính toán phân trang dựa trên danh sách ĐÃ LỌC
+    const totalItems = filteredItems.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
+    // 3. Lấy ra các món ăn cho trang hiện tại
+    const paginatedItems = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        return filteredItems.slice(startIndex, endIndex);
+    }, [filteredItems, currentPage]); // Tính toán lại khi danh sách lọc hoặc trang thay đổi
+
+    // --- 💡 Hàm xử lý MỚI cho Lọc và Phân trang ---
+    const handleFilterChange = (category) => {
+        setFilterCategory(category);
+        setCurrentPage(1); // Reset về trang 1 khi đổi bộ lọc
+    };
+
+    const handleNextPage = () => {
+        // Không đi quá trang cuối
+        setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    };
+
+    const handlePrevPage = () => {
+        // Không lùi về trước trang 1
+        setCurrentPage(prev => Math.max(prev - 1, 1));
+    };
+
     // --- Render ---
     if (isLoading) {
         return <div style={{ padding: 30, textAlign: 'center' }}>Đang tải thực đơn...</div>;
@@ -294,23 +335,48 @@ export default function RestaurantMenuManager() {
             <div style={styles.header}>
                 <h1 style={{ margin: 0 }}>Quản lý Thực đơn</h1>
                 <button
-                    style={{ ...buttonStyle, background: '#3498db' }}
+                    style={{ ...buttonStyle, background: '#f58134cc' }}
                     onClick={() => { setEditingItem(null); setShowForm(true); }}
                     disabled={isSaving}
                 >
                     + Thêm món mới
                 </button>
             </div>
+{/* 💡 --- GIAO DIỆN BỘ LỌC MỚI --- */}
+            <div style={styles.filterContainer}>
+                <button
+                    style={filterCategory === 'all' ? {...buttonStyle, ...styles.filterButton, ...styles.filterActive} : {...buttonStyle, ...styles.filterButton}}
+                    onClick={() => handleFilterChange('all')}
+                >
+                    Tất cả ({menuItems.length})
+                </button>
+                <button
+                    style={filterCategory === 'single' ? {...buttonStyle, ...styles.filterButton, ...styles.filterActive} : {...buttonStyle, ...styles.filterButton}}
+                    onClick={() => handleFilterChange('single')}
+                >
+                    Món lẻ ({menuItems.filter(i => i.category === 'single').length})
+                </button>
+                <button
+                    style={filterCategory === 'combo' ? {...buttonStyle, ...styles.filterButton, ...styles.filterActive} : {...buttonStyle, ...styles.filterButton}}
+                    onClick={() => handleFilterChange('combo')}
+                >
+                    Combo ({menuItems.filter(i => i.category === 'combo').length})
+                </button>
+            </div>
 
-            {/* Danh sách Món ăn */}
-            {menuItems.length === 0 ? (
-                <p>Chưa có món ăn nào.</p>
+            {/* 💡 --- DANH SÁCH MÓN ĂN (Dùng paginatedItems) --- */}
+            {paginatedItems.length === 0 ? (
+                <p style={{textAlign: 'center', padding: '20px'}}>
+                    {filterCategory === 'all' ? 'Chưa có món ăn nào.' : 'Không có món ăn nào trong danh mục này.'}
+                </p>
             ) : (
                 <div style={styles.list}>
-                    {menuItems.map(item => {
-                        //const isCurrentlyAvailable = item.isAvailable ?? true;
+                    {/* 💡 Map qua paginatedItems thay vì menuItems */}
+                    {paginatedItems.map(item => { 
+                        // const isCurrentlyAvailable = item.isAvailable ?? true; // Đã bỏ
                         return (
                             <div key={item.id} style={styles.itemCard}>
+                                {/* ... (Render Card giữ nguyên) ... */}
                                 <img src={item.image || '/assets/images/menu/placeholder.png'} alt={item.name} style={styles.itemImage} onError={(e)=>{e.target.src='/assets/images/menu/placeholder.png'}}/>
                                 <div style={styles.itemInfo}>
                                     <div style={styles.itemRow}>
@@ -321,15 +387,12 @@ export default function RestaurantMenuManager() {
                                             </span>
                                         </div>
                                     </div>
-                                    {/* SỬA LẠI THÀNH item.desc */}
                                     <p style={styles.itemDesc}>{item.desc || 'Chưa có mô tả'}</p> 
                                     <div style={styles.itemRow}>
                                         <span style={{ fontWeight: 600 }}>{formatVND(item.price || 0)}</span>
                                         <span style={{ fontSize: 12, color: '#666' }}>Loại: {item.category}</span>
                                     </div>
-                                {/* </div> ĐÓNG SAI VỊ TRÍ DIV.itemInfo */}
-                                {/* CHUYỂN itemActions RA NGOÀI itemInfo */}
-                                </div> 
+                                </div>
                                 <div style={styles.itemActions}> 
                                     {item.status === 'pending' && (
                                         <>
@@ -345,6 +408,30 @@ export default function RestaurantMenuManager() {
                     })}  
                 </div>  
             )}  
+
+            {/* 💡 --- GIAO DIỆN PHÂN TRANG MỚI --- */}
+            {/* Chỉ hiển thị phân trang nếu có nhiều hơn 1 trang */}
+            {totalPages > 1 && (
+                <div style={styles.paginationContainer}>
+                    <button 
+                        onClick={handlePrevPage} 
+                        disabled={currentPage === 1} 
+                        style={{...buttonStyle, ...styles.pageButton}}
+                    >
+                        ‹ Trước
+                    </button>
+                    <span style={styles.paginationText}>
+                        Trang {currentPage} / {totalPages}
+                    </span>
+                    <button 
+                        onClick={handleNextPage} 
+                        disabled={currentPage === totalPages} 
+                        style={{...buttonStyle, ...styles.pageButton}}
+                    >
+                        Sau ›
+                    </button>
+                </div>
+            )}
 
             {/* Form Thêm/Sửa */}
             {showForm && (
@@ -371,6 +458,14 @@ const styles = {
     itemDesc: { fontSize: 13, color: '#555', margin: '5px 0', flexGrow: 1 },
     itemActions: { display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', justifyContent: 'center' },
     itemStatus: { fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 999 },
+    // 💡 --- STYLES MỚI ---
+    addButton: { background: '#3498db' },
+    filterContainer: { display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '20px' },
+    filterButton: { background: '#f0f0f0', color: '#555', border: '1px solid #ddd' },
+    filterActive: { background: '#3498db', color: '#fff', border: '1px solid #2980b9', fontWeight: 'bold' },
+    paginationContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '30px', padding: '20px 0', borderTop: '1px solid #eee' },
+    paginationText: { fontWeight: '600', fontSize: '14px', color: '#555' },
+    pageButton: { background: '#f9f9f9', color: '#444', border: '1px solid #ddd' },
     // itemAvailability: { // Style mới
     //     fontSize: 11,
     //     fontWeight: 600,

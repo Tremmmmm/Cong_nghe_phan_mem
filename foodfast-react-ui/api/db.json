@@ -1869,6 +1869,15 @@
       "image": " https://cdn.tgdd.vn/2020/11/CookProduct/CheeseStuffedMashedPotatoBallsRecipe3-40screenshot-1200x676.jpg",
       "category": "single",
       "status": "approved"
+    },
+    {
+      "id": "2434",
+      "name": "Sprite",
+      "desc": "Nước uống có ga mát lạnh",
+      "price": 15000,
+      "image": "https://www.cocoichibanya.vn/wp-content/uploads/2020/07/Sprite_CoCo-Ichibanya.jpg",
+      "category": "single",
+      "status": "approved"
     }
   ]
 }
