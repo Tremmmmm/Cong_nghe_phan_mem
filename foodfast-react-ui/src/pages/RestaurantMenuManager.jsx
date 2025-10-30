@@ -6,7 +6,7 @@ import {
     createMenuItem,
     updateMenuItem,
     deleteMenuItem,
-    updateMenuItemStatus // 💡 API duyệt/từ chối
+    updateMenuItemStatus, // 💡 API duyệt/từ chối  
 } from '../utils/menuAPI.js';
 import { formatVND } from '../utils/format.js';
 
@@ -218,7 +218,7 @@ export default function RestaurantMenuManager() {
         try {
             const updated = await updateMenuItem(editingItem.id, updatedData);
             setMenuItems(prev => prev.map(item => item.id === editingItem.id ? updated : item)
-                                      .sort((a,b) => (a.name || '').localeCompare(b.name || '')));
+                                    .sort((a,b) => (a.name || '').localeCompare(b.name || '')));
             toast.show(`⏳ Đã cập nhật "${updated.name}". Chờ Admin duyệt lại.`, 'info');
             setShowForm(false);
             setEditingItem(null);
@@ -245,30 +245,44 @@ export default function RestaurantMenuManager() {
 
     // --- 💡 Chức năng DUYỆT/TỪ CHỐI (Giả lập Admin) ---
     const handleApprove = async (itemId) => {
-         setIsSaving(true);
-         try {
-             const updated = await updateMenuItemStatus(itemId, 'approved');
-             setMenuItems(prev => prev.map(item => item.id === itemId ? updated : item));
-             toast.show(`✅ Đã DUYỆT món ID: ${itemId}.`, 'success');
-         } catch (error) {
-             toast.show('❌ Lỗi duyệt món ăn.', 'error');
-         } finally {
-             setIsSaving(false);
-         }
+            setIsSaving(true);
+            try {
+                const updated = await updateMenuItemStatus(itemId, 'approved');
+                setMenuItems(prev => prev.map(item => item.id === itemId ? updated : item));
+                toast.show(`✅ Đã DUYỆT món ID: ${itemId}.`, 'success');
+            } catch (error) {
+                toast.show('❌ Lỗi duyệt món ăn.', 'error');
+            } finally {
+                setIsSaving(false);
+            }
+        };
+        const handleReject = async (itemId) => {
+            setIsSaving(true);
+            try {
+                const updated = await updateMenuItemStatus(itemId, 'rejected');
+                setMenuItems(prev => prev.map(item => item.id === itemId ? updated : item));
+                toast.show(`❌ Đã TỪ CHỐI món ID: ${itemId}.`, 'warning');
+            } catch (error) {
+                    toast.show('❌ Lỗi từ chối món ăn.', 'error');
+            } finally {
+                setIsSaving(false);
+            }
     };
-    const handleReject = async (itemId) => {
-         setIsSaving(true);
-         try {
-             const updated = await updateMenuItemStatus(itemId, 'rejected');
-             setMenuItems(prev => prev.map(item => item.id === itemId ? updated : item));
-             toast.show(`❌ Đã TỪ CHỐI món ID: ${itemId}.`, 'warning');
-         } catch (error) {
-             toast.show('❌ Lỗi từ chối món ăn.', 'error');
-         } finally {
-             setIsSaving(false);
-         }
-    };
-
+// const handleToggleAvailability = async (item) => {
+//         const newState = !(item.isAvailable ?? true); // Lấy trạng thái ngược lại (mặc định là true nếu chưa có)
+//         setIsSaving(true); // Có thể dùng loading riêng
+//         try {
+//             const updated = await toggleMenuItemAvailability(item.id, newState);
+//             // Cập nhật state cục bộ
+//             setMenuItems(prev => prev.map(i => i.id === item.id ? updated : i)
+//                                     .sort((a,b) => (a.name || '').localeCompare(b.name || '')));
+//             toast.show(`✅ Món "${item.name}" đã được ${newState ? 'HIỂN THỊ LẠI' : 'TẠM ẨN'}.`, 'success');
+//         } catch (error) {
+//             toast.show('❌ Lỗi cập nhật trạng thái ẩn/hiện.', 'error');
+//         } finally {
+//             setIsSaving(false);
+//         }
+//     };
 
     // --- Render ---
     if (isLoading) {
@@ -293,37 +307,44 @@ export default function RestaurantMenuManager() {
                 <p>Chưa có món ăn nào.</p>
             ) : (
                 <div style={styles.list}>
-                    {menuItems.map(item => (
-                        <div key={item.id} style={styles.itemCard}>
-                            <img src={item.image || '/assets/images/menu/placeholder.png'} alt={item.name} style={styles.itemImage} onError={(e)=>{e.target.src='/assets/images/menu/placeholder.png'}}/>
-                            <div style={styles.itemInfo}>
-                                <div style={styles.itemRow}>
-                                    <strong style={{ fontSize: 16 }}>{item.name || '(Chưa có tên)'}</strong>
-                                    <span style={{...styles.itemStatus, ...statusStyles[item.status || 'pending']}}>
-                                        {item.status === 'approved' ? 'Đã duyệt' : (item.status === 'rejected' ? 'Bị từ chối' : 'Chờ duyệt')}
-                                    </span>
+                    {menuItems.map(item => {
+                        //const isCurrentlyAvailable = item.isAvailable ?? true;
+                        return (
+                            <div key={item.id} style={styles.itemCard}>
+                                <img src={item.image || '/assets/images/menu/placeholder.png'} alt={item.name} style={styles.itemImage} onError={(e)=>{e.target.src='/assets/images/menu/placeholder.png'}}/>
+                                <div style={styles.itemInfo}>
+                                    <div style={styles.itemRow}>
+                                        <strong style={{ fontSize: 16 }}>{item.name || '(Chưa có tên)'}</strong>
+                                        <div> 
+                                            <span style={{...styles.itemStatus, ...statusStyles[item.status || 'pending']}}>
+                                                {item.status === 'approved' ? 'Đã duyệt' : (item.status === 'rejected' ? 'Bị từ chối' : 'Chờ duyệt')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {/* SỬA LẠI THÀNH item.desc */}
+                                    <p style={styles.itemDesc}>{item.desc || 'Chưa có mô tả'}</p> 
+                                    <div style={styles.itemRow}>
+                                        <span style={{ fontWeight: 600 }}>{formatVND(item.price || 0)}</span>
+                                        <span style={{ fontSize: 12, color: '#666' }}>Loại: {item.category}</span>
+                                    </div>
+                                {/* </div> ĐÓNG SAI VỊ TRÍ DIV.itemInfo */}
+                                {/* CHUYỂN itemActions RA NGOÀI itemInfo */}
+                                </div> 
+                                <div style={styles.itemActions}> 
+                                    {item.status === 'pending' && (
+                                        <>
+                                            <button onClick={() => handleApprove(item.id)} style={{...buttonStyle, background:'#2ecc71', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Duyệt</button>
+                                            <button onClick={() => handleReject(item.id)} style={{...buttonStyle, background:'#f39c12', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Từ chối</button>
+                                        </>
+                                    )} 
+                                    <button onClick={() => handleEditItem(item)} style={{...buttonStyle, fontSize:12, padding:"4px 10px", borderRadius:999,background:"#c8e6faff", color:"#2090daff", border:"1px solid #8dc7ebff"}} disabled={isSaving}>Sửa</button>
+                                    <button onClick={() => handleDeleteItem(item)} style={{...buttonStyle, fontSize:12, padding:"4px 10px", borderRadius:999,background:"#ffe6e6ff", color:"#d40606ff", border:"1px solid #ff8f8fff"}} disabled={isSaving}>Xóa</button>
                                 </div>
-                                <p style={styles.itemDesc}>{item.desc || 'Chưa có mô tả'}</p>
-                                <div style={styles.itemRow}>
-                                    <span style={{ fontWeight: 600 }}>{formatVND(item.price || 0)}</span>
-                                    <span style={{ fontSize: 12, color: '#666' }}>Loại: {item.category}</span>
-                                </div>
-                            </div>
-                            <div style={styles.itemActions}>
-                                {/* Nút Duyệt/Từ chối (Giả lập Admin) */}
-                                {item.status === 'pending' && (
-                                    <>
-                                        <button onClick={() => handleApprove(item.id)} style={{...buttonStyle, background:'#2ecc71', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Duyệt</button>
-                                        <button onClick={() => handleReject(item.id)} style={{...buttonStyle, background:'#f39c12', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Từ chối</button>
-                                    </>
-                                )}
-                                <button onClick={() => handleEditItem(item)} style={{...buttonStyle, fontSize:12, padding:"4px 10px", borderRadius:999,background:"#c8e6faff", color:"#2090daff", border:"1px solid #8dc7ebff"}} disabled={isSaving}>Sửa</button>
-                                <button onClick={() => handleDeleteItem(item)} style={{...buttonStyle, fontSize:12, padding:"4px 10px", borderRadius:999,background:"#ffe6e6ff", color:"#d40606ff", border:"1px solid #ff8f8fff"}} disabled={isSaving}>Xóa</button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                            </div>  
+                        );  
+                    })}  
+                </div>  
+            )}  
 
             {/* Form Thêm/Sửa */}
             {showForm && (
@@ -334,8 +355,8 @@ export default function RestaurantMenuManager() {
                     isSaving={isSaving}
                 />
             )}
-        </div>
-    );
+        </div>  
+    );  
 }
 
 // --- Styles (Nội tuyến) ---
@@ -350,6 +371,14 @@ const styles = {
     itemDesc: { fontSize: 13, color: '#555', margin: '5px 0', flexGrow: 1 },
     itemActions: { display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', justifyContent: 'center' },
     itemStatus: { fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 999 },
+    // itemAvailability: { // Style mới
+    //     fontSize: 11,
+    //     fontWeight: 600,
+    //     padding: '3px 8px',
+    //     borderRadius: 999,
+    //     marginRight: '8px',
+    //     border: '1px solid currentColor', // Viền theo màu chữ 
+    // },
 };
 const statusStyles = {
     pending: { background: '#fffbe6', color: '#b45309', border: '1px solid #fde68a'},

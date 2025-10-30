@@ -73,7 +73,7 @@ export default function Menu() {
         const pollingInterval = setInterval(() => {
             console.log("Polling for settings update...");
             loadStoreSettings(false); // Gọi lại hàm load, không hiển thị loading
-        }, 3000); // 10.000ms = 10 giây
+        }, 10000); // 10.000ms = 10 giây
 
         // Cleanup interval khi component unmount
         return () => {
@@ -318,7 +318,7 @@ export default function Menu() {
             setIsLoadingMenu(true);
             try {
                 // Chỉ fetch các món đã 'approved'
-                const data = await fetchMenuItems('approved'); 
+                const data = await fetchMenuItems('approved'); // Thay vì 'approved_available' dùng cho tạm ẩn
                 setMenuItems(data);
             } catch (error) {
                 toast.show('Lỗi tải thực đơn.', 'error');

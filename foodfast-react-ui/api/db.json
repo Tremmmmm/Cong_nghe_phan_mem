@@ -1767,8 +1767,9 @@
       "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
       "image": "http://localhost:5182/beefburger.jpg",
       "category": "single",
-      "status": "pending",
-      "description": ""
+      "status": "approved",
+      "description": "",
+      "isAvailable": true
     },
     {
       "id": "sg-2",
@@ -1777,7 +1778,8 @@
       "desc": "Burger bò phô mai béo ngậy.",
       "image": "/assets/images/menu/cheeseburger.webp",
       "category": "single",
-      "status": "approved"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "sg-3",
@@ -1786,7 +1788,8 @@
       "desc": "Gà rán giòn rụm, vị cay nhẹ.",
       "image": "/assets/images/menu/friedchicken.webp",
       "category": "single",
-      "status": "approved"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "sg-4",
@@ -1795,7 +1798,8 @@
       "desc": "Khoai tây chiên giòn, muối nhẹ.",
       "image": "/assets/images/menu/frenchfries.jpg",
       "category": "single",
-      "status": "approved"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "sg-5",
@@ -1804,7 +1808,8 @@
       "desc": "Pizza phô mai lát, nướng lò.",
       "image": "/assets/images/menu/cheesepizza.webp",
       "category": "single",
-      "status": "approved"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "sg-6",
@@ -1813,7 +1818,8 @@
       "desc": "Nước ngọt có ga 330ml.",
       "image": "/assets/images/menu/cocacola.jpg",
       "category": "single",
-      "status": "approved"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "cb-1",
@@ -1822,7 +1828,8 @@
       "desc": "Burger bò + Cola 330ml.",
       "image": "/assets/images/menu/combo1.webp",
       "category": "combo",
-      "status": "approved"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "cb-2",
@@ -1831,7 +1838,8 @@
       "desc": "2 miếng gà rán + Khoai tây chiên.",
       "image": "/assets/images/menu/combo2.webp",
       "category": "combo",
-      "status": "approved"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "cb-3",
@@ -1840,25 +1848,8 @@
       "desc": "Pizza phô mai (m) + Cola 330ml.",
       "image": "/assets/images/menu/combo3.jpg",
       "category": "combo",
-      "status": "approved"
-    },
-    {
-      "id": "73fa",
-      "name": "test thử nhé",
-      "description": "",
-      "price": 10000,
-      "image": "http://localhost:5182/friedchicken.webp",
-      "category": "single",
-      "status": "approved"
-    },
-    {
-      "id": "dd1b",
-      "name": "test xóa thử nhé",
-      "desc": "",
-      "price": 124000,
-      "image": "http://localhost:5182/frenchfries.jpg",
-      "category": "single",
-      "status": "rejected"
+      "status": "approved",
+      "isAvailable": true
     },
     {
       "id": "8b7a",
@@ -1866,6 +1857,16 @@
       "desc": "Trái cây kết hợp lớp bánh crepe tạo vị ngon mới lạ",
       "price": 35000,
       "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg",
+      "category": "single",
+      "status": "approved",
+      "isAvailable": true
+    },
+    {
+      "id": "2921",
+      "name": "Khoai tây nghiền chiên giòn",
+      "desc": "popcorn khoai tây nghiền chiên giòn rụm",
+      "price": 29000,
+      "image": " https://cdn.tgdd.vn/2020/11/CookProduct/CheeseStuffedMashedPotatoBallsRecipe3-40screenshot-1200x676.jpg",
       "category": "single",
       "status": "approved"
     }

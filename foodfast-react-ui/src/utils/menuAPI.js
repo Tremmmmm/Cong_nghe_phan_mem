@@ -1,21 +1,36 @@
 // File: src/utils/menuAPI.js
 
 // 💡 URL CỦA JSON-SERVER CHO MENU ITEMS
-const API_URL = 'http://localhost:5181/menuItems'; // Đảm bảo cổng đúng
+const API_URL = 'http://localhost:5181/menuItems';
 
 /**
  * [GET] Lấy danh sách món ăn
- * @param {string} filterStatus - Lọc theo trạng thái (vd: 'approved', 'pending')
+ * @param {'all' | 'approved' | 'pending'} filterType - Loại lọc
+ * - 'all': Lấy tất cả cho quản lý
+ * - 'approved': Lấy món đã duyệt cho khách
+ * - 'pending': Lấy món chờ duyệt cho Admin Server
  * @returns {Promise<Array>}
  */
-export async function fetchMenuItems(filterStatus = '') {
+export async function fetchMenuItems(filterType = 'all') {
     try {
         let url = API_URL;
-        if (filterStatus) {
-            // json-server hỗ trợ lọc qua query parameter
-            url += `?status=${encodeURIComponent(filterStatus)}`;
+        const params = new URLSearchParams();
+        params.append('cacheBust', Date.now());
+
+        // 💡 SỬA LẠI LOGIC LỌC:
+        if (filterType === 'approved') {
+            params.append('status', 'approved');
+            // (Không lọc 'isAvailable' nữa)
+        } else if (filterType === 'pending') {
+            params.append('status', 'pending');
+        }  
+
+        const queryString = params.toString();
+        if (queryString) {
+            url += `?${queryString}`;
         }
-        const response = await fetch(`${url}${filterStatus ? '&' : '?'}cacheBust=${Date.now()}`); // Thêm cache busting
+
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -93,9 +108,9 @@ export async function updateMenuItem(itemId, updates) {
  * @returns {Promise<object>}
  */
 export async function updateMenuItemStatus(itemId, newStatus) {
-     if (newStatus !== 'approved' && newStatus !== 'rejected') {
-         throw new Error("Invalid status for approval/rejection.");
-     }
+    if (newStatus !== 'approved' && newStatus !== 'rejected') {
+        throw new Error("Invalid status for approval/rejection.");
+    }
     try {
         const response = await fetch(`${API_URL}/${itemId}`, {
             method: 'PATCH',
@@ -133,3 +148,27 @@ export async function deleteMenuItem(itemId) {
         throw error;
     }
 }
+
+// /**
+//  * 💡 [PATCH] Cập nhật trạng thái ẩn/hiện (Available)
+//  * @param {string} itemId - ID món ăn
+//  * @returns {Promise<object>}
+//  */
+// // export async function toggleMenuItemAvailability(itemId, isAvailable) {
+//     try {
+//         const response = await fetch(`${API_URL}/${itemId}`, {
+//             method: 'PATCH',
+//             headers: { 'Content-Type': 'application/json' },
+//             // Chỉ gửi trường isAvailable, không reset status về pending
+//             body: JSON.stringify({ isAvailable: !!isAvailable }), // Đảm bảo là boolean
+//         });
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+//         const data = await response.json();
+//         return data;
+//     } catch (error) {
+//         console.error(`Error toggling availability for item ${itemId}:`, error);
+//         throw error;
+//     }
+// }
