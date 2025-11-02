@@ -1,5 +1,5 @@
 // src/pages/Checkout.jsx
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import { useToast } from '../context/ToastContext.jsx'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +9,7 @@ import { useOrderCtx } from '../context/OrderContext.jsx'
 import { calcDiscount, normalizeCode, coupons, CODE_PATTERN } from '../utils/coupons'
 import { formatVND } from '../utils/format'
 import { isPhoneVN } from '../utils/validators'
+import PaymentModal from '../components/PaymentModal.jsx'
 
 function VND(n){ return formatVND(n) }
 
@@ -116,13 +117,12 @@ export default function Checkout(){
   // === Tổng thanh toán
   const finalTotal = Math.max(0, subtotal - discount + shippingFee - shippingDiscount)
 
-  // ----- PAYMENT METHOD (COD / VNPay / MoMo) -----
-  const [paymentMethod, setPaymentMethod] = useState('COD') // 'COD' | 'VNPAY' | 'MOMO'
+  // ----- PAYMENT METHOD (VNPAY / MOMO) -----
+  const [paymentMethod, setPaymentMethod] = useState('MOMO') // default theo yêu cầu demo
 
-  // Mock payment modal state
+  // Modal state
   const [showPayModal, setShowPayModal] = useState(false)
-  const payResolveRef = useRef(null)
-  const payTimerRef = useRef(null)
+  const [pendingOrder, setPendingOrder] = useState(null)
 
   // auto hủy mã khi sửa input khác mã đang áp
   useEffect(() => {
@@ -173,27 +173,7 @@ export default function Checkout(){
     else show(`Áp dụng mã ${code} thành công. Giảm ${VND(off)}.`, 'success')
   }
 
-  // ===== MOCK PAYMENT =====
-  function openMockPayment() {
-    return new Promise((resolve) => {
-      payResolveRef.current = resolve
-      setShowPayModal(true)
-      // auto success sau 6s để demo mượt
-      payTimerRef.current = setTimeout(() => {
-        resolve({ ok: true, txnId: 'MOCK' + Math.random().toString(36).slice(2, 8).toUpperCase() })
-        setShowPayModal(false)
-      }, 6000)
-    })
-  }
-  function closeMockPayment(result) {
-    if (payTimerRef.current) { clearTimeout(payTimerRef.current); payTimerRef.current = null }
-    if (payResolveRef.current) {
-      payResolveRef.current(result)
-      payResolveRef.current = null
-    }
-    setShowPayModal(false)
-  }
-
+  // ===== SUBMIT: mở modal, CHƯA tạo đơn =====
   const submit = async (e) => {
     e.preventDefault()
     if (loading) return
@@ -206,7 +186,7 @@ export default function Checkout(){
 
       const session = await ensureSession()
 
-      // Tạo khung order (chưa gửi lên nếu là online)
+      // Tạo khung order (pending – chưa gửi)
       const localId = Math.random().toString(36).slice(2,6)
       const baseOrder = {
         id: localId,
@@ -242,67 +222,34 @@ export default function Checkout(){
         status: 'new',
       }
 
-      // 1) COD: giữ nguyên như cũ
-      if (paymentMethod === 'COD') {
-        const order = {
-          ...baseOrder,
-          payment: 'COD',
-          payment_status: 'unpaid',
-        }
+      // mở modal – chờ user xác nhận
+      setPendingOrder(baseOrder)
+      setShowPayModal(true)
+    } catch (err) {
+      console.error(err)
+      setState('error')
+      show('Đặt hàng thất bại. Vui lòng thử lại.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-        const created = await placeOrder(order)
-        clear()
-        setState('success')
-
-        const oid = created?.id || order.id
-        try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
-        try { sessionStorage.setItem('lastDeliveryMode', DELIVERY_MODE) } catch {}
-
-        // nhớ thông tin người nhận cho lần sau
-        try {
-          localStorage.setItem('lastName', name.trim())
-          localStorage.setItem('lastPhone', String(phone).trim())
-          localStorage.setItem('lastAddress', address.trim())
-        } catch {}
-
-        if (user && saveAsDefault && typeof updateUser === 'function') {
-          updateUser({ name: name.trim(), phone: String(phone).trim(), address: address.trim() })
-        }
-
-        try {
-          const cur = JSON.parse(localStorage.getItem(REC_ADDR_KEY) || '[]') || []
-          const norm = address.trim()
-          const next = [norm, ...cur.filter(x => x && x !== norm)].slice(0, 3)
-          localStorage.setItem(REC_ADDR_KEY, JSON.stringify(next))
-          setRecentAddr(next)
-        } catch {}
-
-        markOrderAsCurrent(oid)
-        show(`Đặt hàng thành công! Mã đơn: ${oid}`, 'success')
-        nav(`/confirmation?id=${encodeURIComponent(oid)}`, { replace: true })
-        return
-      }
-
-      // 2) Online (VNPay / MoMo): mở modal mock
+  // ===== Handlers từ PaymentModal =====
+  async function handlePaid() {
+    if (!pendingOrder) return
+    try {
       const gateway = paymentMethod // 'VNPAY' | 'MOMO'
-      const payRes = await openMockPayment()
-      if (!payRes?.ok) {
-        setState('error')
-        show('Thanh toán thất bại hoặc bị hủy.', 'error')
-        return
-      }
-
-      // Nếu thanh toán OK → tạo order đã "paid"
       const order = {
-        ...baseOrder,
+        ...pendingOrder,
         payment: gateway,
-        payment_status: 'paid',
-        payment_txn_id: payRes.txnId || 'MOCK-TXN',
+        payment_status: 'paid',                // FE-only
+        payment_txn_id: 'MOCK-' + Date.now(),  // FE-only
       }
 
       const created = await placeOrder(order)
       clear()
       setState('success')
+      setShowPayModal(false)
 
       const oid = created?.id || order.id
       try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
@@ -311,18 +258,18 @@ export default function Checkout(){
 
       // nhớ thông tin người nhận cho lần sau
       try {
-        localStorage.setItem('lastName', name.trim())
-        localStorage.setItem('lastPhone', String(phone).trim())
-        localStorage.setItem('lastAddress', address.trim())
+        localStorage.setItem('lastName', pendingOrder.customerName)
+        localStorage.setItem('lastPhone', pendingOrder.phone)
+        localStorage.setItem('lastAddress', pendingOrder.address)
       } catch {}
 
       if (user && saveAsDefault && typeof updateUser === 'function') {
-        updateUser({ name: name.trim(), phone: String(phone).trim(), address: address.trim() })
+        updateUser({ name: pendingOrder.customerName, phone: pendingOrder.phone, address: pendingOrder.address })
       }
 
       try {
         const cur = JSON.parse(localStorage.getItem(REC_ADDR_KEY) || '[]') || []
-        const norm = address.trim()
+        const norm = pendingOrder.address.trim()
         const next = [norm, ...cur.filter(x => x && x !== norm)].slice(0, 3)
         localStorage.setItem(REC_ADDR_KEY, JSON.stringify(next))
         setRecentAddr(next)
@@ -331,14 +278,23 @@ export default function Checkout(){
       markOrderAsCurrent(oid)
       show(`Thanh toán thành công! Mã đơn: ${oid}`, 'success')
       nav(`/confirmation?id=${encodeURIComponent(oid)}`, { replace: true })
-
     } catch (err) {
       console.error(err)
       setState('error')
-      show('Đặt hàng thất bại. Vui lòng thử lại.', 'error')
-    } finally {
-      setLoading(false)
+      show('Có lỗi khi tạo đơn sau thanh toán.', 'error')
     }
+  }
+
+  function handleClose() {
+    setShowPayModal(false)
+    show('Bạn đã hủy thanh toán.', 'info')
+    nav('/cart')
+  }
+
+  function handleTimeout() {
+    setShowPayModal(false)
+    show('Thanh toán thất bại do quá thời gian. Vui lòng thử lại.', 'error')
+    nav('/cart')
   }
 
   // ====== styles & helpers ======
@@ -378,31 +334,17 @@ export default function Checkout(){
     .chip{display:inline-flex;gap:8px;align-items:center;border:1px solid #e6e6ea;padding:8px 12px;border-radius:999px;cursor:pointer}
     .chip input{accent-color:#ff7a59}
     .muted{opacity:.75}
-
     /* địa chỉ gần đây */
     .addr-recent{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
     .chip-sm{padding:4px 10px;border-radius:999px}
     .addr-chip{background:#fafafa;border:1px solid #e6e6ea}
     .addr-chip:hover{background:#ffefe9}
     .dark .addr-chip{background:#222;border-color:#444;color:#eee}
-
-    /* Mock payment modal */
-    .pm-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
-    .pm-card{background:#fff;border-radius:16px;border:1px solid #eee;max-width:520px;width:92%;padding:16px}
-    .pm-title{font-weight:900;font-size:18px;margin:0 0 8px}
-    .pm-row{display:flex;justify-content:space-between;margin:6px 0}
-    .pm-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
-    .btn-ok{height:38px;border:none;border-radius:10px;background:#059669;color:#fff;padding:0 12px;font-weight:700;cursor:pointer}
-    .btn-cancel{height:38px;border:1px solid #e5e7eb;border-radius:10px;background:#f3f4f6;color:#111;padding:0 12px;font-weight:700;cursor:pointer}
   `
 
   const codeNormalized = normalizeCode(couponCode)
   const formatOK = !!codeNormalized && CODE_PATTERN.test(codeNormalized)
   const exists = formatOK && Object.prototype.hasOwnProperty.call(coupons, codeNormalized)
-  const minOk = exists ? (subtotal >= (coupons[codeNormalized].min || 0)) : false
-
-  const canApply = !appliedCode && formatOK && exists
-
   const all = Object.entries(coupons).map(([code, info]) => ({ code, ...info }))
   const qRaw = normalizeCode(couponCode)
   const q = qRaw.replace(/[^A-Z0-9]/g, '')
@@ -505,32 +447,23 @@ export default function Checkout(){
           <div className="field">
             <label>Phương thức thanh toán</label>
             <div className="radio-row">
-              <label className="chip" title="Thanh toán khi nhận hàng">
-                <input
-                  type="radio"
-                  name="pm"
-                  checked={paymentMethod === 'COD'}
-                  onChange={()=>setPaymentMethod('COD')}
-                />
-                COD
-              </label>
-              <label className="chip" title="Thanh toán online qua VNPay (mô phỏng)">
+              <label className="chip" title="Thanh toán online qua VNPay">
                 <input
                   type="radio"
                   name="pm"
                   checked={paymentMethod === 'VNPAY'}
                   onChange={()=>setPaymentMethod('VNPAY')}
                 />
-                VNPay <span className="muted">mock</span>
+                VNPay
               </label>
-              <label className="chip" title="Thanh toán online qua MoMo (mô phỏng)">
+              <label className="chip" title="Thanh toán online qua MoMo">
                 <input
                   type="radio"
                   name="pm"
                   checked={paymentMethod === 'MOMO'}
                   onChange={()=>setPaymentMethod('MOMO')}
                 />
-                MoMo <span className="muted">mock</span>
+                MoMo
               </label>
             </div>
           </div>
@@ -580,7 +513,7 @@ export default function Checkout(){
           </div>
 
           <button className="btn" type="submit" disabled={loading || !items.length}>
-            {loading ? 'Đang đặt hàng…' : (paymentMethod === 'COD' ? 'Đặt hàng (COD)' : 'Thanh toán & đặt hàng')}
+            {loading ? 'Đang mở cổng thanh toán…' : 'Thanh toán & đặt hàng'}
           </button>
         </form>
 
@@ -608,21 +541,20 @@ export default function Checkout(){
         </div>
       </div>
 
-      {/* MOCK PAYMENT MODAL */}
-      {showPayModal && (
-        <div className="pm-backdrop" role="dialog" aria-modal="true">
-          <div className="pm-card">
-            <h3 className="pm-title">Thanh toán {paymentMethod === 'VNPAY' ? 'VNPay' : 'MoMo'} (mock)</h3>
-            <div className="pm-row"><span>Số tiền</span><b>{VND(finalTotal)}</b></div>
-            <div className="pm-row"><span>Thời gian giữ phiên</span><span>~ 60s</span></div>
-            <div className="pm-row"><span>Mô phỏng</span><span>Hệ thống sẽ tự xác nhận sau ~6s</span></div>
-            <div className="pm-actions">
-              <button className="btn-cancel" onClick={()=>closeMockPayment({ ok:false })}>Giả lập thất bại</button>
-              <button className="btn-ok" onClick={()=>closeMockPayment({ ok:true, txnId:'MOCK-' + Date.now() })}>Giả lập thành công</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Payment Modal (UI như MoMo/VNPay) */}
+      <PaymentModal
+        open={showPayModal}
+        method={paymentMethod}                 // 'MOMO' | 'VNPAY'
+        amount={finalTotal}
+        orderId={pendingOrder?.id}
+        customerName={name}                    // ⬅️ lấy từ ô "Họ tên"
+        description={`Khách hàng: ${name}\nNội dung: Thanh toán tại FoodFast`}  // ⬅️ mô tả chuẩn
+        durationSec={60}                       // tổng thời gian đếm ngược (tuỳ chọn)
+        autoConfirmSec={25}                    // tự xác nhận “vừa phải” (tuỳ chọn)
+        onConfirm={handlePaid}
+        onClose={handleClose}
+        onTimeout={handleTimeout}
+      />
     </section>
   )
 }
