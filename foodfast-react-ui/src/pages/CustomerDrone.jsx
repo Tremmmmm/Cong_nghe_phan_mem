@@ -57,6 +57,21 @@ const normalizeStatus = (s = "") => {
 const canTrack = (order, mission) => normalizeStatus(order?.status) === "delivery" && !!mission?.id;
 const Dash = () => <span className="mini">—</span>;
 
+/* ===== Helpers ETA fallback (thuần FE) ===== */
+const toLL = (p) => (Array.isArray(p) ? p : [p?.lat, p?.lng ?? p?.lon ?? p?.longitude]);
+const isLL = (ll) => Array.isArray(ll) && Number.isFinite(ll[0]) && Number.isFinite(ll[1]);
+const toRad = (d) => (d * Math.PI) / 180;
+function haversineKm([lat1, lng1], [lat2, lng2]) {
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function computeETA(distKm, speedKmh) {
+  if (!distKm || !speedKmh) return null;
+  return Math.round((distKm / speedKmh) * 60);
+}
+
 function CoordText({ lat, lng }) {
   const ok = Number.isFinite(lat) && Number.isFinite(lng);
   return ok ? (
@@ -232,10 +247,24 @@ export default function CustomerDrone() {
             {orders.map((o) => {
               const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)] || null;
               const t = m ? (teleByMission[m.id] || teleByMission[o.droneMissionId]) : null;
-              const lat = t?.lat, lng = t?.lng;
+              const lat = Number(t?.lat), lng = Number(t?.lng);
               const orderParam = encodeURIComponent(String(o.id).replace(/^#/, ""));
               const hasMission = !!m?.id;
               const trackable = canTrack(o, m);
+
+              // === ETA fallback (FE) ===
+              let etaText = m?.eta != null ? `${m.eta} phút` : null;
+              if (etaText == null && hasMission && Array.isArray(m?.path) && m.path.length && Number.isFinite(lat) && Number.isFinite(lng)) {
+                const dest = toLL(m.path[m.path.length - 1]);
+                const cur  = [lat, lng];
+                if (isLL(dest) && isLL(cur)) {
+                  const dist = haversineKm(cur, dest);
+                  const v = Number.isFinite(t?.speed) ? Number(t.speed) : 35; // fallback 35 km/h
+                  const em = computeETA(dist, v);
+                  if (em != null) etaText = `${em} phút`;
+                }
+              }
+
               return (
                 <tr key={o.id} className="row">
                   <td className="cell">
@@ -244,10 +273,12 @@ export default function CustomerDrone() {
                   </td>
                   <td className="cell center">
                     {hasMission ? <StatusPill status={m?.status} /> : <span className="mini">Chưa có mission</span>}
-                    <span className="mini">{t?.ts ? `Cập nhật: ${new Date(t.ts).toLocaleTimeString("vi-VN")}` : "—"}</span>
+                    <span className="mini" style={{ display: "block" }}>
+                      {t?.ts ? `Cập nhật: ${new Date(t.ts).toLocaleTimeString("vi-VN")}` : "—"}
+                    </span>
                   </td>
-                  <td className="cell center">{t?.speed != null ? `${t.speed} km/h` : <Dash />}</td>
-                  <td className="cell center">{m?.eta   != null ? `${m.eta} phút` : <Dash />}</td>
+                  <td className="cell center">{Number.isFinite(t?.speed) ? `${t.speed} km/h` : <Dash />}</td>
+                  <td className="cell center">{etaText ?? <Dash />}</td>
                   <td className="cell center"><CoordText lat={lat} lng={lng} /></td>
                   <td className="cell right">
                     {trackable ? (
