@@ -602,6 +602,40 @@ export default function RestaurantOrders() {
     return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
+  // Tự hoàn thành đơn khi DroneTracker bắn event "order:statusChanged"
+useEffect(() => {
+  function onAutoDone(e) {
+    const { id, status } = e.detail || {};
+    if (!id || String(status).toLowerCase() !== "completed") return;
+
+    setOrders((list) => {
+      const has = list.some(
+        (o) =>
+          String(o.id) === String(id) &&
+          (o.status === STATUS.DELIVERING || String(o.status).toLowerCase() === "delivering")
+      );
+      if (!has) return list;
+
+      const next = list.map((o) =>
+        String(o.id) === String(id) ? { ...o, status: STATUS.COMPLETED } : o
+      );
+
+      // (tuỳ chọn) đồng bộ “API” mock
+      try {
+        api.patch(`/orders/${id}`, {
+          status: STATUS.COMPLETED,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch {}
+
+      return next;
+    });
+  }
+
+  window.addEventListener("order:statusChanged", onAutoDone);
+  return () => window.removeEventListener("order:statusChanged", onAutoDone);
+}, []);
+
   function onDragEnter(e) { e.currentTarget.classList.add("drag-over"); }
   function onDragLeave(e) { e.currentTarget.classList.remove("drag-over"); }
   function onDropCol(e, targetStatus) {
