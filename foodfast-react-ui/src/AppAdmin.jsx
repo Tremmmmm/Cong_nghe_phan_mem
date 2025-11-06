@@ -30,7 +30,7 @@ import AdminServerRestaurant from './pages/AdminServerRestaurant.jsx'
 import AdminServerDashboard from './pages/AdminServerDashboard.jsx'
 import AdminUsers from './admin/AdminUsers.jsx'
 import AdminMerchantDetail from './pages/AdminMerchantDetail.jsx'
-// Admin shell layout (sidebar) 
+// Admin shell layout (sidebar)
 import AdminLayout from './admin/AdminLayout.jsx'
 
 // Restaurant (Kitchen)
@@ -94,42 +94,41 @@ export default function AppAdmin() {
               <Orders />
             </RequireAuth>
           }
-        />  
-        {/* Admin login (nếu có) */}
+        />
+
+        {/* Admin login */}
         <Route path="/admin/login" element={<AdminSignIn />} />
 
-        {/* Admin Panel (nested dưới ResLayout) */}
+        {/* ========= ADMIN GROUP (nested) ========= */}
         <Route
-        path="/admin"
-        element={
+          path="/admin"
+          element={
             <RequireAdmin>
-              <AdminLayout /> 
-              </RequireAdmin>
-              }
-              >
-                <Route path="users" element={<AdminUsers />} />
-                <Route index element={<Navigate to="dashboard" replace />} /> 
-                <Route path="dashboard" element={<AdminServerDashboard />} /> {/* Thay dashboard_restaurant thành dashboard */}
-{/* <Route path="orders" element={<AdminOrders />} />*/} 
+              <AdminLayout />
+            </RequireAdmin>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminServerDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="restaurant_managerment" element={<AdminServerRestaurant />} />
+          <Route path="merchants/:merchantId" element={<AdminMerchantDetail />} />
 
-            {/* 1. ROUTE DANH SÁCH MERCHANT (Admin Server Selection) */}
-<Route path="restaurant_managerment" element={<AdminServerRestaurant />} />
+          {/* Drone cho Admin */}
+          <Route path="drone" element={<DroneOrders />} />
+          <Route path="drone/:id" element={<DroneTracker />} />
 
-            {/* 2. ROUTE CHI TIẾT MERCHANT (Admin Server Viewing) */}
-            {/* Khi Admin chọn 1 Merchant, họ sẽ được đưa đến đường dẫn này */}
-            {/* :merchantId là tham số bắt buộc */}
-            <Route path="merchants/:merchantId" element={<AdminMerchantDetail />} />
+          <Route path="restaurant" element={<RestaurantOrders />} />
 
-{/* NEW: danh sách Drone chuyên biệt */}
-            <Route path="drone" element={<DroneOrders />} />
-              <Route path="restaurant" element={<RestaurantOrders />} />
-            </Route>
+          {/* ✅ Fallback CHỈ CHO KHỐI /admin */}
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+        </Route>
+        {/* ========= END ADMIN GROUP ========= */}
 
-        {/* NEW: Trang theo dõi chi tiết 1 đơn Drone */}
-        <Route path="/orders/:id/tracking" element={<DroneTracker />}  />
+        {/* Trang theo dõi dành cho user */}
+        <Route path="/orders/:id/tracking" element={<DroneTracker />} />
 
-        {/* Fallbacks */}
-        <Route path="/admin*" element={<Navigate to="/admin/dashboard" replace />} />
+        {/* Fallback toàn site */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

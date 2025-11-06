@@ -20,6 +20,11 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const ddRef = useRef(null);
 
+  // ✅ dựa theo AuthContext: isAdmin / isServerAdmin / isRestaurantAdmin
+  const isAdmin = !!user?.isAdmin;
+  const isServerAdmin = !!user?.isServerAdmin;
+  const isRestaurantAdmin = !!user?.isRestaurantAdmin;
+
   // đóng dropdown khi click ra ngoài / nhấn Esc
   useEffect(() => {
     const onClick = (e) => {
@@ -50,7 +55,6 @@ export default function Header() {
     .search input{border:none;outline:none;padding:0 12px;width:260px;background:#fff}
     .search button{border:none;background:#f4f4f6;height:36px;width:40px;cursor:pointer}
 
-    /* icon + badge */
     .icon-box{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:12px;
       background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.08), inset 0 0 0 1px #eee;color:#333;text-decoration:none}
     .icon-box .ico{font-size:18px;line-height:1}
@@ -59,13 +63,11 @@ export default function Header() {
       font-size:11px;font-weight:700;background:#ffe8e0;color:#d24c1f;border:1px solid #ffb199;box-shadow:0 2px 6px rgba(0,0,0,.15)
     }
 
-    /* user */
     .user{position:relative}
     .user-btn{display:flex;align-items:center;gap:8px;border:1px solid #eee;background:#fafafa;border-radius:99px;padding:6px 12px;cursor:pointer}
     .avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#ff6b35;color:#fff;font-weight:800}
     .uname{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 
-    /* dropdown */
     .dropdown{
       position:absolute;right:0;top:calc(100% + 8px);
       min-width:220px;background:#fff;border:1px solid #eee;border-radius:16px;
@@ -74,8 +76,7 @@ export default function Header() {
     }
     .dropdown a,.dropdown button{
       display:flex;align-items:center;justify-content:center;
-      width:100%;height:44px;
-      background:none;border:none;text-decoration:none;cursor:pointer;
+      width:100%;height:44px;background:none;border:none;text-decoration:none;cursor:pointer;
       color:#2b2b2b;font-size:14.5px;font-weight:700;letter-spacing:.2px;text-align:center;padding:0;
       transition:background .15s ease;
     }
@@ -84,7 +85,6 @@ export default function Header() {
 
     @media (max-width:940px){ .nav{display:none} .search input{width:160px} }
 
-    /* dark */
     .dark .ff-header{background:#111;border-color:#333}
     .dark .nav a{color:#ddd}.dark .nav a.active{color:#ffb199}
     .dark .search{border-color:#333}.dark .search input{background:transparent;color:#ddd}
@@ -123,7 +123,7 @@ export default function Header() {
           <img src={logo} alt="FoodFast Logo" />
         </Link>
 
-        {/* Nav center (đÃ bỏ Admin khỏi navbar chính) */}
+        {/* Nav center */}
         <nav className="nav">
           <ul>
             <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Trang chủ</NavLink></li>
@@ -166,13 +166,26 @@ export default function Header() {
               </button>
               {open && (
                 <div className="dropdown" role="menu" aria-label="User menu">
-                  <NavLink to="/orders" onClick={()=>setOpen(false)}>Đơn của tôi</NavLink>
-                  <NavLink to="/history" onClick={()=>setOpen(false)}>Lịch sử đơn</NavLink>
+                  {/* ⛔ Ẩn với admin, chỉ user thường thấy */}
+                  {!isAdmin && (
+                    <>
+                      <NavLink to="/orders" onClick={()=>setOpen(false)}>Đơn của tôi</NavLink>
+                      <NavLink to="/history" onClick={()=>setOpen(false)}>Lịch sử đơn</NavLink>
+                    </>
+                  )}
+
                   <NavLink to="/profile" onClick={()=>setOpen(false)}>Cài đặt</NavLink>
-                  {user?.isAdmin && (
+
+                  {/* ✅ Chỉ admin thấy Trang quản trị (dù server hay restaurant) */}
+                  {(isAdmin || isServerAdmin || isRestaurantAdmin) && (
                     <NavLink to="/admin" onClick={()=>setOpen(false)}>Trang quản trị</NavLink>
                   )}
-                  <button onClick={()=>{ signOut(); setOpen(false); navigate("/signin"); }}>
+
+                  <button onClick={()=>{
+                    signOut();
+                    setOpen(false);
+                    navigate("/signin");
+                  }}>
                     Đăng xuất
                   </button>
                 </div>

@@ -1,10 +1,33 @@
-import { NavLink, Outlet } from "react-router-dom";
+// src/admin/ResLayout.jsx
+import { NavLink, Outlet, useMatch } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 
-export default function ResLayout(){
-  const css = useMemo(()=>`
-    .admin-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;max-width:1200px;margin:16px auto;padding:0 16px}
-    .aside{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;height:max-content;position:sticky;top:72px}
+export default function ResLayout() {
+  // 👉 Đang ở /admin/drone/:id thì ẩn sidebar + full-width
+  const isDroneTracker = !!useMatch("/admin/drone/:id");
+
+  const css = useMemo(
+    () => `
+    .admin-layout{
+      display:grid;
+      grid-template-columns:220px 1fr;
+      gap:16px;
+      max-width:1200px;
+      margin:16px auto;
+      padding:0 16px;
+    }
+    /* ➜ Full-width thật sự khi xem tracker */
+    .admin-layout.full{
+      grid-template-columns:1fr;
+      max-width:100vw;   /* bỏ giới hạn chiều ngang */
+      margin:0;          /* sát mép */
+      padding:0;         /* bỏ padding 2 bên */
+    }
+    .aside{
+      background:#fff;border:1px solid #eee;border-radius:12px;
+      padding:12px;height:max-content;position:sticky;top:72px
+    }
+    .aside.hidden{display:none}
     .a-title{font-size:18px;font-weight:900;margin:4px 0 10px}
     .a-nav{display:grid;gap:6px}
     .a-link{display:block;padding:10px 12px;border-radius:10px;text-decoration:none;color:#333;font-weight:700;border:1px solid #eee}
@@ -19,46 +42,31 @@ export default function ResLayout(){
       .admin-layout{grid-template-columns:1fr}
       .aside{position:static}
     }
-  `,[])
+  `,
+    []
+  );
 
-  useEffect(()=>{
-    const id='admin-layout-style'
-    if(!document.getElementById(id)){
-      const s=document.createElement('style');
-      s.id=id;
-      s.innerHTML=css;
-      document.head.appendChild(s)
+  useEffect(() => {
+    const id = "admin-layout-style";
+    if (!document.getElementById(id)) {
+      const s = document.createElement("style");
+      s.id = id;
+      s.innerHTML = css;
+      document.head.appendChild(s);
     }
-  },[css])
+  }, [css]);
 
   return (
-    <div className="admin-layout">
-      <aside className="aside">
+    <div className={`admin-layout ${isDroneTracker ? "full" : ""}`}>
+      <aside className={`aside ${isDroneTracker ? "hidden" : ""}`}>
         <div className="a-title">Trang quản trị cửa hàng</div>
-        <nav className="a-nav"> 
-
-          <NavLink to="/admin/dashboard" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Dashboard
-          </NavLink> 
-
-          <NavLink to="/admin/orders" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Lịch sử đơn hàng
-          </NavLink>
-
-          {/* Drone: route riêng để NavLink match chính xác */}
-          <NavLink to="/admin/drone" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Drone (theo dõi)
-          </NavLink>
-
-          <NavLink to="/admin/restaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Quản lý đơn hàng
-          </NavLink>
-          <NavLink to="/admin/settingrestaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Cài đặt cửa hàng 
-          </NavLink>
-          <NavLink to="/admin/settingmenu" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Menu 
-          </NavLink>
+        <nav className="a-nav">
+          <NavLink to="/admin/dashboard" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Dashboard</NavLink>
+          <NavLink to="/admin/orders" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Lịch sử đơn hàng</NavLink>
+          <NavLink to="/admin/drone" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Drone (theo dõi)</NavLink>
+          <NavLink to="/admin/restaurant" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Quản lý đơn hàng</NavLink>
+          <NavLink to="/admin/settingrestaurant" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Cài đặt cửa hàng</NavLink>
+          <NavLink to="/admin/settingmenu" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Menu</NavLink>
         </nav>
       </aside>
 
@@ -66,5 +74,5 @@ export default function ResLayout(){
         <Outlet />
       </main>
     </div>
-  )
+  );
 }

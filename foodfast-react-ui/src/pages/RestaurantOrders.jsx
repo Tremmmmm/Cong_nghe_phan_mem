@@ -1,5 +1,5 @@
 // src/pages/RestaurantOrders.jsx
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../utils/api";
 import { formatVND } from "../utils/format";
 import OrderEditModal from "../components/OrderEditModal";
@@ -210,7 +210,7 @@ function OrderDetailDrawer({
           )}
         </div>
 
-        {/* Tổng tiền (bỏ phí đóng gói & khách ghi chú) */}
+        {/* Tổng tiền */}
         <div style={{marginTop:14, padding:"12px", border:"1px solid #eee", borderRadius:12}}>
           <Row label="Tổng tiền món (giá gốc)">{VND(subTotal)}</Row>
           {discount ? <Row label="Chiết khấu">{VND(-discount)}</Row> : null}
@@ -221,7 +221,7 @@ function OrderDetailDrawer({
           </Row>
         </div>
 
-        {/* Thông tin khác ngắn gọn */}
+        {/* Thông tin khác */}
         <div style={{marginTop:14}}>
           <div style={{fontSize:12, color:"#999", marginBottom:4}}>Thông tin</div>
           <div style={{fontSize:13, color:"#444", lineHeight:1.8}}>
@@ -231,7 +231,7 @@ function OrderDetailDrawer({
           </div>
         </div>
 
-        {/* Hành động nhanh (ràng buộc trạng thái) */}
+        {/* Hành động nhanh */}
         <div style={{display:"flex", gap:8, marginTop:18}}>
           <button
             onClick={onEdit}
@@ -263,100 +263,20 @@ function OrderDetailDrawer({
 }
 /* ===================== End Drawer ===================== */
 
-function MoreMenu({ onEdit, onCancel, canEdit, disabledEdit, canCancel=true }) {
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
-
-  const canEditAllowed = !!(canEdit && !disabledEdit);
-  const nothingAllowed = !canEditAllowed && !canCancel;
-
-  // đóng khi bấm ra ngoài / nhấn Esc
-  useEffect(() => {
-    function onDocClick(e) {
-      if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(e.target)) setOpen(false);
-    }
-    function onKey(e) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    if (open) {
-      document.addEventListener("mousedown", onDocClick);
-      document.addEventListener("keydown", onKey);
-    }
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  return (
-    <div ref={wrapRef} className="ff-dropdown">
-      <button
-        className="ff-btn ff-btn--ghost"
-        onClick={() => setOpen(v => !v)}
-        disabled={nothingAllowed}
-        title={nothingAllowed ? "Không có thao tác khả dụng" : ""}
-      >
-        Xem thêm ▾
-      </button>
-
-      {open && (
-        <div className="ff-menu" role="menu" aria-label="Thao tác đơn">
-          {canEditAllowed && (
-            <button
-              className="ff-menu-item"
-              onClick={() => { setOpen(false); onEdit(); }}
-            >
-              Sửa đơn
-            </button>
-          )}
-          {canEditAllowed && canCancel && <div className="ff-menu-sep" />}
-          {canCancel && (
-            <button
-              className="ff-menu-item ff-danger"
-              onClick={() => { setOpen(false); onCancel(); }}
-            >
-              Huỷ đơn
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function OrderCard({ order, onMove, onAskCancel, onEdit, onOpenDetail }) {
+/* ======= Card gọn, không Sửa/Huỷ ======= */
+function OrderCard({ order, onMove, onOpenDetail }) {
   const s = order.status || STATUS.NEW;
-  const editable = s === STATUS.NEW || s === STATUS.ACCEPTED;
-  const disabledEdit = !!order.modified;
-
   const stop = (fn) => (e) => { e.stopPropagation(); fn?.(); };
 
   const actions = [];
   if (s === STATUS.NEW) {
     actions.push(
-      <button key="accept" className="ff-btn" onClick={stop(() => onMove(order, STATUS.ACCEPTED))}>Xác nhận</button>,
-      <MoreMenu
-        key="more"
-        canEdit={editable}
-        disabledEdit={disabledEdit}
-        canCancel={canCancelOrder(order)}
-        onEdit={stop(() => onEdit(order))}
-        onCancel={stop(() => onAskCancel(order))}
-      />
+      <button key="accept" className="ff-btn" onClick={stop(() => onMove(order, STATUS.ACCEPTED))}>Xác nhận</button>
     );
   }
   if (s === STATUS.ACCEPTED) {
     actions.push(
-      <button key="ready" className="ff-btn" onClick={stop(() => onMove(order, STATUS.READY))}>Sẵn sàng</button>,
-      <MoreMenu
-        key="more"
-        canEdit={editable}
-        disabledEdit={disabledEdit}
-        canCancel={canCancelOrder(order)}
-        onEdit={stop(() => onEdit(order))}
-        onCancel={stop(() => onAskCancel(order))}
-      />
+      <button key="ready" className="ff-btn" onClick={stop(() => onMove(order, STATUS.READY))}>Sẵn sàng</button>
     );
   }
   if (s === STATUS.READY) {
@@ -372,7 +292,7 @@ function OrderCard({ order, onMove, onAskCancel, onEdit, onOpenDetail }) {
   return (
     <div
       className="card"
-      onClick={() => onOpenDetail(order)}          // mở chi tiết khi bấm card
+      onClick={() => onOpenDetail(order)}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", String(order.id));
@@ -422,6 +342,10 @@ export default function RestaurantOrders() {
   const bottomColumns = [STATUS.COMPLETED, STATUS.CANCELLED];
   const allColumns = [...mainColumns, ...bottomColumns];
 
+  // ===== Global Pagination (áp dụng đồng thời cho tất cả cột) =====
+  const PAGE_SIZE = 5;
+  const [page, setPage] = useState(1);
+
   const css = `
     :root{
       --ff-accent:#ff7a59;
@@ -436,20 +360,10 @@ export default function RestaurantOrders() {
     .top{display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
     .title{font-size:24px;font-weight:800;margin:0}
     .bottom-board{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
-    .board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+    .board{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:8px}
 
-    @media (max-width:1320px){
-      .board{grid-template-columns:repeat(4,1fr)}
-      .bottom-board{grid-template-columns:repeat(2,1fr)}
-    }
-    @media (max-width:900px){
-      .board{grid-template-columns:repeat(2,1fr)}
-      .bottom-board{grid-template-columns:repeat(2,1fr)}
-    }
-    @media (max-width:640px){
-      .board{grid-template-columns:1fr}
-      .bottom-board{grid-template-columns:1fr}
-    }
+    @media (max-width:900px){ .board{grid-template-columns:repeat(2,1fr)} .bottom-board{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:640px){ .board{grid-template-columns:1fr} .bottom-board{grid-template-columns:1fr} }
 
     .col{background:var(--ff-bg);border:1px solid var(--ff-border);border-radius:14px;padding:14px;min-height:140px;transition:border-color .2s, box-shadow .2s; overflow:visible}
     .col.drag-over{border-color:#ffb199; box-shadow:0 0 0 3px #ffe8e0}
@@ -466,54 +380,39 @@ export default function RestaurantOrders() {
     .ff-btn{height:32px;border:none;border-radius:16px;background:var(--ff-accent);color:#fff;padding:0 12px;cursor:pointer}
     .ff-btn--ghost{background:#fff;color:#c24a26;border:1px solid var(--ff-accent-ghost)}
     .ff-btn--disabled{background:#f0f0f0;color:#999;cursor:not-allowed}
-    .ff-btn:hover{filter:brightness(0.98)}
-    .ff-btn:active{transform:translateY(1px)}
+    .ff-btn:hover{filter:brightness(0.98)} .ff-btn:active{transform:translateY(1px)}
 
-    /* Dropdown tệp với tổng thể */
-    .ff-dropdown{ position:relative; }
-    .ff-menu{
-      position:absolute; right:0; top:calc(100% + 10px);
-      min-width:180px; background:#fff; border:1px solid var(--ff-border); border-radius:12px;
-      box-shadow:var(--ff-shadow); padding:6px; z-index:2000;
-      animation: ff-pop .12s ease-out;
-    }
-    .ff-menu:before{
-      content:""; position:absolute; right:18px; top:-8px;
-      width:14px; height:14px; transform:rotate(45deg);
-      background:#fff; border-left:1px solid var(--ff-border); border-top:1px solid var(--ff-border);
-    }
-    .ff-menu-item{
-      width:100%; text-align:left; background:#fff; border:none;
-      padding:9px 10px; border-radius:10px; cursor:pointer; font-weight:600;
-    }
-    .ff-menu-item:hover{ background:var(--ff-soft); }
-    .ff-menu-item:active{ transform:translateY(1px); }
-    .ff-menu-item[disabled]{ opacity:.5; cursor:not-allowed; }
-    .ff-menu-sep{ height:6px; }
-    /* Huỷ đơn màu đen */
-    .ff-menu-item.ff-danger{ color:#111; }
-    .dark .ff-menu-item.ff-danger{ color:#eee; }
+    /* Global pager */
+    .pager{display:flex;gap:6px;align-items:center;margin:8px 0 16px auto;flex-wrap:wrap;justify-content:flex-end}
+    .pager-btn{height:28px;min-width:28px;padding:0 10px;border:1px solid var(--ff-border);background:#fff;border-radius:12px;cursor:pointer}
+    .pager-btn[disabled]{opacity:.5;cursor:not-allowed}
+    .pager-page{height:28px;min-width:28px;padding:0 10px;border:1px solid var(--ff-border);background:#fff;border-radius:12px;cursor:pointer}
+    .pager-page.active{background:var(--ff-soft);border-color:#ffd6c7;font-weight:700}
 
     .dark .col,.dark .card{background:#151515;border-color:#333}
     .dark .col-count{background:#1d1d1d;border-color:#333}
     .dark .muted{color:#aaa}
-    .dark .ff-menu{background:#1a1a1a; border-color:#333}
-    .dark .ff-menu:before{background:#1a1a1a; border-color:#333}
-    .dark .ff-menu-item{background:#1a1a1a}
-    .dark .ff-menu-item:hover{background:#202020}
-
-    .ff-modal .ff-edit-row{align-items:flex-start !important}
-    .ff-modal .ff-edit-row .c3{display:grid;grid-template-rows:32px auto;align-items:start}
-    .ff-modal .ff-edit-row .c3 input{height:32px}
-
-    @keyframes ff-pop { from{ opacity:0; transform: translateY(-4px); } to{ opacity:1; transform:none; } }
+    .dark .pager-btn,.dark .pager-page{background:#1a1a1a;border-color:#333;color:#eee}
+    .dark .pager-page.active{background:#202020;border-color:#444}
   `;
 
   const grouped = useMemo(() => {
-    const by = Object.fromEntries(allColumns.map((c) => [c, []]));
+    const by = Object.fromEntries([...allColumns.map(c => [c, []])]);
     for (const o of orders) (by[o.status || STATUS.NEW] || by[STATUS.NEW]).push(o);
     return by;
   }, [orders]);
+
+  // tổng số trang = max theo từng cột (mỗi cột PAGE_SIZE đơn / trang)
+  const totalPages = useMemo(() => {
+    const counts = allColumns.map(c => Math.ceil((grouped[c]?.length || 0) / PAGE_SIZE) || 1);
+    return Math.max(1, ...counts);
+  }, [grouped]);
+
+  // khi dữ liệu thay đổi, giữ page trong biên
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+    if (page < 1) setPage(1);
+  }, [totalPages]); // eslint-disable-line
 
   function toTs(v) {
     if (!v) return 0;
@@ -654,13 +553,12 @@ export default function RestaurantOrders() {
     }
   }
 
-  // === Edit handlers ===
+  // === Edit/Cancel for Drawer ===
   function onEdit(order) {
     if (!canEditOrder(order)) return;
     setEditOrder(order);
     setEditOpen(true);
   }
-
   async function handleSaveEdit(patch) {
     const ord = editOrder;
     setEditOpen(false);
@@ -670,39 +568,22 @@ export default function RestaurantOrders() {
     catch (e) { console.error(e); alert("Lưu chỉnh sửa thất bại. Đã hoàn tác."); fetchOrders(); }
     finally { setEditOrder(null); }
   }
-
-  // === Cancel handlers ===
   function onAskCancel(order) {
     if (!canCancelOrder(order)) return;
     setCancelOrderObj(order);
     setCancelOpen(true);
   }
-
   async function handleConfirmCancel({ reason, note }) {
     const ord = cancelOrderObj;
     setCancelOpen(false);
-
     const prev = ord.status || STATUS.NEW;
     setOrders((list) => list.map((o) => (o.id === ord.id ? { ...o, status: STATUS.CANCELLED } : o)));
-
     try {
       const now = new Date().toISOString();
       await api.patch(`/orders/${ord.id}`, {
-        status: STATUS.CANCELLED,
-        cancelReason: reason,
-        cancelBy: "merchant",
-        cancelNote: note,
-        cancelledAt: now,
-        updatedAt: now,
+        status: STATUS.CANCELLED, cancelReason: reason, cancelBy: "merchant",
+        cancelNote: note, cancelledAt: now, updatedAt: now,
       });
-
-      if (reason === "out_of_stock") {
-        if (window.confirm("Huỷ do hết món. Bạn có muốn cập nhật món tạm hết hàng trên menu không?")) {
-          // TODO: điều hướng sang trang menu/inventory của merchant
-        }
-      } else if (reason === "closed") {
-        alert("Đã huỷ do quán đóng cửa. Hãy cập nhật trạng thái quán để tránh khách đặt nhầm.");
-      }
     } catch (e) {
       console.error(e);
       alert("Huỷ đơn thất bại. Đã hoàn tác.");
@@ -721,6 +602,40 @@ export default function RestaurantOrders() {
     return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
+  // Tự hoàn thành đơn khi DroneTracker bắn event "order:statusChanged"
+useEffect(() => {
+  function onAutoDone(e) {
+    const { id, status } = e.detail || {};
+    if (!id || String(status).toLowerCase() !== "completed") return;
+
+    setOrders((list) => {
+      const has = list.some(
+        (o) =>
+          String(o.id) === String(id) &&
+          (o.status === STATUS.DELIVERING || String(o.status).toLowerCase() === "delivering")
+      );
+      if (!has) return list;
+
+      const next = list.map((o) =>
+        String(o.id) === String(id) ? { ...o, status: STATUS.COMPLETED } : o
+      );
+
+      // (tuỳ chọn) đồng bộ “API” mock
+      try {
+        api.patch(`/orders/${id}`, {
+          status: STATUS.COMPLETED,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch {}
+
+      return next;
+    });
+  }
+
+  window.addEventListener("order:statusChanged", onAutoDone);
+  return () => window.removeEventListener("order:statusChanged", onAutoDone);
+}, []);
+
   function onDragEnter(e) { e.currentTarget.classList.add("drag-over"); }
   function onDragLeave(e) { e.currentTarget.classList.remove("drag-over"); }
   function onDropCol(e, targetStatus) {
@@ -735,6 +650,64 @@ export default function RestaurantOrders() {
     moveStatus(dragged, targetStatus);
   }
 
+  // ==== Helpers render 1 cột (có cắt theo trang tổng) ====
+  const renderColumn = (col) => {
+    const items = grouped[col] || [];
+    const start = (page - 1) * PAGE_SIZE;
+    const view = items.slice(start, start + PAGE_SIZE);
+
+    return (
+      <section
+        key={col}
+        className="col"
+        onDragOver={(e) => e.preventDefault()}
+        onDragEnter={onDragEnter}
+        onDragLeave={onDragLeave}
+        onDrop={(e) => onDropCol(e, col)}
+      >
+        <div className="col-head">
+          <div className="col-title">{STATUS_LABEL[col]}</div>
+          <span className="col-count">{items.length}</span>
+        </div>
+
+        {view.length ? (
+          view.map((o) => (
+            <OrderCard
+              key={o.id}
+              order={o}
+              onMove={moveStatus}
+              onOpenDetail={openDetail}
+            />
+          ))
+        ) : (
+          <div className="muted">Không có đơn ở trang này</div>
+        )}
+      </section>
+    );
+  };
+
+  // ==== Global Pager ====
+  const GlobalPager = () => (
+    <div className="pager">
+      <button className="pager-btn" onClick={() => setPage(1)} disabled={page <= 1}>«</button>
+      <button className="pager-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>Trước</button>
+      {Array.from({ length: totalPages }).map((_, i) => {
+        const n = i + 1;
+        return (
+          <button
+            key={n}
+            className={`pager-page ${n === page ? "active" : ""}`}
+            onClick={() => setPage(n)}
+          >
+            {n}
+          </button>
+        );
+      })}
+      <button className="pager-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Sau</button>
+      <button className="pager-btn" onClick={() => setPage(totalPages)} disabled={page >= totalPages}>»</button>
+    </div>
+  );
+
   return (
     <div className="od-wrap">
       <style>{css}</style>
@@ -744,79 +717,29 @@ export default function RestaurantOrders() {
         <button className="ff-btn" onClick={fetchOrders}>Làm mới</button>
       </div>
 
+      {/* Pager tổng ở trên */}
+      <GlobalPager />
+
       {loading ? (
         <div>Đang tải…</div>
       ) : (
         <>
           {/* Hàng trên: 4 cột chính */}
           <div className="board">
-            {[STATUS.NEW, STATUS.ACCEPTED, STATUS.READY, STATUS.DELIVERING].map((col) => (
-              <section
-                key={col}
-                className="col"
-                onDragOver={(e) => e.preventDefault()}
-                onDragEnter={onDragEnter}
-                onDragLeave={onDragLeave}
-                onDrop={(e) => onDropCol(e, col)}
-              >
-                <div className="col-head">
-                  <div className="col-title">{STATUS_LABEL[col]}</div>
-                  <span className="col-count">{grouped[col]?.length || 0}</span>
-                </div>
-                {grouped[col]?.length ? (
-                  grouped[col].map((o) => (
-                    <OrderCard
-                      key={o.id}
-                      order={o}
-                      onMove={moveStatus}
-                      onEdit={onEdit}
-                      onAskCancel={onAskCancel}
-                      onOpenDetail={openDetail}
-                    />
-                  ))
-                ) : (
-                  <div className="muted">Không có đơn</div>
-                )}
-              </section>
-            ))}
+            {mainColumns.map(renderColumn)}
           </div>
 
           {/* Hàng dưới: 2 cột phụ */}
           <div className="bottom-board">
-            {[STATUS.COMPLETED, STATUS.CANCELLED].map((col) => (
-              <section
-                key={col}
-                className="col"
-                onDragOver={(e) => e.preventDefault()}
-                onDragEnter={onDragEnter}
-                onDragLeave={onDragLeave}
-                onDrop={(e) => onDropCol(e, col)}
-              >
-                <div className="col-head">
-                  <div className="col-title">{STATUS_LABEL[col]}</div>
-                  <span className="col-count">{grouped[col]?.length || 0}</span>
-                </div>
-                {grouped[col]?.length ? (
-                  grouped[col].map((o) => (
-                    <OrderCard
-                      key={o.id}
-                      order={o}
-                      onMove={moveStatus}
-                      onEdit={onEdit}
-                      onAskCancel={onAskCancel}
-                      onOpenDetail={openDetail}
-                    />
-                  ))
-                ) : (
-                  <div className="muted">Không có đơn</div>
-                )}
-              </section>
-            ))}
+            {bottomColumns.map(renderColumn)}
           </div>
         </>
       )}
 
-      {/* Drawer chi tiết: truyền quyền theo trạng thái */}
+      {/* Pager tổng ở dưới */}
+      <GlobalPager />
+
+      {/* Drawer chi tiết */}
       <OrderDetailDrawer
         open={detailOpen}
         order={detailOrder}
@@ -827,7 +750,7 @@ export default function RestaurantOrders() {
         canCancel={detailOrder ? canCancelOrder(detailOrder) : false}
       />
 
-      {/* Modals sẵn có */}
+      {/* Modals */}
       <OrderEditModal
         open={editOpen}
         order={editOrder}
