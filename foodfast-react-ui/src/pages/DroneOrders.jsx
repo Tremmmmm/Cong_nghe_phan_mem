@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { myOrders } from "../utils/api";
 import { formatVND } from "../utils/format";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const VND = (n) => formatVND(n);
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5181";
@@ -153,6 +154,9 @@ const Dash = () => <span className="mini">—</span>;
 
 /* ====================== Main ====================== */
 export default function DroneOrders() {
+  const { user } = useAuth();
+  const isAdmin = !!user?.isAdmin;
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -250,7 +254,7 @@ export default function DroneOrders() {
       if (["queued", "preflight"].includes(st)) counts.waiting++;
       else if (["takeoff", "enroute", "descending", "returning"].includes(st)) counts.active++;
       else if (["dropoff", "landed"].includes(st)) counts.landed++;
-      else if (["failed", "cancelled"].includes(st)) counts.error++;
+      else if (["failed, cancelled"].includes(st)) counts.error++;
     }
     return { total: orders.length, ...counts };
   }, [orders, missionById, missionByOrderId]);
@@ -360,7 +364,7 @@ export default function DroneOrders() {
                   <td className="cell right">
                     {trackable ? (
                       <Link
-                        to={`/orders/${orderParam}/tracking`}
+                        to={isAdmin ? `/admin/drone/${orderParam}` : `/orders/${orderParam}/tracking`}
                         className="btn"
                         style={{ textDecoration: "none", minWidth: 140 }}
                       >

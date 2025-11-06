@@ -26,8 +26,8 @@ import Orders from './pages/Orders.jsx'
 // Admin pages (nội dung)
 import AdminOrders from './pages/AdminOrders.jsx'
 import AdminSignIn from './pages/AdminSignIn.jsx'
-import AdminDashboard from './pages/AdminDashboard.jsx' 
-import SettingRestaurant from './pages/RestaurantSettings.jsx' 
+import AdminDashboard from './pages/AdminDashboard.jsx'
+import SettingRestaurant from './pages/RestaurantSettings.jsx'
 import RestaurantMenu from './pages/RestaurantMenuManager.jsx'
 
 // Admin shell layout (sidebar)
@@ -36,7 +36,7 @@ import ResLayout from './admin/ResLayout.jsx'
 // Restaurant (Kitchen)
 import RestaurantOrders from './pages/RestaurantOrders.jsx'
 
-// NEW: Drone pages
+// Drone pages
 import DroneOrders from './pages/DroneOrders.jsx'
 import DroneTracker from './pages/DroneTracker.jsx'
 
@@ -96,10 +96,10 @@ export default function App() {
           }
         />
 
-        {/* Admin login (nếu có) */}
+        {/* Admin login */}
         <Route path="/admin/login" element={<AdminSignIn />} />
 
-        {/* Admin Panel (nested dưới ResLayout) */}
+        {/* ========= ADMIN GROUP (nested) ========= */}
         <Route
           path="/admin"
           element={
@@ -107,24 +107,28 @@ export default function App() {
               <ResLayout />
             </RequireAdmin>
           }
-        > 
+        >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="orders" element={<AdminOrders />} />
-          {/* NEW: danh sách Drone chuyên biệt */}
-          <Route path="drone" element={<DroneOrders />} />
-          <Route path="restaurant" element={<RestaurantOrders />} />
-          <Route path="settingrestaurant" element={<SettingRestaurant />} />
+          <Route path="restaurant_managerment" element={<SettingRestaurant />} />
           <Route path="settingmenu" element={<RestaurantMenu />} />
 
+          {/* Drone (Admin) */}
+          <Route path="drone" element={<DroneOrders />} />
+          <Route path="drone/:id" element={<DroneTracker />} />
 
+          <Route path="restaurant" element={<RestaurantOrders />} />
+
+          {/* ✅ Fallback CHỈ cho khối /admin */}
+          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
+        {/* ========= END ADMIN GROUP ========= */}
 
-        {/* NEW: Trang theo dõi chi tiết 1 đơn Drone */}
-        <Route path="/orders/:id/tracking" element={<DroneTracker />}  />
+        {/* Trang theo dõi dành cho user */}
+        <Route path="/orders/:id/tracking" element={<DroneTracker />} />
 
-        {/* Fallbacks */}
-        <Route path="/admin*" element={<Navigate to="/admin/dashboard" replace />} />
+        {/* Fallback toàn site */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
