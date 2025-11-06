@@ -1,10 +1,12 @@
 // src/admin/ResLayout.jsx
 import { NavLink, Outlet, useMatch } from "react-router-dom";
 import { useEffect, useMemo } from "react";
+import { useAuth } from "../context/AuthContext";
 
 export default function ResLayout() {
-  // 👉 Đang ở /admin/drone/:id thì ẩn sidebar + full-width
-  const isDroneTracker = !!useMatch("/admin/drone/:id");
+  const { logout } = useAuth();
+  // ẩn sidebar + full-width
+  const isDroneTracker = !!useMatch("/merchant/drone/:id");
 
   const css = useMemo(
     () => `
@@ -33,6 +35,10 @@ export default function ResLayout() {
     .a-link{display:block;padding:10px 12px;border-radius:10px;text-decoration:none;color:#333;font-weight:700;border:1px solid #eee}
     .a-link:hover{background:#f7f7f7}
     .a-link.active{background:#ffefe9;border-color:#ffb199;color:#c24a26}
+
+    .logout-btn { color: #e74c3c; border-color: #fadbd8; }
+    .logout-btn:hover { background: #fdedec; }
+
     .main{min-width:0}
     .dark .aside{background:#151515;border-color:#333}
     .dark .a-link{color:#eee;border-color:#333}
@@ -55,18 +61,27 @@ export default function ResLayout() {
       document.head.appendChild(s);
     }
   }, [css]);
-
+// Hàm xử lý đăng xuất
+  const handleLogout = () => {
+      logout();
+      navigate('/signin');
+  };
   return (
     <div className={`admin-layout ${isDroneTracker ? "full" : ""}`}>
       <aside className={`aside ${isDroneTracker ? "hidden" : ""}`}>
         <div className="a-title">Trang quản trị cửa hàng</div>
         <nav className="a-nav">
-          <NavLink to="/admin/dashboard" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Dashboard</NavLink>
-          <NavLink to="/admin/orders" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Lịch sử đơn hàng</NavLink>
-          <NavLink to="/admin/drone" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Drone (theo dõi)</NavLink>
-          <NavLink to="/admin/restaurant" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Quản lý đơn hàng</NavLink>
-          <NavLink to="/admin/settingrestaurant" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Cài đặt cửa hàng</NavLink>
-          <NavLink to="/admin/settingmenu" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Menu</NavLink>
+          <NavLink to="/merchant/dashboard" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Dashboard</NavLink>
+          <NavLink to="/merchant/orders" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Lịch sử đơn hàng</NavLink>
+          <NavLink to="/merchant/kitchen" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Quản lý đơn (Bếp)</NavLink>
+          <NavLink to="/merchant/menu" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Quản lý Menu</NavLink>
+          <NavLink to="/merchant/settings" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Cài đặt cửa hàng</NavLink>
+          <NavLink to="/merchant/drone" className={({ isActive }) => `a-link ${isActive ? "active" : ""}`}>Drone (theo dõi)</NavLink>
+          
+          <hr style={{margin: '10px 0', border: 'none', borderTop: '1px solid #eee'}} />
+          <button onClick={handleLogout} className="a-link logout-btn">
+                      Đăng xuất
+                    </button>
         </nav>
       </aside>
 

@@ -1,6 +1,7 @@
 // File: src/pages/RestaurantMenuManager.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useToast } from '../context/ToastContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import {
     fetchMenuItems,
     createMenuItem,
@@ -179,19 +180,23 @@ export default function RestaurantMenuManager() {
     const [filterCategory, setFilterCategory] = useState('all'); // 'all', 'single', 'combo'
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 10; // Số sản phẩm mỗi trang
+const { currentUser } = useAuth(); // 💡 Lấy user hiện tại
+    const merchantId = currentUser?.merchantId;
 
-// --- Load Menu Items ---
+    // --- Load Menu Items (Đã sửa để dùng merchantId) ---
     const loadMenuItems = useCallback(async () => {
+        if (!merchantId) return; // Không có ID thì không tải
         setIsLoading(true);
         try {
-            const data = await fetchMenuItems(); // Lấy tất cả (cả pending)
-            setMenuItems(data.sort((a,b) => (a.name || '').localeCompare(b.name || ''))); // Sắp xếp theo tên
+            // 💡 Truyền merchantId vào hàm fetch
+            const data = await fetchMenuItems(merchantId); 
+            setMenuItems(data.sort((a,b) => (a.name || '').localeCompare(b.name || '')));
         } catch (error) {
             toast.show('❌ Lỗi tải danh sách món ăn.', 'error');
         } finally {
             setIsLoading(false);
         }
-    }, [toast]);
+    }, [merchantId, toast]);
 
     useEffect(() => {
         loadMenuItems();
@@ -199,11 +204,15 @@ export default function RestaurantMenuManager() {
 
     // --- Xử lý CUD ---
     const handleAddItem = async (newItemData) => {
+        if (!merchantId) return;
         setIsSaving(true);
         try {
-            const newItem = await createMenuItem(newItemData);
+            // 💡 Kèm merchantId vào dữ liệu món mới
+            const dataToCreate = { ...newItemData, merchantId };
+            const newItem = await createMenuItem(dataToCreate);
+            
             setMenuItems(prev => [...prev, newItem].sort((a,b) => (a.name || '').localeCompare(b.name || '')));
-            toast.show(`⏳ Đã thêm "${newItem.name}". Chờ Admin duyệt.`, 'info');
+            toast.show(`⏳ Đã thêm "${newItem.name}".`, 'info');
             setShowForm(false);
         } catch (error) {
             toast.show('❌ Lỗi thêm món ăn.', 'error');

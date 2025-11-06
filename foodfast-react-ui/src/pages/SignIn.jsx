@@ -9,7 +9,6 @@ export default function SignIn() {
   const toast = useToast();
   const auth = useAuth();
 
-  // Đặt tên rõ ràng cho state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,23 +54,22 @@ export default function SignIn() {
     try {
       setLoading(true);
 
-      // 🔧 GỌI ĐÚNG CHỮ KÝ HÀM: truyền OBJECT { email, password }
-      // Ở backend JSON bạn đang dùng 'username', còn AuthContext map 'email' -> username
-      const { user } = await auth.login({ email: username, password });
+      // Gọi hàm login từ AuthContext
+      const result = await auth.login({ email: username, password });
+      const user = result.user;
 
-      toast.show(`Chào mừng, ${user.username || user.name || "user"}!`, "success");
+      toast.show(`Chào mừng, ${user.name || user.username || "bạn"}!`, "success");
 
-      // Điều hướng theo role
+      // Điều hướng dựa trên vai trò (Role-based navigation)
       if (user.role === "SuperAdmin") {
-        navigate("/admin/merchants");
+        navigate("/admin", { replace: true });
       } else if (user.role === "Merchant") {
-        const mid = user.merchantId;               // lấy merchantId từ user (db.json)
-        navigate(`/admin/settingrestaurant?mid=${encodeURIComponent(mid)}`, { replace: true });
+        navigate("/merchant", { replace: true });
       } else {
         navigate(redirectTo, { replace: true });
       }
     } catch (err) {
-      toast.show("Đăng nhập thất bại. Sai Username hoặc Password.", "error");
+      toast.show(err.message || "Đăng nhập thất bại. Sai thông tin.", "error");
       console.error(err);
     } finally {
       setLoading(false);
@@ -86,32 +84,32 @@ export default function SignIn() {
         <form className="form" onSubmit={submit}>
           <input
             className="input"
-            placeholder="Enter your Username (vd: svadmin, resadmin)"
+            placeholder="Username hoặc Email"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             name="username"
+            autoComplete="username"
           />
           <input
             className="input"
             type="password"
-            placeholder="Password (vd: 123)"
+            placeholder="Mật khẩu"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             name="password"
+            autoComplete="current-password"
           />
           <button className="btn" type="submit" disabled={loading}>
-            {loading ? "Signing In..." : "Đăng nhập"}
+            {loading ? "Đang xử lý..." : "Đăng nhập"}
           </button>
         </form>
 
         <div className="links">
-          New Registration <Link to="/signup">Click Here</Link>
+          Chưa có tài khoản? <Link to="/signup">Đăng ký ngay</Link>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 15, fontSize: 13, color: "#666" }}>
-          <p>Demo accounts:</p>
-          <p>Super Admin: <b>svadmin</b> / <b>123</b></p>
-          <p>Merchant 1: <b>resadmin</b> / <b>123</b></p>
+        <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#999" }}>
+          (Demo: <b>svadmin</b>/123, <b>resadmin</b>/123)
         </div>
       </div>
     </section>

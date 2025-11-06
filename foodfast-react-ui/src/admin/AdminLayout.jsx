@@ -1,6 +1,8 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useEffect, useMemo } from "react"; 
+import { useAuth } from "../context/AuthContext";
 export default function AdminLayout(){
+  const { logout } = useAuth();
   const css = useMemo(()=>`
     .admin-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;max-width:1200px;margin:16px auto;padding:0 16px}
     .aside{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px;height:max-content;position:sticky;top:72px}
@@ -9,6 +11,9 @@ export default function AdminLayout(){
     .a-link{display:block;padding:10px 12px;border-radius:10px;text-decoration:none;color:#333;font-weight:700;border:1px solid #eee}
     .a-link:hover{background:#f7f7f7}
     .a-link.active{background:#ffefe9;border-color:#ffb199;color:#c24a26}
+    /* Style riêng cho nút Đăng xuất nếu muốn khác biệt chút */
+    .logout-btn { color: #e74c3c; border-color: #fadbd8; }
+    .logout-btn:hover { background: #fdedec; }
     .main{min-width:0}
     .dark .aside{background:#151515;border-color:#333}
     .dark .a-link{color:#eee;border-color:#333}
@@ -29,7 +34,10 @@ export default function AdminLayout(){
       document.head.appendChild(s)
     }
   },[css])
-
+const handleLogout = () => {
+      logout();
+      navigate('/signin'); // Hoặc '/' tuỳ bạn muốn
+  };
   return (
     <div className="admin-layout">
       <aside className="aside">
@@ -51,9 +59,9 @@ export default function AdminLayout(){
             Drone (theo dõi)
           </NavLink>
 
-          <NavLink to="/admin/restaurant" className={({isActive})=>`a-link ${isActive?'active':''}`}>
-            Quản lý đơn hàng 
-          </NavLink>
+            <button onClick={handleLogout} className="a-link logout-btn">
+              Đăng xuất
+            </button>
 
         </nav>
       </aside>

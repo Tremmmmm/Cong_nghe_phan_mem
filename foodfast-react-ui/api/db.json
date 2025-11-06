@@ -4445,14 +4445,50 @@
       "timestamp": 1762418299431
     }
   ],
+  "users": [
+    {
+      "id": "u001",
+      "username": "svadmin",
+      "password": "123",
+      "name": "Super Admin",
+      "role": "SuperAdmin",
+      "merchantId": null
+    },
+    {
+      "id": "u002",
+      "username": "resadmin",
+      "password": "123",
+      "name": "Restaurant Admin (BK)",
+      "role": "Merchant",
+      "merchantId": "m001"
+    },
+    {
+      "id": "u003",
+      "username": "pho_admin",
+      "password": "123",
+      "name": "Admin Phở Lý",
+      "role": "Merchant",
+      "merchantId": "m002"
+    },
+    {
+      "id": "7efa",
+      "name": "customer",
+      "email": "customer",
+      "phone": "0998989898",
+      "address": "customer",
+      "password": "123",
+      "username": "customer",
+      "role": "Customer"
+    }
+  ],
   "merchants": [
     {
       "id": "m001",
       "name": "Burger King Fast Food",
       "status": "Active",
       "ordersToday": 45,
-      "owner": "admin@foodfast.com",
-      "phone": "0901234567",
+      "owner": "resadmin",
+      "phone": "0909090909",
       "address": "123 Đường A, Quận 1",
       "contract": "2023-01-01 / 2024-12-31"
     },
@@ -4485,179 +4521,91 @@
       "phone": "0912121212",
       "address": "101 Đường D, Quận 10",
       "contract": "2023-11-01 / 2025-11-01"
+    },
+    {
+      "id": "bfd2",
+      "ordersToday": 0,
+      "status": "Rejected",
+      "name": "Merchant Mới (API) #5",
+      "owner": "new.owner@example.com"
     }
   ],
-  "restaurantSettings": {
-    "item": {
-      "item": {
-        "item": {
-          "item": {
-            "item": {
-              "item": {
-                "item": {
-                  "item": {
-                    "item": {
-                      "item": {
-                        "item": {
-                          "id": "main_settings",
-                          "storeName": "Foodfast",
-                          "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
-                          "phone": "0909090909",
-                          "isManuallyClosed": false,
-                          "operatingHours": {
-                            "mon": {
-                              "open": 7,
-                              "close": 22
-                            },
-                            "tue": {
-                              "open": 7,
-                              "close": 22
-                            },
-                            "wed": {
-                              "open": 7,
-                              "close": 22
-                            },
-                            "thu": {
-                              "open": 7,
-                              "close": 22
-                            },
-                            "fri": {
-                              "open": 7,
-                              "close": 22
-                            },
-                            "sat": {
-                              "open": 7,
-                              "close": 22
-                            },
-                            "sun": {
-                              "open": 7,
-                              "close": 22
-                            }
-                          }
-                        },
-                        "isManuallyClosed": false,
-                        "storeName": "Fastfood",
-                        "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
-                        "phone": "0909090909",
-                        "operatingHours": {
-                          "mon": {
-                            "open": 7,
-                            "close": 22
-                          },
-                          "tue": {
-                            "open": 7,
-                            "close": 22
-                          },
-                          "wed": {
-                            "open": 7,
-                            "close": 22
-                          },
-                          "thu": {
-                            "open": 7,
-                            "close": 22
-                          },
-                          "fri": {
-                            "open": 7,
-                            "close": 22
-                          },
-                          "sat": {
-                            "open": 7,
-                            "close": 22
-                          },
-                          "sun": {
-                            "open": 7,
-                            "close": 22
-                          }
-                        }
-                      },
-                      "isManuallyClosed": true
-                    },
-                    "isManuallyClosed": false
-                  },
-                  "isManuallyClosed": true
-                },
-                "isManuallyClosed": false,
-                "storeName": "Fastfood",
-                "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
-                "phone": "0909090909",
-                "operatingHours": {
-                  "mon": {
-                    "open": 7,
-                    "close": 22
-                  },
-                  "tue": {
-                    "open": 7,
-                    "close": 22
-                  },
-                  "wed": {
-                    "open": 7,
-                    "close": 22
-                  },
-                  "thu": {
-                    "open": 7,
-                    "close": 22
-                  },
-                  "fri": {
-                    "open": 7,
-                    "close": 22
-                  },
-                  "sat": {
-                    "open": 7,
-                    "close": 22
-                  },
-                  "sun": {
-                    "open": 7,
-                    "close": 22
-                  }
-                },
-                "id": "main_settings"
-              },
-              "isManuallyClosed": true
-            },
-            "isManuallyClosed": false,
-            "storeName": "Fastfood",
-            "address": "số 1 đường Sư Vạn Hạnh, Quận 10",
-            "phone": "0909090909",
-            "operatingHours": {
-              "mon": {
-                "open": 7,
-                "close": 22
-              },
-              "tue": {
-                "open": 7,
-                "close": 22
-              },
-              "wed": {
-                "open": 7,
-                "close": 22
-              },
-              "thu": {
-                "open": 7,
-                "close": 22
-              },
-              "fri": {
-                "open": 7,
-                "close": 22
-              },
-              "sat": {
-                "open": 7,
-                "close": 22
-              },
-              "sun": {
-                "open": 7,
-                "close": 22
-              }
-            },
-            "id": "main_settings"
-          },
-          "isManuallyClosed": true
+  "restaurantSettings": [
+    {
+      "id": "m001",
+      "storeName": "Burger King Fast Food",
+      "address": "123 Đường A, Quận 1",
+      "phone": "0909090909",
+      "isManuallyClosed": false,
+      "operatingHours": {
+        "mon": {
+          "open": 7,
+          "close": 22
         },
-        "isManuallyClosed": false
-      },
-      "isManuallyClosed": true
+        "tue": {
+          "open": 7,
+          "close": 22
+        },
+        "wed": {
+          "open": 7,
+          "close": 22
+        },
+        "thu": {
+          "open": 7,
+          "close": 22
+        },
+        "fri": {
+          "open": 7,
+          "close": 22
+        },
+        "sat": {
+          "open": 7,
+          "close": 22
+        },
+        "sun": {
+          "open": 7,
+          "close": 22
+        }
+      }
     },
-    "isManuallyClosed": false
-  },
+    {
+      "id": "m002",
+      "storeName": "Phở Lý Quốc Sư",
+      "address": "456 Đường B, Quận 3",
+      "phone": "0907654321",
+      "isManuallyClosed": false,
+      "operatingHours": {
+        "mon": {
+          "open": 6,
+          "close": 14
+        },
+        "tue": {
+          "open": 6,
+          "close": 14
+        },
+        "wed": {
+          "open": 6,
+          "close": 14
+        },
+        "thu": {
+          "open": 6,
+          "close": 14
+        },
+        "fri": {
+          "open": 6,
+          "close": 14
+        },
+        "sat": {
+          "open": 6,
+          "close": 14
+        },
+        "sun": {
+          "open": 6,
+          "close": 14
+        }
+      }
+    }
+  ],
   "menuItems": [
     {
       "id": "sg-1",
@@ -4668,17 +4616,21 @@
       "category": "single",
       "status": "approved",
       "description": "",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "sg-2",
       "name": "Cheese Burger",
       "price": 52000,
       "desc": "Burger bò phô mai béo ngậy.",
-      "image": "/assets/images/menu/cheeseburger.webp",
+      "image": "http://localhost:5182/cheeseburger.webp",
       "category": "single",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "sg-3",
@@ -4688,7 +4640,9 @@
       "image": "/assets/images/menu/friedchicken.webp",
       "category": "single",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "sg-4",
@@ -4698,7 +4652,9 @@
       "image": "/assets/images/menu/frenchfries.jpg",
       "category": "single",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "sg-5",
@@ -4708,7 +4664,9 @@
       "image": "/assets/images/menu/cheesepizza.webp",
       "category": "single",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "sg-6",
@@ -4718,7 +4676,9 @@
       "image": "/assets/images/menu/cocacola.jpg",
       "category": "single",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "cb-1",
@@ -4728,7 +4688,9 @@
       "image": "/assets/images/menu/combo1.webp",
       "category": "combo",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "cb-2",
@@ -4738,7 +4700,9 @@
       "image": "/assets/images/menu/combo2.webp",
       "category": "combo",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "cb-3",
@@ -4748,7 +4712,9 @@
       "image": "/assets/images/menu/combo3.jpg",
       "category": "combo",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "8b7a",
@@ -4758,16 +4724,20 @@
       "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg",
       "category": "single",
       "status": "approved",
-      "isAvailable": true
+      "isAvailable": true,
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "2921",
       "name": "Khoai tây nghiền chiên giòn",
       "desc": "popcorn khoai tây nghiền chiên giòn rụm",
       "price": 29000,
-      "image": " https://cdn.tgdd.vn/2020/11/CookProduct/CheeseStuffedMashedPotatoBallsRecipe3-40screenshot-1200x676.jpg",
+      "image": "https://cdn.tgdd.vn/2020/11/CookProduct/CheeseStuffedMashedPotatoBallsRecipe3-40screenshot-1200x676.jpg",
       "category": "single",
-      "status": "approved"
+      "status": "approved",
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
     },
     {
       "id": "2434",
@@ -4776,6 +4746,29 @@
       "price": 15000,
       "image": "https://www.cocoichibanya.vn/wp-content/uploads/2020/07/Sprite_CoCo-Ichibanya.jpg",
       "category": "single",
+      "status": "approved",
+      "merchantId": "m001",
+      "merchantName": "Burger King Fast Food"
+    },
+    {
+      "id": "pho-01",
+      "name": "Phở Tái Chín",
+      "desc": "Nước dùng truyền thống.",
+      "price": 55000,
+      "image": "https://placehold.co/400x250/f0e0d0/333?text=Pho+Tai+Chin",
+      "category": "single",
+      "status": "approved",
+      "merchantId": "m002",
+      "merchantName": "Phở Lý Quốc Sư"
+    },
+    {
+      "id": "a992",
+      "name": "Cá Nugget ",
+      "desc": ".",
+      "price": 40000,
+      "image": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png",
+      "category": "single",
+      "merchantId": "m001",
       "status": "approved"
     }
   ]
