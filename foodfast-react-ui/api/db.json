@@ -45,122 +45,6 @@
   ],
   "orders": [
     {
-      "id": "865b",
-      "customerName": "Chi Vo",
-      "phone": "0936455952",
-      "address": "Ho Chi Minh city",
-      "items": [
-        {
-          "id": "1",
-          "qty": 4,
-          "name": "Menu Combo 1",
-          "price": 69000
-        },
-        {
-          "id": "3",
-          "qty": 4,
-          "name": "Menu Combo 3",
-          "price": 99000
-        },
-        {
-          "id": "5",
-          "qty": 3,
-          "name": "Menu Combo 5",
-          "price": 129000
-        }
-      ],
-      "total": 1059000,
-      "createdAt": 1758035452628,
-      "status": "completed",
-      "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-15T09:29:02.252Z",
-      "acceptedAt": "2025-10-15T09:28:48.764Z",
-      "readyAt": "2025-10-15T09:28:56.378Z",
-      "pickedAt": "2025-10-15T09:28:58.011Z",
-      "deliveredAt": "2025-10-15T09:29:02.252Z"
-    },
-    {
-      "id": "e165",
-      "customerName": "Chi Vo",
-      "phone": "0936455952",
-      "address": "Ho Chi Minh city",
-      "items": [
-        {
-          "id": "3",
-          "qty": 2,
-          "name": "Menu Combo 3",
-          "price": 99000
-        }
-      ],
-      "total": 198000,
-      "createdAt": 1758036847213,
-      "status": "accepted",
-      "deliveryMode": "DRONE",
-      "updatedAt": "2025-11-01T09:09:08.228Z",
-      "acceptedAt": "2025-11-01T09:09:08.228Z",
-      "readyAt": "2025-11-01T09:09:03.253Z"
-    },
-    {
-      "id": "e7c6",
-      "customerName": "aloo",
-      "phone": "312444444",
-      "address": "Ho Chi Minh city",
-      "items": [
-        {
-          "id": "1",
-          "qty": 1,
-          "name": "Menu Combo 1",
-          "price": 69000
-        },
-        {
-          "id": "2",
-          "qty": 1,
-          "name": "Menu Combo 2",
-          "price": 119000
-        },
-        {
-          "id": "3",
-          "qty": 1,
-          "name": "Menu Combo 3",
-          "price": 99000
-        }
-      ],
-      "total": 287000,
-      "createdAt": 1758037295299,
-      "status": "ready",
-      "deliveryMode": "DRONE",
-      "updatedAt": "2025-11-01T09:09:07.441Z",
-      "acceptedAt": "2025-11-01T09:08:50.475Z",
-      "readyAt": "2025-11-01T09:09:07.441Z"
-    },
-    {
-      "id": "8389",
-      "customerName": "hihi",
-      "phone": "0382659884",
-      "address": "Ho Chi Minh city",
-      "items": [
-        {
-          "id": "2",
-          "qty": 1,
-          "name": "Menu Combo 2",
-          "price": 119000
-        },
-        {
-          "id": "3",
-          "qty": 1,
-          "name": "Menu Combo 3",
-          "price": 99000
-        }
-      ],
-      "total": 218000,
-      "createdAt": 1758038147022,
-      "status": "ready",
-      "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-16T12:21:21.887Z",
-      "acceptedAt": "2025-10-15T14:27:44.092Z",
-      "readyAt": "2025-10-16T12:21:21.887Z"
-    },
-    {
       "id": "05e9",
       "customerName": "haha",
       "phone": "03659998874",
@@ -199,47 +83,6 @@
         "lng": 106.653238
       },
       "droneMissionId": "DM-002"
-    },
-    {
-      "id": "9s39",
-      "userId": 1,
-      "userEmail": "lienchivo04@gmail.com",
-      "customerName": "lienchivo04",
-      "phone": "12345678",
-      "address": "HCM",
-      "items": [
-        {
-          "id": "sg-1",
-          "name": "Beef Burger",
-          "qty": 2,
-          "price": 45000,
-          "image": "/assets/images/menu/beefburger.jpg"
-        },
-        {
-          "id": "sg-2",
-          "name": "Cheese Burger",
-          "qty": 2,
-          "price": 52000,
-          "image": "/assets/images/menu/cheeseburger.webp"
-        },
-        {
-          "id": "sg-3",
-          "name": "Fried Chicken",
-          "qty": 1,
-          "price": 52000,
-          "image": "/assets/images/menu/friedchicken.webp"
-        }
-      ],
-      "total": 246000,
-      "discount": 15000,
-      "finalTotal": 231000,
-      "couponCode": "FREESHIP",
-      "createdAt": 1758215459583,
-      "status": "accepted",
-      "deliveryMode": "DRONE",
-      "updatedAt": "2025-10-28T03:54:48.185Z",
-      "acceptedAt": "2025-10-28T03:54:48.185Z",
-      "readyAt": "2025-10-27T06:53:00.502Z"
     },
     {
       "id": "cr3y",
@@ -436,41 +279,6 @@
       "cancelBy": "merchant",
       "cancelNote": null,
       "cancelledAt": "2025-10-15T14:26:57.383Z"
-    },
-    {
-      "id": "wbr8",
-      "sessionId": "ba32",
-      "userId": 1,
-      "userEmail": "lienchivo04@gmail.com",
-      "customerName": "lienchi",
-      "phone": "0935687742",
-      "address": "vt",
-      "deliveryMode": "DRONE",
-      "items": [
-        {
-          "name": "Beef Burger",
-          "qty": 1,
-          "price": 45000
-        }
-      ],
-      "total": 45000,
-      "discount": 4500,
-      "finalTotal": 45000,
-      "couponCode": "FF10",
-      "payment": "COD",
-      "createdAt": 1760286657105,
-      "status": "accepted",
-      "payment_status": "unpaid",
-      "updatedAt": "2025-11-01T10:01:48.934Z",
-      "acceptedAt": "2025-10-27T06:52:59.067Z",
-      "readyAt": "2025-10-26T16:16:55.218Z",
-      "modified": true,
-      "modification": {
-        "removedItems": [],
-        "priceChanges": [],
-        "note": null,
-        "adjustedAt": "2025-11-01T10:01:48.934Z"
-      }
     },
     {
       "id": "w6hv",
@@ -1013,10 +821,15 @@
         "lat": 10.781742092979162,
         "lng": 106.685756926954
       },
-      "status": "new",
+      "status": "delivering",
       "payment": "VNPAY",
       "payment_status": "paid",
-      "payment_txn_id": "MOCKA7KJOJ"
+      "payment_txn_id": "MOCKA7KJOJ",
+      "updatedAt": "2025-11-06T08:28:43.410Z",
+      "acceptedAt": "2025-11-06T08:28:38.318Z",
+      "readyAt": "2025-11-06T08:28:41.222Z",
+      "droneMissionId": "af57",
+      "pickedAt": "2025-11-06T08:28:43.410Z"
     },
     {
       "id": "ztgd",
@@ -1065,10 +878,175 @@
         "lat": 10.779462460559436,
         "lng": 106.68716883627258
       },
+      "status": "accepted",
+      "payment": "VNPAY",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK4RQZ4N",
+      "updatedAt": "2025-11-06T08:37:58.856Z",
+      "acceptedAt": "2025-11-06T08:37:58.856Z"
+    },
+    {
+      "id": "8xm3",
+      "sessionId": "ed0e",
+      "userId": 1,
+      "userEmail": "lienchivo04@gmail.com",
+      "customerName": "lienchivo04",
+      "phone": "+84912345677",
+      "address": "số 3 Trương Định quận 3",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/cheeseburger.webp"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        },
+        {
+          "id": "sg-6",
+          "name": "Cola",
+          "qty": 1,
+          "price": 15000,
+          "image": "/assets/images/menu/cocacola.jpg"
+        }
+      ],
+      "total": 119000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 20000,
+      "finalTotal": 119000,
+      "couponCode": "FREESHIP",
+      "createdAt": 1762417990374,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.784,
+        "lng": 106.684
+      },
+      "status": "ready",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1762418015430",
+      "updatedAt": "2025-11-06T08:39:31.792Z",
+      "acceptedAt": "2025-11-06T08:36:24.800Z",
+      "readyAt": "2025-11-06T08:39:31.792Z",
+      "droneMissionId": "b857",
+      "pickedAt": "2025-11-06T08:38:19.378Z"
+    },
+    {
+      "id": "2m7z",
+      "sessionId": "ed0e",
+      "userId": 1,
+      "userEmail": "hope123@gmail.com",
+      "customerName": "Hope",
+      "phone": "+84345678912",
+      "address": "số 15 Lý Chính Thắng quận 3",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "8b7a",
+          "name": "Bánh Crepe chuối",
+          "qty": 1,
+          "price": 35000,
+          "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg"
+        },
+        {
+          "id": "2921",
+          "name": "Khoai tây nghiền chiên giòn",
+          "qty": 1,
+          "price": 29000,
+          "image": " https://cdn.tgdd.vn/2020/11/CookProduct/CheeseStuffedMashedPotatoBallsRecipe3-40screenshot-1200x676.jpg"
+        },
+        {
+          "id": "2434",
+          "name": "Sprite",
+          "qty": 1,
+          "price": 15000,
+          "image": "https://www.cocoichibanya.vn/wp-content/uploads/2020/07/Sprite_CoCo-Ichibanya.jpg"
+        }
+      ],
+      "total": 79000,
+      "discount": 7900,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 91100,
+      "couponCode": "FF10",
+      "createdAt": 1762418059076,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.784,
+        "lng": 106.684
+      },
       "status": "new",
       "payment": "VNPAY",
       "payment_status": "paid",
-      "payment_txn_id": "MOCK4RQZ4N"
+      "payment_txn_id": "MOCK-1762418084859"
+    },
+    {
+      "id": "1xae",
+      "sessionId": "ed0e",
+      "userId": 1,
+      "userEmail": "chi@gmail.com",
+      "customerName": "Daddida",
+      "phone": "+84936455952",
+      "address": "số 6 Nguyễn Trãi quận 5",
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        },
+        {
+          "id": "8b7a",
+          "name": "Bánh Crepe chuối",
+          "qty": 1,
+          "price": 35000,
+          "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg"
+        },
+        {
+          "id": "cb-1",
+          "name": "Combo1 Burger + Coke",
+          "qty": 1,
+          "price": 59000,
+          "image": "/assets/images/menu/combo1.webp"
+        }
+      ],
+      "total": 146000,
+      "discount": 14600,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 151400,
+      "couponCode": "FF10",
+      "createdAt": 1762418136031,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.775845728283272,
+        "lng": 106.69232868389962
+      },
+      "status": "accepted",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1762418161080",
+      "updatedAt": "2025-11-06T08:36:23.617Z",
+      "acceptedAt": "2025-11-06T08:36:23.617Z"
     }
   ],
   "sessions": [
@@ -1449,6 +1427,50 @@
         "lng": 106.7218
       },
       "createdAt": "2025-11-01T08:08:36.328Z"
+    },
+    {
+      "id": "af57",
+      "orderId": "we81",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-11-06T08:28:43.410Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 3,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.781742092979162,
+          106.685756926954
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "b857",
+      "orderId": "8xm3",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-11-06T08:38:19.379Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 4,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.784,
+          106.684
+        ]
+      ],
+      "currentIndex": 0
     }
   ],
   "dronePositions": [
@@ -4403,6 +4425,24 @@
       "heading": 57.13970434665796,
       "speed": 12,
       "timestamp": 1761984535697
+    },
+    {
+      "id": "060b",
+      "missionId": "af57",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1762417723578
+    },
+    {
+      "id": "2a47",
+      "missionId": "b857",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1762418299431
     }
   ],
   "merchants": [

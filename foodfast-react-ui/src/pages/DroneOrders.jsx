@@ -12,6 +12,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5181";
 async function getLatestTelemetry(missionId) {
   if (!missionId) return null;
 
+  // lấy theo missionId
   try {
     const qs = new URLSearchParams({
       missionId: String(missionId),
@@ -32,7 +33,7 @@ async function getLatestTelemetry(missionId) {
     }
   } catch {}
 
-  // Fallback DB cũ theo droneId (nếu cần)
+  // fallback theo droneId (DB cũ)
   try {
     const qs = new URLSearchParams({
       droneId: String(missionId),
@@ -85,6 +86,7 @@ async function findMissionByOrderId(orderId) {
 }
 
 /* ====================== Status helpers ====================== */
+// Chuẩn hoá trạng thái đơn (chỉ dùng để hiển thị pill nhỏ)
 const normalizeStatus = (s = "") => {
   const x = s.toLowerCase();
   if (["delivering"].includes(x)) return "delivery";
@@ -95,45 +97,84 @@ const normalizeStatus = (s = "") => {
   return "order";
 };
 
-// 🔧 Đổi logic: đang giao => cần có mission, còn Completed => luôn cho xem lại
+// Gom nhóm mission status → 4 nhóm chính (chỉ dùng cho phần thống kê)
+function missionGroup(ms) {
+  const s = String(ms || "").toLowerCase();
+  if (["queued", "preflight"].includes(s)) return "waiting";            // Chờ cất cánh
+  if (["in_progress","delivering","flight","takeoff","enroute","descending","returning"].includes(s)) return "active"; // Đang giao/đang bay
+  if (["dropoff", "landed"].includes(s)) return "landed";               // Đã hạ cánh
+  if (["failed", "cancelled"].includes(s)) return "error";              // Lỗi/Huỷ
+  return null;
+}
+
+// Đơn đã hoàn thành?
+function isOrderDone(order) {
+  const os = String(order?.status || "").toLowerCase();
+  return ["completed", "done", "delivered"].includes(os);
+}
+
+// Cho phép xem hành trình? (đang giao cần mission, completed thì luôn cho xem)
 const canTrack = (order, mission) => {
   const st = normalizeStatus(order?.status);
   const hasMission = !!mission?.id || !!order?.droneMissionId;
   return st === "delivery" ? hasMission : st === "done";
 };
 
-/* ====================== Small UI helpers ====================== */
-const BADGE = {
-  queued:      { bg: "#f3f4f6", br: "#e5e7eb", tx: "#111827", label: "Queued" },
-  preflight:   { bg: "#fff7cd", br: "#ffeaa1", tx: "#7a5a00", label: "Preflight" },
-  takeoff:     { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Takeoff" },
-  enroute:     { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "En route" },
-  descending:  { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Descending" },
-  dropoff:     { bg: "#dcfce7", br: "#bbf7d0", tx: "#166534", label: "Drop-off" },
-  returning:   { bg: "#e8f5ff", br: "#cfe8ff", tx: "#0b68b3", label: "Returning" },
-  landed:      { bg: "#dcfce7", br: "#bbf7d0", tx: "#166534", label: "Landed" },
-  failed:      { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Failed" },
-  cancelled:   { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Cancelled" },
-};
+/* ====================== MissionCell: chỉ 3 trạng thái ====================== */
+/** Hiển thị đúng 3 trạng thái:
+ *  - Ready        → "Chờ cất cánh"
+ *  - Delivery(*)  → "Đang giao"
+ *  - Completed    → "Đã hoàn thành"
+ *  (*) bất kỳ biến thể delivering/delivery… đều gom về Delivery qua normalizeStatus
+ */
+function MissionCell3({ order, mission, telemetry }) {
+  const st = normalizeStatus(order?.status); // order | processing | delivery | done | cancelled
+  let label = "Chờ cất cánh";
+  let group = "waiting";
 
-function StatusPill({ status }) {
-  const k = (status || "queued").toLowerCase();
-  const c = BADGE[k] || BADGE.queued;
+  if (st === "delivery") {
+    label = "Đang giao";
+    group = "active";
+  } else if (st === "done") {
+    label = "Đã hoàn thành";
+    group = "landed";
+  } else {
+    label = "Chờ cất cánh"; // Ready
+    group = "waiting";
+  }
+
+  // Màu sắc
+  const palette = {
+    waiting: { bg:"#fff7cd", br:"#ffeaa1", tx:"#7a5a00" }, // Chờ cất cánh
+    active:  { bg:"#e8f5ff", br:"#cfe8ff", tx:"#0b68b3" }, // Đang giao
+    landed:  { bg:"#dcfce7", br:"#bbf7d0", tx:"#166534" }, // Đã hoàn thành
+    default: { bg:"#f3f4f6", br:"#e5e7eb", tx:"#111827" },
+  };
+  const c = palette[group] || palette.default;
+
+  // Dòng cập nhật (nếu có telemetry)
+  const updated = telemetry?.ts ? new Date(telemetry.ts).toLocaleTimeString("vi-VN") : "—";
+
   return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "4px 10px",
-        borderRadius: 999,
-        border: `1px solid ${c.br}`,
-        background: c.bg,
-        color: c.tx,
-        fontWeight: 700,
-        fontSize: 12,
-      }}
-    >
-      {c.label}
-    </span>
+    <>
+      <span
+        style={{
+          display:"inline-block",
+          padding:"4px 10px",
+          borderRadius:999,
+          border:`1px solid ${c.br}`,
+          background:c.bg,
+          color:c.tx,
+          fontWeight:700,
+          fontSize:12,
+        }}
+      >
+        {label}
+      </span>
+      <div className="mini" style={{marginTop:4, lineHeight:1.2, opacity:.8}}>
+        Cập nhật: {updated}
+      </div>
+    </>
   );
 }
 
@@ -196,6 +237,7 @@ export default function DroneOrders() {
     .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
     .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
     .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
+    .badge.cancelled{background:#fde8e8;border-color:#f9c7c7;color:#b80d0d}
   `;
 
   const load = async () => {
@@ -203,13 +245,29 @@ export default function DroneOrders() {
     try {
       const res = await myOrders({ page: 1, limit: 10000, status: "all", q: "", sort: "createdAt", order: "desc" });
       const arr = Array.isArray(res) ? res : res?.rows || res?.data || [];
-      const drones = arr.filter(
-        (o) =>
-          (o.deliveryMode || "").toLowerCase() === "drone" ||
-          (o.courier || "").toLowerCase() === "drone" ||
-          !!o.droneMissionId
-      );
-      setOrders(drones);
+      // CHỈ lấy các đơn ở 3 cột: Ready / Delivering / Completed
+      const drones = arr.filter((o) => {
+        const s = String(o.status || "").toLowerCase();
+        const isDelivering = s.includes("deliver"); // delivering / delivery
+        const isDone = ["completed", "done", "delivered"].includes(s);
+
+        // Ready CHỈ hiện nếu đã là đơn Drone (đã gán giao bằng drone)
+        const isReady = s.includes("ready");
+        const isDrone =
+          String(o.deliveryMode || "").toLowerCase() === "drone" ||
+          String(o.courier || "").toLowerCase() === "drone" ||
+          !!o.droneMissionId;
+
+        return isDelivering || isDone || (isReady && isDrone);
+      });
+
+      // Sắp xếp: đơn cập nhật/tạo gần nhất nằm trên đầu
+      const sorted = [...drones].sort((a, b) => {
+        const ta = Date.parse(a?.updatedAt || a?.createdAt || 0);
+        const tb = Date.parse(b?.updatedAt || b?.createdAt || 0);
+        return tb - ta; // mới hơn trước
+      });
+      setOrders(sorted);
 
       const missionList = await Promise.all(
         drones.map(async (o) => (o.droneMissionId ? await getMission(o.droneMissionId) : await findMissionByOrderId(o.id)))
@@ -239,23 +297,35 @@ export default function DroneOrders() {
     }
   };
 
+  // 🔕 Bỏ auto-refresh (chỉ load một lần, bấm nút "Làm mới" để cập nhật)
   useEffect(() => {
     load();
-    const onFocus = () => load();
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
   }, []);
 
+  // Tóm tắt theo MISSION (đếm đúng nghĩa)
   const summary = useMemo(() => {
-    const counts = { active: 0, waiting: 0, landed: 0, error: 0 };
+    const counts = { active: 0, waiting: 0, landed: 0, error: 0, noMission: 0 };
+
     for (const o of orders) {
-      const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)] || null;
-      const st = (m?.status || "queued").toLowerCase();
-      if (["queued", "preflight"].includes(st)) counts.waiting++;
-      else if (["takeoff", "enroute", "descending", "returning"].includes(st)) counts.active++;
-      else if (["dropoff", "landed"].includes(st)) counts.landed++;
-      else if (["failed, cancelled"].includes(st)) counts.error++;
+      const m =
+        missionById[o.droneMissionId] ||
+        missionByOrderId[String(o.id)] ||
+        null;
+
+      if (!m) { // chưa tạo mission → không cộng vào waiting
+        counts.noMission++;
+        continue;
+      }
+
+      const g = missionGroup(m.status);
+
+      // "Chờ cất cánh" chỉ khi order CHƯA xong
+      if (g === "waiting" && !isOrderDone(o)) counts.waiting++;
+      else if (g === "active") counts.active++;
+      else if (g === "landed") counts.landed++;
+      else if (g === "error") counts.error++;
     }
+
     return { total: orders.length, ...counts };
   }, [orders, missionById, missionByOrderId]);
 
@@ -316,25 +386,23 @@ export default function DroneOrders() {
               const hasMission = !!m?.id;
               const trackable = canTrack(o, m);
 
+              // Nhãn Việt cho pill trạng thái ĐƠN
+               const orderCls = normalizeStatus(o.status);
+              const orderLabelEN =
+                {
+                  order: "Order",
+                  processing: "Ready",
+                  delivery: "Delivering",
+                  done: "Completed",
+                  cancelled: "Cancelled",
+                }[orderCls] || (o.status || "—");
+
               return (
                 <tr key={o.id} className="row">
                   <td className="cell">
                     <div>
                       <b>#{o.id}</b>{" "}
-                      <span
-                        className={`badge ${
-                          (o.status || "").toLowerCase().includes("deliver")
-                            ? "delivery"
-                            : (o.status || "").toLowerCase().includes("accept") ||
-                              (o.status || "").toLowerCase().includes("ready")
-                            ? "processing"
-                            : (o.status || "").toLowerCase().includes("complete")
-                            ? "done"
-                            : "order"
-                        }`}
-                      >
-                        {o.status || "order"}
-                      </span>
+                      <span className={`badge ${orderCls}`}>{orderLabelEN}</span>
                     </div>
                     <span className="mini">
                       {o.createdAt ? new Date(o.createdAt).toLocaleString("vi-VN") : "—"}
@@ -351,12 +419,15 @@ export default function DroneOrders() {
                   </td>
 
                   <td className="cell center">
-                    {hasMission ? <StatusPill status={m?.status} /> : <span className="mini">Chưa có mission</span>}
-                    <span className="mini">{t?.ts ? `Cập nhật: ${new Date(t.ts).toLocaleTimeString("vi-VN")}` : "—"}</span>
+                    {hasMission ? (
+                      <MissionCell3 order={o} mission={m} telemetry={t} />
+                    ) : (
+                      <span className="mini">Chưa có mission</span>
+                    )}
                   </td>
 
-                  <td className="cell center">{t?.speed != null ? `${t.speed} km/h` : <Dash />}</td>
-                  <td className="cell center">{m?.eta   != null ? `${m.eta} phút` : <Dash />}</td>
+                  <td className="cell center">{t?.speed != null ? `${Number(t.speed).toFixed(1)} km/h` : <Dash />}</td>
+                  <td className="cell center">{Number.isFinite(m?.eta) ? `≈ ${m.eta} phút` : <Dash />}</td>
 
                   <td className="cell coord">
                     <CoordText lat={lat} lng={lng} />
