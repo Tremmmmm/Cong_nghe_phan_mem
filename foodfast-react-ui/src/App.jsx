@@ -111,7 +111,7 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="orders" element={<AdminOrders />} />
-          <Route path="restaurant_managerment" element={<SettingRestaurant />} />
+          <Route path="settingrestaurant" element={<SettingRestaurant />} />
           <Route path="settingmenu" element={<RestaurantMenu />} />
 
           {/* Drone (Admin) */}
