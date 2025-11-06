@@ -1,221 +1,223 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 
-const LS_KEY = 'ff_user'
-const LS_PROFILE = 'ff_profile_v1'       // { [email]: { name, address, phone } }
-const LS_ACC_IDX = 'ff_account_idx_v1'   // { [usernameLower]: email }
+const AuthCtx = createContext(null);
+const LS_KEY = 'ff_user_v3'; // Key mới để lưu phiên đăng nhập
 
-const AuthCtx = createContext(null)
-
-// hardcode accounts demo
-const ADMIN_ACCOUNTS = {
-  server_admin: {
-    email: 'svadmin',
-    password: '123',
-    name: 'Server Admin',
-    role: 'server_admin'
-  },
-  restaurant_admin: {
-    email: 'resadmin',
-    password: '123',
-    name: 'Restaurant Admin',
-    role: 'restaurant_admin'
-  }
-}
-
-// helper
-const isEmail = (s) => /\S+@\S+\.\S+/.test(String(s||''))
-
+// --- CẤU HÌNH API ---
+// Đảm bảo port 5181 khớp với lệnh chạy json-server của bạn
+const API_URL = 'http://localhost:5181/users'; 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(LS_KEY)) || null }
-    catch { return null }
-  })
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // ===== Helpers đọc/ghi "DB" cục bộ
-  const getProfiles = () => {
-    try { return JSON.parse(localStorage.getItem(LS_PROFILE) || '{}') } catch { return {} }
-  }
-  const setProfiles = (obj) => {
-    try { localStorage.setItem(LS_PROFILE, JSON.stringify(obj)) } catch {}
-  }
-  const getIndex = () => {
-    try { return JSON.parse(localStorage.getItem(LS_ACC_IDX) || '{}') } catch { return {} }
-  }
-  const setIndex = (obj) => {
-    try { localStorage.setItem(LS_ACC_IDX, JSON.stringify(obj)) } catch {}
-  }
-
-  // ✅ cập nhật user + đồng bộ xuống profile & index khi cần
-  const updateUser = (patch) => {
-    setUser(prev => {
-      if (!prev) return prev
-      const next = { ...prev, ...patch }
-
-      const profiles = getProfiles()
-      if (next.email) {
-        profiles[next.email] = {
-          ...(profiles[next.email] || {}),
-          name: next.name ?? (profiles[next.email]?.name || ''),
-          phone: next.phone ?? (profiles[next.email]?.phone || ''),
-          address: next.address ?? (profiles[next.email]?.address || '')
-        }
-        setProfiles(profiles)
-
-        // cập nhật index username → email theo tên mới
-        if (next.name) {
-          const idx = getIndex()
-          // xoá key cũ đang trỏ tới email này
-          for (const k of Object.keys(idx)) if (idx[k] === next.email) delete idx[k]
-          idx[next.name.toLowerCase()] = next.email
-          setIndex(idx)
-        }
-      }
-      return next
-    })
-  }
-
+  // 1. Khôi phục phiên đăng nhập từ localStorage khi F5
   useEffect(() => {
     try {
-      if (user) localStorage.setItem(LS_KEY, JSON.stringify(user))
-      else localStorage.removeItem(LS_KEY)
-    } catch {}
-  }, [user])
-
-  // ===== Sign in: chấp nhận username HOẶC email
-  // Param 'email' của form hiện tại chính là "identifier"
-  const signIn = async ({ email, password }) => {
-    const identifier = String(email || '').trim()
-
-    // check admin accounts
-    for (const role in ADMIN_ACCOUNTS) {
-      const account = ADMIN_ACCOUNTS[role];
-      if (identifier === account.email && password === account.password) {
-        const u = { 
-          id: 0, 
-          name: account.name, 
-          email: account.email, 
-          role: account.role,
-          isAdmin: true,
-          isServerAdmin: role === 'server_admin',
-          isRestaurantAdmin: role === 'restaurant_admin'
-        }
-        setUser(u)
-        return { user: u }
+      const storedUser = localStorage.getItem(LS_KEY);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
       }
+    } catch (e) {
+      localStorage.removeItem(LS_KEY);
     }
+    setLoading(false);
+  }, []);
 
-    // resolve email khi login bằng username
-    let resolvedEmail = ''
-    if (isEmail(identifier)) {
-      resolvedEmail = identifier
-    } else {
-      const idx = getIndex()
-      resolvedEmail = idx[identifier.toLowerCase()] || ''
+  // 2. Hàm Đăng nhập (Gọi API tới db.json)
+  const signIn = async ({ email, password }) => {
+    try {
+      // 💡 Tìm user trong db.json khớp cả username (hoặc email) VÀ password
+      // Lưu ý: json-server hỗ trợ filter bằng query params
+      // Chúng ta tìm theo 'username' vì trong db.json bạn đặt là 'username' cho admin
+      let response = await fetch(`${API_URL}?username=${email}&password=${password}`);
+      let users = await response.json();
+
+      // Nếu không tìm thấy bằng username, thử tìm bằng email (cho khách hàng cũ nếu có)
+      if (users.length === 0) {
+         response = await fetch(`${API_URL}?email=${email}&password=${password}`);
+         users = await response.json();
+      }
+
+      if (users.length > 0) {
+        const userDat = users[0];
+        // 💡 Bổ sung các cờ (flag) tiện ích để dễ kiểm tra sau này
+        const finalUser = {
+            ...userDat,
+            isAdmin: userDat.role === 'SuperAdmin' || userDat.role === 'Merchant',
+            isSuperAdmin: userDat.role === 'SuperAdmin',
+            isMerchant: userDat.role === 'Merchant'
+        };
+
+        setUser(finalUser);
+        localStorage.setItem(LS_KEY, JSON.stringify(finalUser));
+        return { user: finalUser };
+      } else {
+        throw new Error('Sai tên đăng nhập hoặc mật khẩu');
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
     }
+  };
 
-    const profiles = getProfiles()
-    const pf = resolvedEmail ? (profiles[resolvedEmail] || {}) : {}
+  // 3. Hàm Đăng ký (Gọi API POST để tạo user mới)
+  const signUp = async (userData) => {
+      try {
+          // Kiểm tra xem username/email đã tồn tại chưa
+          const checkRes = await fetch(`${API_URL}?username=${userData.email}`);
+          const existing = await checkRes.json();
+          if (existing.length > 0) {
+              throw new Error('Tên đăng nhập/Email đã tồn tại');
+          }
 
-    // Tên hiển thị: ưu tiên từ hồ sơ
-    const displayName =
-      pf.name ||
-      user?.name ||
-      (!isEmail(identifier) ? identifier : (resolvedEmail ? resolvedEmail.split('@')[0] : identifier))
+          // Tạo user mới với role mặc định là 'Customer'
+          const newUser = {
+              ...userData,
+              username: userData.email, // Dùng email làm username cho khách hàng
+              role: 'Customer'
+          };
 
-    const u = {
-      id: 1,
-      email: resolvedEmail || user?.email || (isEmail(identifier) ? identifier : ''),
-      name: displayName,
-      phone: pf.phone || user?.phone || '',
-      address: pf.address || user?.address || '',
-      isAdmin: false
-    }
-    setUser(u)
-    return { user: u }
+          const response = await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newUser)
+          });
+
+          if (!response.ok) throw new Error('Đăng ký thất bại');
+          
+          const createdUser = await response.json();
+          // Tự động đăng nhập sau khi đăng ký thành công
+          const finalUser = { ...createdUser, isAdmin: false, isSuperAdmin: false, isMerchant: false };
+          setUser(finalUser);
+          localStorage.setItem(LS_KEY, JSON.stringify(finalUser));
+          
+          return { ok: true, user: finalUser };
+      } catch (error) {
+          console.error("Signup error:", error);
+          throw error;
+      }
   }
 
-  // ===== Sign up: lưu hồ sơ + index username→email, đăng nhập luôn
-  const signUp = async ({ name, email, phone, address, password }) => {
-    // lưu hồ sơ
-    const profiles = getProfiles()
-    profiles[email] = {
-      name: name || (email ? email.split('@')[0] : ''),
-      phone: phone || '',
-      address: address || ''
-    }
-    setProfiles(profiles)
-
-    // index username → email (lower-case)
-    const idx = getIndex()
-    if (name) idx[String(name).toLowerCase()] = email
-    setIndex(idx)
-
-    const u = { id: 1, name, email, phone: phone || '', address: address || '', isAdmin: false }
-    setUser(u)
-    return { ok: true, user: u }
+  // 4. Hàm Đăng xuất
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem(LS_KEY);
+  };
+  
+  // 5. Hàm cập nhật thông tin (Gọi API PATCH)
+  const updateUser = async (patch) => {
+      if (!user?.id) return;
+      try {
+          const response = await fetch(`${API_URL}/${user.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(patch)
+          });
+          if (response.ok) {
+              const updatedUser = await response.json();
+              // Giữ lại các cờ tiện ích
+              const finalUser = {
+                  ...updatedUser,
+                  isAdmin: updatedUser.role === 'SuperAdmin' || updatedUser.role === 'Merchant',
+                  isSuperAdmin: updatedUser.role === 'SuperAdmin',
+                  isMerchant: updatedUser.role === 'Merchant'
+              };
+              setUser(finalUser);
+              localStorage.setItem(LS_KEY, JSON.stringify(finalUser));
+          }
+      } catch (error) {
+          console.error("Update user error:", error);
+      }
   }
 
-  const signOut = () => setUser(null)
+  // Giá trị context cung cấp ra bên ngoài
+  const value = {
+    user,
+    currentUser: user, // Alias
+    login: signIn,     // Alias
+    signIn,
+    signUp,
+    signOut: logout,   // Alias
+    logout,
+    updateUser,
+    isAuthenticated: !!user,
+    isMerchant: user?.role === 'Merchant',
+    isSuperAdmin: user?.role === 'SuperAdmin',
+  };
 
   return (
-    <AuthCtx.Provider value={{ user, signIn, signUp, signOut, updateUser }}>
-      {children}
+    <AuthCtx.Provider value={value}>
+      {!loading && children}
     </AuthCtx.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthCtx)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
+  const ctx = useContext(AuthCtx);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }
 
-// Guard: chỉ cần login
+// ================= ROUTE GUARDS (BỘ BẢO VỆ) =================
+
+// 1. Guard: Yêu cầu đăng nhập (bất kỳ ai)
 export function RequireAuth({ children }) {
-  const { user } = useAuth()
-  const location = useLocation()
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return null; // Hoặc loading spinner
   if (!user) {
-    return <Navigate to="/signin" replace state={{ from: location }} />
+    return <Navigate to="/signin" replace state={{ from: location }} />;
   }
-  return children
+  return children;
 }
 
-// Guard: bắt buộc là server admin
+// 2. Guard: Bắt buộc là SUPER ADMIN
 export function RequireServerAdmin({ children }) {
-  const { user } = useAuth()
-  const location = useLocation()
+  const { user, isSuperAdmin, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return null;
+
   if (!user) {
-    return <Navigate to="/admin/login" replace state={{ from: location }} />
+    return <Navigate to="/admin/login" replace state={{ from: location }} />;
   }
-  if (!user.isServerAdmin) {
-    return <Navigate to="/" replace />
+  // Kiểm tra đúng role từ DB
+  if (!isSuperAdmin) { 
+    return <Navigate to="/" replace />; // Không đủ quyền -> về trang chủ
   }
-  return children
+  return children;
 }
 
-// Guard: bắt buộc là restaurant admin
+// 3. Guard: Bắt buộc là MERCHANT ADMIN
 export function RequireRestaurantAdmin({ children }) {
-  const { user } = useAuth()
-  const location = useLocation()
+  const { user, isMerchant, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return null;
+
   if (!user) {
-    return <Navigate to="/restaurant/login" replace state={{ from: location }} />
+    return <Navigate to="/restaurant/login" replace state={{ from: location }} />;
   }
-  if (!user.isRestaurantAdmin) {
-    return <Navigate to="/" replace />
+  // Kiểm tra đúng role từ DB
+  if (!isMerchant) {
+    return <Navigate to="/" replace />;
   }
-  return children
+  // Kiểm tra thêm: Merchant phải có merchantId hợp lệ
+  if (!user.merchantId) {
+      console.error("Lỗi: Tài khoản Merchant này thiếu merchantId!");
+      return <Navigate to="/" replace />;
+  }
+
+  return children;
 }
 
-// Guard: bắt buộc là admin (cả server và restaurant)
+// 4. Guard: Bất kỳ Admin nào (dùng cho các trang chung nếu cần)
 export function RequireAdmin({ children }) {
-  const { user } = useAuth()
-  const location = useLocation()
-  if (!user) {
-    return <Navigate to="/admin/login" replace state={{ from: location }} />
-  }
-  if (!user.isAdmin) {
-    return <Navigate to="/" replace />
-  }
-  return children
+    const { user, isSuperAdmin, isMerchant } = useAuth();
+    const location = useLocation();
+    if (!user) return <Navigate to="/admin/login" replace state={{ from: location }} />;
+    if (!isSuperAdmin && !isMerchant) return <Navigate to="/" replace />;
+    return children;
 }
+
+export const MerchantRoute = RequireRestaurantAdmin;
+export const SuperAdminRoute = RequireServerAdmin;

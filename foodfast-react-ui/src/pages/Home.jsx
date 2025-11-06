@@ -1,75 +1,225 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useEffect, useMemo } from "react";
-// trang này sẽ cần chỉnh sửa nhé
+import { fetchMerchants, fetchMenuItems } from "../utils/merchantAPI";
+
 export default function Home() {
+  // ⬇️ SỬA LỖI: Đổi 'categories' thành 'merchants'
+  const [merchants, setMerchants] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Dùng useMemo để chứa CSS (Giữ nguyên)
   const styles = useMemo(() => `
-    .hero{position:relative;overflow:hidden;padding:46px 0 34px;background:#f4f4f6;
-      background-image:url("data:image/svg+xml;utf8,${encodeURIComponent(`
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' opacity='0.16'>
-          <defs><pattern id='p' width='160' height='120' patternUnits='userSpaceOnUse'>
-            <g fill='none' stroke='#cfcfd6' stroke-width='1.2'>
-              <circle cx='20' cy='20' r='10'/><circle cx='120' cy='60' r='8'/>
-              <rect x='60' y='20' width='20' height='20' rx='4'/>
-              <path d='M20 80c18 0 18 20 36 20s18-20 36-20 18 20 36 20'/>
-            </g></pattern></defs><rect width='100%' height='100%' fill='url(%23p)'/>
-        </svg>`)}");
+    .home-wrap {
+      max-width: 1140px;
+      margin: 24px auto;
+      padding: 0 16px;
     }
-    .hero .wrap{max-width:1140px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center}
-    .eyebrow{font-size:18px;color:#2a3345;margin:0 0 6px}
-    .h1{margin:0;font-size:57px;line-height:1.1;font-weight:900;color:#ff6b35;font-family: 'Times New Roman', Times, serif;}
-    .accent{margin:0.5;color:#1a2233;display:block}
-    .sub{margin:12px 0 22px;color:#444;font-size:15.5px;max-width:560px}
-    .cta{display:inline-block;background:#ff7a59;color:#fff;text-decoration:none;padding:12px 22px;border-radius:30px;font-weight:700;box-shadow:0 6px 18px rgba(255,122,89,.35)}
-    .figure{max-width:520px;margin:0 0 0 auto}
-    .shot{aspect-ratio:1.2/1;overflow:hidden;border-radius:50% / 38%;box-shadow:0 30px 60px rgba(0,0,0,.25),0 10px 18px rgba(0,0,0,.12);background:#111}
-    .shot img{width:100%;height:100%;object-fit:cover;display:block}
-    .cap{margin:16px 6% 0 6%}
-    .cap h4{margin:0 0 6px;font-size:18px;color:#1e2537;font-weight:800}
-    .cap p{margin:0;color:#555;font-size:13.8px;line-height:1.55}
-    @media (max-width:980px){ .hero .wrap{grid-template-columns:1fr} .figure{margin:24px auto 0} .h1{font-size:42px}}
-    @media (max-width:540px){ .h1{font-size:34px}}
-    .dark .hero{background:#121214}.dark .h1{color:#f3f3f7}.dark .sub{color:#c9c9cf}
-    .dark .cap h4{color:#f0f0f4}.dark .cap p{color:#bdbdc5}
+    .section-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 24px 0 16px;
+    }
+    .category-list {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .category-list::-webkit-scrollbar {
+      display: none;
+    }
+    .category-item {
+      flex-shrink: 0;
+      width: 80px;
+      text-align: center;
+      text-decoration: none;
+      color: #333;
+      transition: transform 0.2s ease;
+    }
+    .category-item:hover {
+      transform: scale(1.05);
+    }
+    .category-item img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 8px;
+    }
+    .category-item p {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .dish-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .dish-card {
+      border: 1px solid #eee;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s ease;
+    }
+    .dish-card:hover {
+      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+    .dish-card-img-link {
+      display: block;
+      position: relative;
+    }
+    .dish-card-img {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      display: block;
+    }
+    .dish-card-body {
+      padding: 12px 16px 16px;
+    }
+    .dish-card-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin: 0 0 4px;
+      color: #111;
+    }
+    .dish-card-merchant {
+      font-size: 13px;
+      color: #666;
+      margin: 0 0 10px;
+      font-weight: 500;
+    }
+    .dish-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .dish-card-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ff7a59;
+    }
+    .dish-card-rating {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+    .dark .home-wrap { color: #eee; }
+    .dark .category-item { color: #ddd; }
+    .dark .category-item img { border-color: #333; }
+    .dark .dish-card { background: #151515; border-color: #333; }
+    .dark .dish-card-title { color: #eee; }
+    .dark .dish-card-merchant { color: #aaa; }
+    .dark .dish-card-rating { color: #ccc; }
+    
   `, []);
 
+  // useEffect này bây giờ đã chạy đúng
   useEffect(() => {
-    const id = "home-hero-style";
-    if (!document.getElementById(id)) {
-      const s = document.createElement("style");
-      s.id = id;
-      s.textContent = styles;
-      document.head.appendChild(s);
+    setLoading(true);
+
+    async function loadData() {
+        try {
+            const [merchantsData, menuItemsData] = await Promise.all([
+                fetchMerchants(),
+                fetchMenuItems()
+            ]);
+            
+            setMerchants(merchantsData); // <-- Giờ đã CÓ setMerchants
+            setMenuItems(menuItemsData);
+
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu trang Home:", error);
+        } finally {
+            setLoading(false);
+        }
     }
-  }, [styles]);
+
+    loadData();
+    
+  }, []);
 
   return (
-    <section className="hero">
-      <div className="wrap">
+    <>
+      <style>{styles}</style>
+      
+      <div className="home-wrap">
+        {/* --- Phần Danh Mục (Hình tròn) --- */}
+        <h2 className="section-title">Khám phá Quán ăn</h2>
+        <div className="category-list">
+          {loading ? (
+            <p>Đang tải quán ăn...</p>
+          ) : (
+            // ⬇️ Giờ đã CÓ 'merchants' để map
+            merchants.map((merchant) => (
+              <Link 
+                to={`/merchant/${merchant.id}`} 
+                key={merchant.id} 
+                className="category-item"
+              >
+                {/* ⚠️ LƯU Ý: merchant.logoUrl không có trong db.json,
+                   sẽ dùng ảnh default.
+                */}
+                <img 
+                  src={merchant.logoUrl || "/assets/images/default_merchant.png"} 
+                  alt={merchant.name} 
+                />
+                <p>{merchant.name}</p>
+              </Link>
+            ))
+          )}
+        </div>
 
-        <figure className="figure">
-          <div className="shot">
-            <img
-            src="/assets/images/menu/cheeseburger.webp"
-            alt="Cheese Burger"
-            loading="lazy"
-            decoding="async"
-            sizes="(max-width: 980px) 100vw, 520px"
-            onError={(e)=>{ e.currentTarget.src="/assets/images/menu/cheeseburger.webp"; }}
-          />
-          </div>
-          <figcaption className="cap">
-            <h4 >Cheese Burger</h4>
-            <p>Burger bò phô mai béo ngậy cùng với bí quyết sốt độc quyền của chúng tôi tạo nên hương vị mới lạ</p>
-          </figcaption>
-        </figure>
-        <div>
-          <div className="eyebrow">Chào mừng bạn đến với</div>
-          <h1 className="h1">Cửa hàng của</h1>
-          <h1 className="h1">chúng tôi</h1> 
-          <span className="accent">Chúng tôi cung cấp cho các bạn những món ăn nhanh và đầy đủ dưỡng chất cho một ngày tuyệt vời. </span>
-           
+        {/* --- Phần Món Ăn Gợi Ý (Thẻ) --- */}
+        <h2 className="section-title">Món ngon gần bạn</h2>
+        <div className="dish-grid">
+          {loading ? (
+            <p>Đang tải món ăn...</p>
+          ) : (
+            menuItems.map((item) => (
+              <div key={item.id} className="dish-card">
+                
+                {/* ⬇️ SỬA LẠI: Phục hồi <Link> */}
+                <Link 
+                  to={`/merchant/${item.merchantId}`}
+                  className="dish-card-img-link"
+                >
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="dish-card-img" 
+                    loading="lazy"
+                  />
+                </Link>
+
+                <div className="dish-card-body">
+                  <h4 className="dish-card-title">{item.name}</h4>
+                  
+                  {/* Dùng 'merchantName' từ db.json */}
+                  <p className="dish-card-merchant">{item.merchantName}</p>  
+                  
+                  <div className="dish-card-footer">
+                    <span className="dish-card-price">{item.price.toLocaleString('vi-VN')}đ</span>
+                    
+                    {/* Dùng 'desc' từ db.json */}
+                    <span className="dish-card-rating">
+                      {item.desc ? item.desc.substring(0, 20) + '...' : ''}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
-    </section>
+    </>
   );
 }

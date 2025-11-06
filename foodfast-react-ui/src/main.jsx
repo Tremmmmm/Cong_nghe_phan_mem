@@ -8,34 +8,34 @@ import '/assets/stylesheets/toast.css';
 import '/assets/stylesheets/theme.css';
 
 import App from './App.jsx';
-import { CartProvider } from './context/CartContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
+import { CartProvider } from './context/CartContext.jsx';
 import { FavProvider } from './context/FavContext.jsx';
-import { OrderProvider } from './context/OrderContext.jsx'; // NEW
-//đối với admin server thì cần import sau
-//import { MerchantAdminProvider } from './context/MerchantAdminContext.jsx';
+import { OrderProvider } from './context/OrderContext.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render( 
-    <React.StrictMode>
+  <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
+        {/* AuthProvider bọc ngoài cùng để quản lý trạng thái đăng nhập toàn app */}
         <AuthProvider> 
-          <CartProvider>
-            <FavProvider>
-              <OrderProvider>  
-                <ToastProvider> 
-                  <App />
-                </ToastProvider>
+          <ToastProvider> 
+             <OrderProvider>
+                <CartProvider>
+                  <FavProvider>
+                    <App />
+                  </FavProvider>
+                </CartProvider>
               </OrderProvider>
-            </FavProvider>
-          </CartProvider> 
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>,
-  {/*  <React.StrictMode>
+  {/*
+    <React.StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
@@ -53,7 +53,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
-  </React.StrictMode>,
-  
+  </React.StrictMode>, 
     Nếu là dùng AppAdmin.jsx  thì xài code này và đẩy đoạn trên vô chỗ này , thay cái  trong này lên trên*/}
 );

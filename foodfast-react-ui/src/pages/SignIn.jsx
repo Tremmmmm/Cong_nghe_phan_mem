@@ -9,76 +9,29 @@ export default function SignIn() {
   const toast = useToast();
   const auth = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+  // Đặt tên rõ ràng cho state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // nơi sẽ quay lại sau khi đăng nhập (nếu đến từ RequireAuth)
   const redirectTo = location.state?.from?.pathname || "/";
 
   const styles = useMemo(
     () => `
-    .auth-hero{
-      min-height: calc(100vh - 140px);
-      display: grid; place-items: center;
-      background: #f4f4f6;
-      background-image: url("data:image/svg+xml;utf8,${encodeURIComponent(`
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600' opacity='0.2'>
-          <defs>
-            <pattern id='p' width='160' height='120' patternUnits='userSpaceOnUse'>
-              <g fill='none' stroke='#cfcfd6' stroke-width='1.5'>
-                <circle cx='20' cy='20' r='10'/>
-                <circle cx='120' cy='60' r='8'/>
-                <rect x='60' y='20' width='20' height='20' rx='4' />
-                <path d='M20 80c18 0 18 20 36 20s18-20 36-20 18 20 36 20'/>
-              </g>
-            </pattern>
-          </defs>
-          <rect width='100%' height='100%' fill='url(%23p)'/>
-        </svg>
-      `)}");
-    }
-    .auth-card{
-      width: min(680px, 92vw);
-      padding: 48px 28px;
-      margin: 28px 0;
-      background: rgba(255,255,255,0.65);
-      border: 1px solid #eee;
-      border-radius: 18px;
-      backdrop-filter: blur(2px);
-      box-shadow: 0 10px 30px rgba(0,0,0,.06);
-    }
-    .auth-title{
-      text-align:center; font-size:40px; font-weight:800; color:#19243a; margin: 4px 0 8px;
-    }
-    .zigzag{
-      width: 120px; height: 12px; margin: 0 auto 26px; background:
-      linear-gradient(135deg, #ffb54d 25%, transparent 25%) -6px 0/12px 12px,
-      linear-gradient(225deg, #ffb54d 25%, transparent 25%) -6px 0/12px 12px,
-      linear-gradient(315deg, #ffb54d 25%, transparent 25%) 0px 0/12px 12px,
-      linear-gradient(45deg,  #ffb54d 25%, transparent 25%) 0px 0/12px 12px;
-    }
-    .form{ width:min(520px, 90%); margin:0 auto; display:grid; gap:14px; }
-    .input{
-      height:44px; border-radius:12px; border:1px solid #e6e6ea; padding:0 14px;
-      background:#fff; outline:none; font-size:14px;
-      box-shadow: inset 0 3px 6px rgba(0,0,0,.06);
-    }
-    .btn{
-      margin: 6px auto 0;
-      height:44px; min-width:140px; padding:0 18px;
-      border-radius:26px; border:none; cursor:pointer; color:#fff; font-weight:700;
-      background: linear-gradient(135deg, #ffa62b, #ff7a59);
-      box-shadow: 0 6px 14px rgba(255,122,89,.35);
-    }
+    .auth-hero{ min-height: calc(100vh - 140px); display:grid; place-items:center; background:#f4f4f6; }
+    .auth-card{ width:min(680px,92vw); padding:48px 28px; margin:28px 0; background:#fff; border:1px solid #eee; border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,.06) }
+    .auth-title{ text-align:center; font-size:40px; font-weight:800; color:#19243a; margin:4px 0 8px }
+    .zigzag{ width:120px; height:12px; margin:0 auto 26px; background:
+      linear-gradient(135deg,#ffb54d 25%,transparent 25%) -6px 0/12px 12px,
+      linear-gradient(225deg,#ffb54d 25%,transparent 25%) -6px 0/12px 12px,
+      linear-gradient(315deg,#ffb54d 25%,transparent 25%) 0px 0/12px 12px,
+      linear-gradient(45deg, #ffb54d 25%,transparent 25%) 0px 0/12px 12px; }
+    .form{ width:min(520px,90%); margin:0 auto; display:grid; gap:14px }
+    .input{ height:44px; border-radius:12px; border:1px solid #e6e6ea; padding:0 14px; background:#fff; outline:none; font-size:14px; box-shadow: inset 0 3px 6px rgba(0,0,0,.06) }
+    .btn{ margin:6px auto 0; height:44px; min-width:140px; padding:0 18px; border-radius:26px; border:none; cursor:pointer; color:#fff; font-weight:700; background:linear-gradient(135deg,#ffa62b,#ff7a59); box-shadow:0 6px 14px rgba(255,122,89,.35) }
     .btn[disabled]{ opacity:.6; cursor:not-allowed }
-    .links{ text-align:center; margin-top:18px; color:#444; }
+    .links{ text-align:center; margin-top:18px; color:#444 }
     .links a{ color:#ff7a59; font-weight:700; text-decoration:none }
-    .footer-mini{ margin-top:36px; border-top:1px solid #eee; padding-top:18px; text-align:center; color:#777; font-size:14px; }
-    .dark .auth-card{ background: rgba(24,24,28,.7); border-color:#333; }
-    .dark .auth-title{ color:#f3f3f7 }
-    .dark .input{ background:#111; color:#eee; border-color:#444 }
-    .dark .footer-mini{ border-color:#333; color:#aaa }
     `,
     []
   );
@@ -95,17 +48,30 @@ export default function SignIn() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !pass.trim()) {
-      toast.show("Vui lòng nhập Email và Password", "error");
+    if (!username.trim() || !password.trim()) {
+      toast.show("Vui lòng nhập Username và Password", "error");
       return;
     }
     try {
       setLoading(true);
-      await auth.signIn({ email, password: pass });
-      toast.show("Đăng nhập thành công", "success");
-      navigate(redirectTo, { replace: true });
+
+      // 🔧 GỌI ĐÚNG CHỮ KÝ HÀM: truyền OBJECT { email, password }
+      // Ở backend JSON bạn đang dùng 'username', còn AuthContext map 'email' -> username
+      const { user } = await auth.login({ email: username, password });
+
+      toast.show(`Chào mừng, ${user.username || user.name || "user"}!`, "success");
+
+      // Điều hướng theo role
+      if (user.role === "SuperAdmin") {
+        navigate("/admin/merchants");
+      } else if (user.role === "Merchant") {
+        const mid = user.merchantId;               // lấy merchantId từ user (db.json)
+        navigate(`/admin/settingrestaurant?mid=${encodeURIComponent(mid)}`, { replace: true });
+      } else {
+        navigate(redirectTo, { replace: true });
+      }
     } catch (err) {
-      toast.show("Đăng nhập thất bại", "error");
+      toast.show("Đăng nhập thất bại. Sai Username hoặc Password.", "error");
       console.error(err);
     } finally {
       setLoading(false);
@@ -118,20 +84,35 @@ export default function SignIn() {
         <h1 className="auth-title">Đăng Nhập</h1>
         <div className="zigzag" />
         <form className="form" onSubmit={submit}>
-          <input className="input" placeholder="Enter your Email ID" value={email} onChange={e=>setEmail(e.target.value)} />
-          <input className="input" type="password" placeholder="Password" value={pass} onChange={e=>setPass(e.target.value)} />
-          <button className="btn" type="submit" disabled={loading}>{loading ? "Signing In..." : "Đăng nhập"}</button>
+          <input
+            className="input"
+            placeholder="Enter your Username (vd: svadmin, resadmin)"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            name="username"
+          />
+          <input
+            className="input"
+            type="password"
+            placeholder="Password (vd: 123)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+          />
+          <button className="btn" type="submit" disabled={loading}>
+            {loading ? "Signing In..." : "Đăng nhập"}
+          </button>
         </form>
 
         <div className="links">
           New Registration <Link to="/signup">Click Here</Link>
-          <br /></div>
-          {/* Admin Login <Link to="/admin">Click Here</Link>
-        </div> */}
+        </div>
 
-        {/* <div className="footer-mini">
-          Open Hours: Mon–Thu 9:00–22:00 • Fri–Sun 11:00–22:00
-        </div> */}
+        <div style={{ textAlign: "center", marginTop: 15, fontSize: 13, color: "#666" }}>
+          <p>Demo accounts:</p>
+          <p>Super Admin: <b>svadmin</b> / <b>123</b></p>
+          <p>Merchant 1: <b>resadmin</b> / <b>123</b></p>
+        </div>
       </div>
     </section>
   );

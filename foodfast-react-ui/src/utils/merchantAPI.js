@@ -2,6 +2,7 @@
 
 // 💡 URL CỦA JSON-SERVER (Đảm bảo cổng khớp với lúc bạn chạy)
 const API_URL = 'http://localhost:5181/merchants'; 
+const API_URL_MENUITEMS = 'http://localhost:5181/menuitems';
 
 // --------------------------------------------------------
 // CÁC HÀM GỌI API ĐẾN JSON-SERVER
@@ -21,6 +22,19 @@ export async function fetchMerchants() {
     } catch (error) {
         console.error("Error fetching merchants:", error);
         throw error; // Ném lỗi để component xử lý
+    }
+}
+export async function fetchMenuItems() {  
+    try {
+        const response = await fetch(API_URL_MENUITEMS); // ⬅️ Gọi GET /menuitems
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data; // Trả về mảng menuitems
+    } catch (error) {
+        console.error("Error fetching menu items:", error);
+        throw error;
     }
 }
 
