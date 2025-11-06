@@ -94,8 +94,13 @@ const normalizeStatus = (s = "") => {
   if (["new", "pending", "confirmed"].includes(x)) return "order";
   return "order";
 };
-const canTrack = (order, mission) =>
-  normalizeStatus(order?.status) === "delivery" && !!mission?.id;
+
+// 🔧 Đổi logic: đang giao => cần có mission, còn Completed => luôn cho xem lại
+const canTrack = (order, mission) => {
+  const st = normalizeStatus(order?.status);
+  const hasMission = !!mission?.id || !!order?.droneMissionId;
+  return st === "delivery" ? hasMission : st === "done";
+};
 
 /* ====================== Small UI helpers ====================== */
 const BADGE = {
@@ -110,6 +115,7 @@ const BADGE = {
   failed:      { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Failed" },
   cancelled:   { bg: "#fde8e8", br: "#f9c7c7", tx: "#b80d0d", label: "Cancelled" },
 };
+
 function StatusPill({ status }) {
   const k = (status || "queued").toLowerCase();
   const c = BADGE[k] || BADGE.queued;
@@ -131,7 +137,6 @@ function StatusPill({ status }) {
   );
 }
 
-// ⬇️ Toạ độ 2 dòng, chữ nhỏ & mờ (mini)
 function CoordText({ lat, lng }) {
   const has = Number.isFinite(lat) && Number.isFinite(lng);
   if (!has) {
@@ -149,7 +154,6 @@ function CoordText({ lat, lng }) {
     </div>
   );
 }
-
 const Dash = () => <span className="mini">—</span>;
 
 /* ====================== Main ====================== */
@@ -173,8 +177,6 @@ export default function DroneOrders() {
     .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
     .title{font-weight:800;margin:0 0 6px}
     .val{font-size:22px;font-weight:900}
-
-    /* === bảng & ô === */
     .table{width:100%;border-collapse:separate;border-spacing:0 8px;table-layout:fixed;font-variant-numeric:tabular-nums}
     .row{background:#fff;border:1px solid #eee;border-radius:12px}
     .cell{padding:10px 12px;vertical-align:middle}
@@ -186,7 +188,6 @@ export default function DroneOrders() {
     .cell.coord{white-space:normal;text-align:center}
     .coord{font-variant-numeric:tabular-nums;line-height:1.2}
     .coord-line{display:block}
-
     .header{font-size:12px;color:#666;padding-bottom:6px}
     .mini{font-size:12px;opacity:.75}
     .cell .mini{display:block}
@@ -245,7 +246,6 @@ export default function DroneOrders() {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
-  // Summary thẻ nhỏ
   const summary = useMemo(() => {
     const counts = { active: 0, waiting: 0, landed: 0, error: 0 };
     for (const o of orders) {
@@ -282,16 +282,15 @@ export default function DroneOrders() {
         <div className="card">Không có đơn Drone.</div>
       ) : (
         <table className="table">
-          {/* Không có cột PIN – phân bổ lại % cho đủ 100 */}
           <colgroup>
-            <col style={{ width: "16%" }} /> {/* Đơn */}
-            <col style={{ width: "18%" }} /> {/* Khách */}
-            <col style={{ width: "11%" }} /> {/* Số tiền */}
-            <col style={{ width: "16%" }} /> {/* Mission */}
-            <col style={{ width: "8%"  }} /> {/* Tốc độ */}
-            <col style={{ width: "8%"  }} /> {/* ETA */}
-            <col style={{ width: "15%" }} /> {/* Toạ độ */}
-            <col style={{ width: "8%"  }} /> {/* Thao tác */}
+            <col style={{ width: "16%" }} />
+            <col style={{ width: "18%" }} />
+            <col style={{ width: "11%" }} />
+            <col style={{ width: "16%" }} />
+            <col style={{ width: "8%"  }} />
+            <col style={{ width: "8%"  }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: "8%"  }} />
           </colgroup>
 
           <thead>
@@ -322,16 +321,18 @@ export default function DroneOrders() {
                   <td className="cell">
                     <div>
                       <b>#{o.id}</b>{" "}
-                      <span className={`badge ${
-                        (o.status || "").toLowerCase().includes("deliver")
-                          ? "delivery"
-                          : (o.status || "").toLowerCase().includes("accept") ||
-                            (o.status || "").toLowerCase().includes("ready")
-                          ? "processing"
-                          : (o.status || "").toLowerCase().includes("complete")
-                          ? "done"
-                          : "order"
-                      }`}>
+                      <span
+                        className={`badge ${
+                          (o.status || "").toLowerCase().includes("deliver")
+                            ? "delivery"
+                            : (o.status || "").toLowerCase().includes("accept") ||
+                              (o.status || "").toLowerCase().includes("ready")
+                            ? "processing"
+                            : (o.status || "").toLowerCase().includes("complete")
+                            ? "done"
+                            : "order"
+                        }`}
+                      >
                         {o.status || "order"}
                       </span>
                     </div>
