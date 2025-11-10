@@ -1,6 +1,6 @@
 // src/pages/DetailsHistory.jsx
 import { useEffect, useMemo, useState } from 'react'
-import { myOrders, getMenu } from '../utils/api'
+import { myOrders, getMenu } from '../utils/orderAPI.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useCart } from '../context/CartContext.jsx'
 import { useNavigate } from 'react-router-dom'

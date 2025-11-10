@@ -1,10 +1,10 @@
 // src/pages/AdminDashboard.jsx
 import { useEffect, useMemo, useState } from 'react';
-import { getAllOrders } from '../utils/api';
+import { useAuth } from '../context/AuthContext.jsx';
 import { formatVND } from '../utils/format';
 
 const VND = (n) => formatVND(n);
-
+const API_URL = 'http://localhost:5181/orders';
 // Chuẩn hoá DB → UI status (ĐỒNG BỘ với AdminOrders.jsx)
 function normalizeStatus(db) {
   const s = (db || '').toLowerCase();
@@ -39,11 +39,17 @@ export default function AdminDashboard(){
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user } = useAuth();
+  const merchantId = user?.merchantId;
 
   const load = async () => {
+    if (!merchantId) return;
     try {
       setLoading(true); setError('');
-      const data = await getAllOrders();
+      const res = await fetch(`${API_URL}?merchantId=${merchantId}`);
+      if (!res.ok) throw new Error('Lỗi khi tải danh sách đơn hàng');
+      const data = await res.json();
+
       setOrders(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
@@ -51,9 +57,7 @@ export default function AdminDashboard(){
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(()=>{ load(); },[]);
+  };useEffect(()=>{ load(); }, [merchantId]);
 
   useEffect(() => {
     const onFocus = () => load();
@@ -64,7 +68,7 @@ export default function AdminDashboard(){
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, []);
+  }, [merchantId]);
 
   const summary = useMemo(() => {
     const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
@@ -76,25 +80,30 @@ export default function AdminDashboard(){
     const byStatus = { order:0, processing:0, delivery:0, done:0, cancelled:0 };
 
     for (const o of orders) {
+      // Đảm bảo chỉ tính đơn của merchant này (phòng hờ API trả sai)
+      if (o.merchantId !== merchantId) continue;
+
       const total = o.finalTotal ?? o.total ?? 0;
       const s = normalizeStatus(o.status);
       if (byStatus[s] != null) byStatus[s]++;
 
       const d = o.createdAt ? new Date(o.createdAt) : null;
       if (d) {
-        // BỎ QUA cancelled trong doanh thu
         if (s !== 'cancelled' && d >= startOfToday) revenueToday += total;
         if (s !== 'cancelled' && d >= startOfMonth) revenueMonth += total;
       }
     }
 
-    // Doanh thu 7 ngày (BỎ QUA cancelled)
+    // Doanh thu 7 ngày
     const days = [];
     const fmt = (d) => d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit' });
     for (let i = 6; i >= 0; i--) {
       const day = new Date(); day.setHours(0,0,0,0); day.setDate(day.getDate()-i);
       const next = new Date(day); next.setDate(day.getDate()+1);
       const sum = orders.reduce((s, o) => {
+        // Lọc merchantId một lần nữa cho chắc chắn
+        if (o.merchantId !== merchantId) return s;
+        
         const t = o.createdAt ? new Date(o.createdAt) : null;
         const st = normalizeStatus(o.status);
         if (t && t >= day && t < next && st !== 'cancelled') s += (o.finalTotal ?? o.total ?? 0);
@@ -112,7 +121,7 @@ export default function AdminDashboard(){
       days,
       maxVal
     };
-  }, [orders]);
+  }, [orders, merchantId]);
 
   const styles = `
     .adb-wrap{padding:24px 0}
@@ -138,12 +147,17 @@ export default function AdminDashboard(){
     .dark .card{background:#151515;border-color:#333}
   `;
 
+  if (!merchantId && loading) return <div className="adb-wrap">Đang tải thông tin...</div>;
   return (
     <section className="ff-container adb-wrap">
       <style>{styles}</style>
 
       <div className="topbar">
-        <h2 style={{margin:0}}>Dashboard</h2>
+        <div>
+            <h2 style={{margin:0}}>Dashboard</h2>
+            {/* Hiển thị ID để debug xem đúng merchant chưa */}
+            <span className="muted" style={{fontSize: 13}}>Merchant ID: {merchantId}</span>
+        </div>
         <div className="tools">
           <button className="btn" onClick={load}>Làm mới</button>
         </div>
@@ -182,7 +196,7 @@ export default function AdminDashboard(){
             </div>
           </div>
 
-          {/* Status breakdown (không hiển thị cancelled) */}
+          {/* Status breakdown */}
           <div className="grid">
             {['order','processing','delivery','done'].map(s=>(
               <div className="card" key={s}>

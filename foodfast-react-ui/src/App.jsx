@@ -64,7 +64,7 @@ export default function App() {
       {/* ===== 1. PUBLIC LAYOUT & ROUTES ===== */}
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/menu" element={<Menu />} />
+        <Route path="/merchant/:merchantId/menu" element={<Menu />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/search" element={<SearchResults />} />

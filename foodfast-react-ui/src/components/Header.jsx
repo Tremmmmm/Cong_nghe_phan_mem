@@ -10,6 +10,7 @@ import logo from "/assets/images/logo.png";
 export default function Header() {
   const navigate = useNavigate();
 
+  // Lấy thông tin user để kiểm tra đăng nhập
   const { user, signOut } = useAuth();
   const { items } = useCart();
   const { count: favCount } = useFav();
@@ -20,12 +21,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const ddRef = useRef(null);
 
-  // ✅ dựa theo AuthContext: isAdmin / isServerAdmin / isRestaurantAdmin
-  const isAdmin = !!user?.isAdmin;
-  const isServerAdmin = !!user?.isServerAdmin;
-  const isRestaurantAdmin = !!user?.isRestaurantAdmin;
-
-  // đóng dropdown khi click ra ngoài / nhấn Esc
+  // Đóng dropdown khi click ra ngoài
   useEffect(() => {
     const onClick = (e) => {
       if (ddRef.current && !ddRef.current.contains(e.target)) setOpen(false);
@@ -126,9 +122,15 @@ export default function Header() {
         {/* Nav center */}
         <nav className="nav">
           <ul>
+            {/* Luôn hiện Trang chủ */}
             <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Trang chủ</NavLink></li>
-            <li><NavLink to="/menu" className={({isActive})=>isActive?"active":""}>Thực đơn</NavLink></li>
-            <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Yêu thích</NavLink></li>
+            
+            {/* Ẩn Thực đơn (đã xóa) */}
+            
+            {/* Chỉ hiện Yêu thích khi đã đăng nhập */}
+            {user && (
+              <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Yêu thích</NavLink></li>
+            )}
           </ul>
         </nav>
 
@@ -139,11 +141,15 @@ export default function Header() {
             <button type="submit" title="Tìm kiếm">🔍</button>
           </form>
 
-          <NavLink to="/favorites" className="icon-box" title="Yêu thích">
-            <span className="ico" role="img" aria-label="heart">❤️</span>
-            {favCount > 0 && <span className="badge">{favCount}</span>}
-          </NavLink>
+          {/* Chỉ hiện Icon Yêu thích khi đã đăng nhập */}
+          {user && (
+            <NavLink to="/favorites" className="icon-box" title="Yêu thích">
+              <span className="ico" role="img" aria-label="heart">❤️</span>
+              {favCount > 0 && <span className="badge">{favCount}</span>}
+            </NavLink>
+          )}
 
+          {/* Giỏ hàng luôn hiện để khách có thể thêm đồ trước khi đăng nhập */}
           <NavLink to="/cart" className="icon-box" title="Giỏ hàng">
             <span className="ico" role="img" aria-label="cart">🛒</span>
             {cartCount > 0 && <span className="badge">{cartCount}</span>}
@@ -166,26 +172,11 @@ export default function Header() {
               </button>
               {open && (
                 <div className="dropdown" role="menu" aria-label="User menu">
-                  {/* ⛔ Ẩn với admin, chỉ user thường thấy */}
-                  {!isAdmin && (
-                    <>
-                      <NavLink to="/orders" onClick={()=>setOpen(false)}>Đơn của tôi</NavLink>
-                      <NavLink to="/history" onClick={()=>setOpen(false)}>Lịch sử đơn</NavLink>
-                    </>
-                  )}
-
+                  <NavLink to="/orders" onClick={()=>setOpen(false)}>Đơn của tôi</NavLink>
+                  <NavLink to="/history" onClick={()=>setOpen(false)}>Lịch sử đơn</NavLink>
                   <NavLink to="/profile" onClick={()=>setOpen(false)}>Cài đặt</NavLink>
-
-                  {/* ✅ Chỉ admin thấy Trang quản trị (dù server hay restaurant) */}
-                  {(isAdmin || isServerAdmin || isRestaurantAdmin) && (
-                    <NavLink to="/admin" onClick={()=>setOpen(false)}>Trang quản trị</NavLink>
-                  )}
-
-                  <button onClick={()=>{
-                    signOut();
-                    setOpen(false);
-                    navigate("/signin");
-                  }}>
+                    
+                  <button onClick={()=>{ signOut(); setOpen(false); navigate("/signin"); }}>
                     Đăng xuất
                   </button>
                 </div>

@@ -1,7 +1,7 @@
 // src/pages/Confirmation.jsx
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { getOrder } from "../utils/api";
+import { getOrder } from "../utils/orderAPI";
 import { formatVND } from "../utils/format";
 import { estimateETA, etaWindowLabel, formatArrivalClock, formatCountdown } from "../utils/eta";
 

@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useToast } from '../context/ToastContext.jsx';
-import { useAuth } from '../context/AuthContext.jsx'; // 💡 1. IMPORT AUTH
-import { fetchSettings, updateSettings, patchSettings } from '../utils/settingsAPI.js';
+import { useAuth } from '../context/AuthContext.jsx';
+import { fetchSettings, updateSettings, patchSettings } from '../utils/settingsAPI.js'; // Đảm bảo đã import đủ
 
 const DAYS_OF_WEEK = [
   { key: 'mon', label: 'Thứ 2' }, { key: 'tue', label: 'Thứ 3' }, { key: 'wed', label: 'Thứ 4' },
   { key: 'thu', label: 'Thứ 5' }, { key: 'fri', label: 'Thứ 6' }, { key: 'sat', label: 'Thứ 7' }, { key: 'sun', label: 'Chủ Nhật' },
 ];
 
-// 💡 Cấu trúc dữ liệu mặc định
+// Cấu trúc dữ liệu mặc định
 const DEFAULT_SETTINGS = {
-    storeName: '', address: '', phone: '', isManuallyClosed: false,
+    storeName: '', address: '', phone: '', logo: '', isManuallyClosed: false, // 💡 Thêm 'logo'
     operatingHours: {
         mon: { open: null, close: null }, tue: { open: null, close: null },
         wed: { open: null, close: null }, thu: { open: null, close: null },
@@ -20,24 +20,25 @@ const DEFAULT_SETTINGS = {
 };
 
 export default function RestaurantSettings() {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS); // 💡 Khởi tạo state mặc định
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const toast = useToast();
   
-  // 💡 2. Lấy thông tin user và merchantId
   const { user, isMerchant } = useAuth();
   const merchantId = isMerchant ? user.merchantId : null;
 
-  // 💡 3. Load cài đặt dựa trên merchantId
   useEffect(() => {
     if (merchantId) {
         setIsLoading(true);
         fetchSettings(merchantId)
             .then(data => {
                 // Nếu data tồn tại trong DB, dùng nó. Nếu không, giữ state default.
+                // Đảm bảo các trường cũ trong DEFAULT_SETTINGS không bị mất
                 if (data) {
-                    setSettings(prevDefault => ({ ...prevDefault, ...data }));
+                    setSettings(prev => ({ ...prev, ...data }));
+                } else {
+                    setSettings(prev => ({ ...prev, id: merchantId })); // Đảm bảo có ID cho PUT nếu chưa có
                 }
             })
             .catch(() => toast.show('Lỗi tải cài đặt cửa hàng.', 'error'))
@@ -46,9 +47,7 @@ export default function RestaurantSettings() {
         setIsLoading(false);
         toast.show("Bạn không có quyền truy cập trang này.", "error");
     }
-  }, [merchantId, toast]);
-
-  // --- Các hàm xử lý (thêm merchantId vào các lệnh gọi API) ---
+  }, [merchantId, toast, isMerchant]); // Thêm isMerchant vào dependency
 
   const handleInfoChange = useCallback((e) => {
     setSettings(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -68,7 +67,6 @@ export default function RestaurantSettings() {
     const newState = !settings.isManuallyClosed;
     setIsSaving(true);
     try {
-      // 💡 4. Gửi merchantId khi gọi API
       await patchSettings(merchantId, { isManuallyClosed: newState });
       setSettings(prev => ({ ...prev, isManuallyClosed: newState }));
       toast.show(newState ? '🟠 Cửa hàng đã TẠM ĐÓNG.' : '🟢 Cửa hàng đã MỞ LẠI.', 'info');
@@ -83,7 +81,6 @@ export default function RestaurantSettings() {
     if (!merchantId) return;
     setIsSaving(true);
     try {
-      // 💡 5. Gửi merchantId khi gọi API (hàm updateSettings sẽ tạo mới nếu chưa có)
       const updated = await updateSettings(merchantId, settings);
       setSettings(updated);
       toast.show('✅ Đã lưu cài đặt thành công!', 'success');
@@ -120,7 +117,6 @@ export default function RestaurantSettings() {
     return <div style={{ padding: 30, textAlign: 'center' }}>Đang tải cài đặt cửa hàng...</div>;
   }
   
-  // --- Render (Sửa lại value để dùng || '' thay vì ??) ---
   return (
     <div style={styles.wrap}>
       <h1 style={{ textAlign: 'center', marginBottom: 30 }}>Cài đặt Cửa hàng</h1>
@@ -128,7 +124,7 @@ export default function RestaurantSettings() {
           ({merchantId})
       </h3>
 
-      {/* --- Trạng thái Đóng/Mở Thủ công --- */}
+      {/* --- Trạng thái Đóng/Mở Thủ công ---
       <div style={styles.section}>
         <h2 style={styles.sectionTitle}>Trạng thái Hoạt động</h2>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -143,7 +139,7 @@ export default function RestaurantSettings() {
             {isSaving ? 'Đang xử lý...' : (settings.isManuallyClosed ? 'Mở cửa lại' : 'Tạm đóng cửa')}
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* --- Cập nhật Thông tin Cơ bản --- */}
       <div style={styles.section}>
@@ -159,6 +155,17 @@ export default function RestaurantSettings() {
         <div style={styles.fieldGroup}>
           <label style={styles.label}>Số điện thoại:</label>
           <input type="tel" name="phone" value={settings.phone || ''} onChange={handleInfoChange} style={styles.input} />
+        </div>
+        {/* 💡 THÊM TRƯỜNG LOGO */}
+        <div style={styles.fieldGroup}>
+          <label style={styles.label}>URL Logo (Ví dụ: https://example.com/logo.png):</label>
+          <input type="url" name="logo" value={settings.logo || ''} onChange={handleInfoChange} style={styles.input} placeholder="Dán URL hình ảnh logo của bạn vào đây" />
+          {settings.logo && (
+            <div style={{marginTop: '10px', textAlign: 'center'}}>
+                <img src={settings.logo} alt="Logo Preview" style={{maxWidth: '100px', maxHeight: '80px', border: '1px solid #eee', padding: '5px'}} onError={(e)=>{e.target.style.display='none'}}/>
+                <p style={{fontSize: '12px', color: '#777'}}>Xem trước logo</p>
+            </div>
+          )}
         </div>
       </div>
 

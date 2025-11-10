@@ -3,13 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useMerchantAdmin } from '../context/MerchantAdminContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 
-// Dữ liệu Merchant giả lập (Giống trong AdminServerRestaurant để tìm kiếm)
-const ALL_MERCHANTS = [
-    { id: 'm001', name: 'Burger King Fast Food', status: 'Active', owner: 'admin@foodfast.com', phone: '0901234567', address: '123 Đường A, Quận 1', contract: '2023-01-01 / 2024-12-31' },
-    { id: 'm002', name: 'Phở Lý Quốc Sư', status: 'Inactive', owner: 'pho.ls@gmail.com', phone: '0907654321', address: '456 Đường B, Quận 3', contract: '2022-05-15 / 2024-05-15' },
-    { id: 'm003', name: 'Trà Sữa KOI', status: 'Pending', owner: 'koi@milk.com', phone: '0988998899', address: '789 Đường C, Quận 5', contract: 'N/A' },
-    { id: 'm004', name: 'Cơm Tấm Cali', status: 'Active', owner: 'tam.cali@corp.com', phone: '0912121212', address: '101 Đường D, Quận 10', contract: '2023-11-01 / 2025-11-01' },
-];
 
 export default function AdminMerchantDetail() {
     const { merchantId } = useParams();

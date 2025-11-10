@@ -1,7 +1,7 @@
 // src/pages/DroneOrders.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { myOrders } from "../utils/api";
+import { myOrders } from "../utils/orderAPI.js";
 import { formatVND } from "../utils/format";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -199,6 +199,10 @@ const Dash = () => <span className="mini">—</span>;
 
 /* ====================== Main ====================== */
 export default function DroneOrders() {
+const { user, isMerchant, isSuperAdmin } = useAuth();
+  // Nếu là merchant thì lấy ID, nếu là Super Admin thì null (để lấy tất cả)
+  const merchantId = isMerchant ? user?.merchantId : null;
+
   const { user } = useAuth();
   const isAdmin = !!user?.isAdmin;
 
@@ -243,7 +247,15 @@ export default function DroneOrders() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await myOrders({ page: 1, limit: 10000, status: "all", q: "", sort: "createdAt", order: "desc" });
+      const res = await myOrders({ 
+          page: 1, 
+          limit: 10000, 
+          status: "all", 
+          q: "", 
+          sort: "createdAt", 
+          order: "desc",
+          merchantId: merchantId // <-- Thêm tham số này
+      });
       const arr = Array.isArray(res) ? res : res?.rows || res?.data || [];
       // CHỈ lấy các đơn ở 3 cột: Ready / Delivering / Completed
       const drones = arr.filter((o) => {
@@ -300,7 +312,7 @@ export default function DroneOrders() {
   // 🔕 Bỏ auto-refresh (chỉ load một lần, bấm nút "Làm mới" để cập nhật)
   useEffect(() => {
     load();
-  }, []);
+  }, [merchantId]); // <-- Thêm merchantId
 
   // Tóm tắt theo MISSION (đếm đúng nghĩa)
   const summary = useMemo(() => {

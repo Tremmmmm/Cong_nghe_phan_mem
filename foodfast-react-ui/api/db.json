@@ -46,6 +46,7 @@
   "orders": [
     {
       "id": "05e9",
+      "merchantId": "m001",
       "customerName": "haha",
       "phone": "03659998874",
       "address": "Ho Chi Minh city",
@@ -86,6 +87,7 @@
     },
     {
       "id": "cr3y",
+      "merchantId": "m001",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
       "customerName": "lienchivo04",
@@ -127,6 +129,7 @@
     },
     {
       "id": "i8uk",
+      "merchantId": "m001",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
       "customerName": "lienchivo04",
@@ -158,6 +161,7 @@
     },
     {
       "id": "4mlp",
+      "merchantId": "m001",
       "sessionId": "21f0",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
@@ -199,6 +203,7 @@
     },
     {
       "id": "3g04",
+      "merchantId": "m001",
       "sessionId": "0e9b",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
@@ -232,6 +237,7 @@
     },
     {
       "id": "btdb",
+      "merchantId": "m001",
       "sessionId": "14f7",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
@@ -282,6 +288,7 @@
     },
     {
       "id": "w6hv",
+      "merchantId": "m001",
       "sessionId": "ba32",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
@@ -331,6 +338,7 @@
     },
     {
       "id": "yklp",
+      "merchantId": "m001",
       "sessionId": "ed0e",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
@@ -409,6 +417,7 @@
     },
     {
       "id": "c7i1",
+      "merchantId": "m001",
       "sessionId": "ed0e",
       "userId": 1,
       "userEmail": "chi@gmail.com",
@@ -459,6 +468,7 @@
     },
     {
       "id": "3erh",
+      "merchantId": "m001",
       "sessionId": "ed0e",
       "userId": 1,
       "userEmail": "chi@gmail.com",
@@ -530,6 +540,7 @@
     },
     {
       "id": "cicb",
+      "merchantId": "m001",
       "sessionId": "ed0e",
       "userId": 1,
       "userEmail": "hope123@gmail.com",
@@ -581,6 +592,7 @@
     {
       "id": "nlcb",
       "sessionId": "908e",
+      "merchantId": "m001",
       "userId": 0,
       "userEmail": "admin@foodfast.com",
       "customerName": "Admin",
@@ -623,6 +635,7 @@
     {
       "id": "p3ah",
       "sessionId": "908e",
+      "merchantId": "m001",
       "userId": 0,
       "userEmail": "admin@foodfast.com",
       "customerName": "Admin",
@@ -665,6 +678,7 @@
     {
       "id": "e8yv",
       "sessionId": "908e",
+      "merchantId": "m001",
       "userId": 0,
       "userEmail": "resadmin",
       "customerName": "Restaurant Admin",
@@ -707,6 +721,7 @@
     {
       "id": "7ehy",
       "sessionId": "ed0e",
+      "merchantId": "m001",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
       "customerName": "lienchivo04",
@@ -756,6 +771,7 @@
     {
       "id": "we81",
       "sessionId": "82ad",
+      "merchantId": "m001",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
       "customerName": "lienchivo04",
@@ -834,6 +850,7 @@
     {
       "id": "ztgd",
       "sessionId": "908e",
+      "merchantId": "m001",
       "userId": 0,
       "userEmail": "resadmin",
       "customerName": "Restaurant Admin",
@@ -888,6 +905,7 @@
     {
       "id": "8xm3",
       "sessionId": "ed0e",
+      "merchantId": "m001",
       "userId": 1,
       "userEmail": "lienchivo04@gmail.com",
       "customerName": "lienchivo04",
@@ -945,6 +963,7 @@
     {
       "id": "2m7z",
       "sessionId": "ed0e",
+      "merchantId": "m001",
       "userId": 1,
       "userEmail": "hope123@gmail.com",
       "customerName": "Hope",
@@ -997,6 +1016,7 @@
     {
       "id": "1xae",
       "sessionId": "ed0e",
+      "merchantId": "m001",
       "userId": 1,
       "userEmail": "chi@gmail.com",
       "customerName": "Daddida",
@@ -4490,7 +4510,38 @@
       "owner": "resadmin",
       "phone": "0909090909",
       "address": "123 Đường A, Quận 1",
-      "contract": "2023-01-01 / 2024-12-31"
+      "contract": "2023-01-01 / 2024-12-31",
+      "operatingHours": {
+        "mon": {
+          "open": 7,
+          "close": 22
+        },
+        "tue": {
+          "open": 7,
+          "close": 22
+        },
+        "wed": {
+          "open": 7,
+          "close": 22
+        },
+        "thu": {
+          "open": 7,
+          "close": 22
+        },
+        "fri": {
+          "open": 7,
+          "close": 22
+        },
+        "sat": {
+          "open": 7,
+          "close": 22
+        },
+        "sun": {
+          "open": 7,
+          "close": 22
+        }
+      },
+      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
     },
     {
       "id": "m002",
@@ -4500,7 +4551,38 @@
       "owner": "pho.ls@gmail.com",
       "phone": "0907654321",
       "address": "456 Đường B, Quận 3",
-      "contract": "2022-05-15 / 2024-05-15"
+      "contract": "2022-05-15 / 2024-05-15",
+      "operatingHours": {
+        "mon": {
+          "open": 7,
+          "close": 22
+        },
+        "tue": {
+          "open": 7,
+          "close": 22
+        },
+        "wed": {
+          "open": 7,
+          "close": 22
+        },
+        "thu": {
+          "open": 7,
+          "close": 22
+        },
+        "fri": {
+          "open": 7,
+          "close": 22
+        },
+        "sat": {
+          "open": 7,
+          "close": 22
+        },
+        "sun": {
+          "open": 7,
+          "close": 22
+        }
+      },
+      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
     },
     {
       "id": "m003",
@@ -4510,7 +4592,8 @@
       "owner": "koi@milk.com",
       "phone": "0988998899",
       "address": "789 Đường C, Quận 5",
-      "contract": "N/A"
+      "contract": "N/A",
+      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
     },
     {
       "id": "m004",
@@ -4520,22 +4603,24 @@
       "owner": "tam.cali@corp.com",
       "phone": "0912121212",
       "address": "101 Đường D, Quận 10",
-      "contract": "2023-11-01 / 2025-11-01"
+      "contract": "2023-11-01 / 2025-11-01",
+      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
     },
     {
       "id": "bfd2",
       "ordersToday": 0,
       "status": "Rejected",
       "name": "Merchant Mới (API) #5",
-      "owner": "new.owner@example.com"
+      "owner": "new.owner@example.com",
+      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
     }
   ],
   "restaurantSettings": [
     {
-      "id": "m001",
       "storeName": "Burger King Fast Food",
       "address": "123 Đường A, Quận 1",
       "phone": "0909090909",
+      "logo": "http://localhost:5182/logoBK.png",
       "isManuallyClosed": false,
       "operatingHours": {
         "mon": {
@@ -4555,7 +4640,7 @@
           "close": 22
         },
         "fri": {
-          "open": 7,
+          "open": 8,
           "close": 22
         },
         "sat": {
@@ -4566,13 +4651,14 @@
           "open": 7,
           "close": 22
         }
-      }
+      },
+      "id": "m001"
     },
     {
-      "id": "m002",
       "storeName": "Phở Lý Quốc Sư",
       "address": "456 Đường B, Quận 3",
       "phone": "0907654321",
+      "logo": "https://tse1.mm.bing.net/th/id/OIP.as_cAXvrFaNSjIK6UDWhrgHaGL?o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3",
       "isManuallyClosed": false,
       "operatingHours": {
         "mon": {
@@ -4597,13 +4683,14 @@
         },
         "sat": {
           "open": 6,
-          "close": 14
+          "close": 22
         },
         "sun": {
           "open": 6,
           "close": 14
         }
-      }
+      },
+      "id": "m002"
     }
   ],
   "menuItems": [

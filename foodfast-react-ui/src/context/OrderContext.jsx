@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { createSession, closeSession as apiCloseSession } from "../utils/api";
+import { createSession, closeSession as apiCloseSession } from "../utils/orderAPI";
 
 // GIỮ NGUYÊN key cũ của bạn cho orders
 const LS_KEY_ORDERS = "ff_orders_v1";

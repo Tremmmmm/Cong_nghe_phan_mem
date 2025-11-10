@@ -1,9 +1,10 @@
 // src/pages/AdminOrders.jsx
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { myOrders } from '../utils/api';
+import { myOrders } from '../utils/orderAPI.js';
 import { exportCsv } from '../utils/exportCsv';
 import { formatVND } from '../utils/format';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const UI_STATUSES = ['order','processing','delivery','done','cancelled'];
 const UI_SUMMARY  = ['order','processing','delivery','done'];
@@ -24,7 +25,7 @@ const VND = (n) => formatVND(n);
 const CANCEL_BY_LABEL = {
   merchant: 'cửa hàng',
   customer: 'khách hàng',
-  rider: 'tài xế',
+  rider: 'drone',
   system: 'hệ thống',
 };
 const REASON_LABEL = {
@@ -35,7 +36,9 @@ const REASON_LABEL = {
 
 export default function AdminOrders({ variant }) {
   const isRestaurant = variant === 'restaurant';
-
+  const { user, isMerchant } = useAuth();
+  // Nếu là trang restaurant (variant='restaurant') HOẶC user đang login là merchant, thì lấy ID
+  const merchantId = (isRestaurant || isMerchant) ? user?.merchantId : null;
   // nhận biết mode drone: /admin/drone hoặc ?mode=drone
   const { pathname, search } = useLocation();
   const mode = useMemo(() => {
@@ -62,10 +65,17 @@ export default function AdminOrders({ variant }) {
     try {
       setLoading(true);
 
-      // Lấy full, FE filter
+     //TRUYỀN MERCHANT ID VÀO API
+      // Lưu ý: pagination ở đây đang làm ở FE (limit 10000), 
+      // nếu muốn làm ở BE thì cần sửa lại logic này.
       const res = await myOrders({
-        page: 1, limit: 10000, status: 'all', q: '',
-        sort: 'createdAt', order: 'desc'
+        page: 1, 
+        limit: 10000, 
+        status: 'all', 
+        q: '',
+        sort: 'createdAt', 
+        order: 'desc',
+        merchantId: merchantId // <-- Truyền ID vào đây
       });
 
       const arr = Array.isArray(res) ? res : (res?.rows || res?.data || []);
@@ -123,7 +133,7 @@ export default function AdminOrders({ variant }) {
     }
   };
 
-  useEffect(()=>{ fetchData(); }, [page, limit, filter, q, isRestaurant, mode]);
+  useEffect(()=>{ fetchData(); }, [page, limit, filter, q, isRestaurant, mode, merchantId]);
 
   // Revalidate khi Tab focus lại
   useEffect(() => {
@@ -135,7 +145,7 @@ export default function AdminOrders({ variant }) {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [page, limit, filter, q, isRestaurant, mode]);
+  }, [page, limit, filter, q, isRestaurant, mode, merchantId]);
 
   const ts = () => new Date().toISOString().replace(/[:.]/g,'-');
   const onExportPage = () => exportCsv(`orders_page_${page}_${ts()}.csv`, rows);
@@ -197,7 +207,7 @@ export default function AdminOrders({ variant }) {
         <h2>
           {mode === 'drone'
             ? 'Đơn giao bằng Drone'
-            : (isRestaurant ? 'Restaurant Orders' : 'Lịch sử đơn hàng')}
+            : (merchantId ? `Lịch sử đơn hàng (${merchantId})` : 'Lịch sử tất cả đơn hàng')}
         </h2>
         <div className="grid-actions" style={{display:'flex', gap:10, alignItems:'center', flexWrap:'wrap'}}>
           <button className="ff-btn" onClick={fetchData}>Refresh</button>

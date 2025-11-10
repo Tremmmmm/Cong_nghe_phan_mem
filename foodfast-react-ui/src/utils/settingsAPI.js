@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5181/merchantSettings';
+const API_URL = 'http://localhost:5181/restaurantSettings';
 
 // [GET] Lấy cài đặt theo ID cửa hàng
 export const fetchSettings = async (merchantId) => {
@@ -52,7 +52,7 @@ export const patchSettings = async (merchantId, partialData) => {
           // Nếu lỗi 404 (chưa có bản ghi để patch), thử dùng PUT để tạo mới
           if (res.status === 404) {
               console.warn("Settings not found for PATCH, trying PUT to create...");
-              return await updateSettings(merchantId, partialData);
+              return await updateSettings(merchantId, partialData); // Gọi updateSettings để tạo mới
           }
           throw new Error(`Lỗi cập nhật trạng thái (Status: ${res.status})`);
       }

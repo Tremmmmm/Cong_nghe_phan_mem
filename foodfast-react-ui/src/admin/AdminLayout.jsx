@@ -50,7 +50,7 @@ const handleLogout = () => {
             Người dùng
           </NavLink>
 
-          <NavLink to="/admin/restaurant_managerment" className={({isActive})=>`a-link ${isActive?'active':''}`}>
+          <NavLink to="/admin/merchants" className={({isActive})=>`a-link ${isActive?'active':''}`}>
             Quản lý cửa hàng
           </NavLink>
 

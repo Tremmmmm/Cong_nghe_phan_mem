@@ -11,7 +11,7 @@ export const api = axios.create({
   }
 })
 
-// ====== MENU ======
+// ====== MENU (Có thể giữ hoặc chuyển sang menuAPI.js tùy bạn) ======
 export const getMenu = (params = {}) =>
   api.get('/menu', { params }).then(r => r.data)
 
@@ -44,6 +44,7 @@ export const createOrder = async (payload) => {
 
 export const placeOrder = createOrder
 
+// 💡 HÀM QUAN TRỌNG: Đã thêm merchantId vào params
 export const myOrders = async ({
   page = 1,
   limit = 10,
@@ -51,6 +52,7 @@ export const myOrders = async ({
   q = '',
   sort = 'createdAt',
   order = 'desc',
+  merchantId = null, // 💡 Thêm tham số này
 } = {}) => {
   const params = {
     _page: page,
@@ -59,10 +61,19 @@ export const myOrders = async ({
     _order: order,
     _: Date.now(), // cache-buster
   }
+  
+  // Lọc theo status
   if (status && status !== 'all') {
     params.status = (status === 'new') ? 'new' : status
   }
+  
+  // Lọc theo từ khóa tìm kiếm
   if (q) params.q = q
+
+  // 💡 Lọc theo merchantId nếu có
+  if (merchantId) {
+      params.merchantId = merchantId;
+  }
 
   const res = await api.get('/orders', { params })
   const total = Number(res.headers['x-total-count'] || 0)
@@ -84,15 +95,21 @@ export const updateOrderStatus = (id, patch) => {
 export const getOrder = (id) =>
   api.get(`/orders/${id}?_=${Date.now()}`).then(r => r.data)
 
-export const getAllOrders = async () => {
-  const res = await api.get('/orders', {
-    params: {
+// 💡 Cập nhật cả hàm getAllOrders để hỗ trợ lọc nếu cần sau này
+export const getAllOrders = async (merchantId = null) => {
+  const params = {
       _sort: 'createdAt',
       _order: 'desc',
       _limit: 10000,
       _: Date.now(),
-    },
-  })
+  };
+  
+  // 💡 Lọc nếu có merchantId
+  if (merchantId) {
+      params.merchantId = merchantId;
+  }
+
+  const res = await api.get('/orders', { params })
   return res.data || []
 }
 

@@ -1,10 +1,11 @@
 // src/pages/RestaurantOrders.jsx
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../utils/api";
+import { api } from "../utils/orderAPI.js";
 import { formatVND } from "../utils/format";
 import OrderEditModal from "../components/OrderEditModal";
 import CancelOrderModal from "../components/CancelOrderModal";
-import { patchOrder } from "../utils/api";
+import { patchOrder } from "../utils/orderAPI.js";
+import { useAuth } from '../context/AuthContext.jsx';
 
 const VND = (n) => formatVND(n);
 
@@ -324,6 +325,8 @@ function OrderCard({ order, onMove, onOpenDetail }) {
 }
 
 export default function RestaurantOrders() {
+  const { user } = useAuth(); // 💡 Lấy user
+  const merchantId = user?.merchantId;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -440,9 +443,10 @@ export default function RestaurantOrders() {
   }
 
   async function fetchOrders() {
+    if (!merchantId) return;
     setLoading(true);
     try {
-      const { data } = await api.get("/orders", { params: { _: Date.now() } });
+      const { data } = await api.get(`/orders?merchantId=${merchantId}`, { params: { _: Date.now() } });
       const list = (Array.isArray(data) ? data : []).slice().sort((a, b) => toTs(b.createdAt) - toTs(a.createdAt));
       setOrders(list);
     } finally {
@@ -593,7 +597,7 @@ export default function RestaurantOrders() {
     }
   }
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { fetchOrders(); }, [merchantId]);
   useEffect(() => {
     const onFocus = () => fetchOrders();
     const onVis = () => { if (document.visibilityState === "visible") fetchOrders(); };

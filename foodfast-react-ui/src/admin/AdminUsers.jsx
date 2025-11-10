@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getAllOrders } from "../utils/api";
+import { getAllOrders } from "../utils/orderAPI";
 import {
   listUsers, upsertUser, setRole, setActive,
 } from "../utils/usersStore";

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 // import { formatVND } from "../utils/format.js"; // Có thể bỏ nếu không dùng
-import { useToast } from "../context/ToastContext.jsx";
-import { useMerchantAdmin } from "../context/MerchantAdminContext.jsx"; // Sẽ tạo file này ở bước 2
+import { useToast } from "../context/ToastContext.jsx"; 
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../context/AuthContext.jsx";
 import { 
     fetchMerchants, 
     createMerchant, 
@@ -17,8 +17,8 @@ export default function AdminServerRestaurant() {
     
     // ✅ KHAI BÁO HOOK BÊN TRONG COMPONENT
     const [merchantToDelete, setMerchantToDelete] = useState(null);
-    const navigate = useNavigate(); 
-    const { selectedMerchantId, selectMerchant } = useMerchantAdmin(); 
+    const navigate = useNavigate();  
+    const { currentUser, isSuperAdmin, logout } = useAuth();
     const toast = useToast();
 
     const styles = useMemo( 
@@ -92,11 +92,8 @@ export default function AdminServerRestaurant() {
 
     // Hành động xem chi tiết (Đã sửa để dùng navigate)
     const handleViewMerchant = (merchant) => {
-        selectMerchant(merchant.id); 
-        toast.show(`Admin đang quản lý Merchant: ${merchant.name}. (Chuyển trang)`, 'info');
-        
-        // 2. Chuyển hướng đến Route chi tiết
-        navigate(`/admin/merchants/${merchant.id}`); 
+        toast.show(`Admin đang xem Merchant: ${merchant.name}.`, 'info');
+        navigate(`/admin/merchants/${merchant.id}`);  
     };
 
     // Hành động tạo cửa hàng (giả lập)
@@ -179,25 +176,25 @@ const handleToggleActive = (merchantId, currentStatus) => {
 };
 
     const MerchantCard = (merchant) => {
-        const isSelected = merchant.id === selectedMerchantId;
+        
         return (
             <div 
                 key={merchant.id} 
                 className="card"
                 // Thêm viền nếu đang được chọn để admin dễ nhận biết
-                style={isSelected ? { border: '2px solid #ff7a59' } : {}}
+                
             >
                 <div className="info-col">
                     <div className="name">
                         {merchant.name}
-                        <span className={`status-pill ${merchant.status}`}>{merchant.status}</span>
+                        <span className={`status-pill ${merchant.status || 'Pending'}`}>{merchant.status || 'Pending'}</span>
                     </div>
                     <div className="owner">Owner: {merchant.owner}</div>
                 </div>
                 
                 <div className="stats-col">
                     <div className="stat-box">
-                        <div className="stat-value">{merchant.ordersToday}</div>
+                        <div className="stat-value">{merchant.ordersToday || 0}</div>
                         <div className="stat-label">Đơn hôm nay</div>
                     </div>
                     {/* 💡 NÚT HÀNH ĐỘNG DUYỆT (CHỈ HIỆN KHI status === 'Pending') */}
@@ -240,12 +237,11 @@ const handleToggleActive = (merchantId, currentStatus) => {
                         Xóa
                     </button>
                     <button 
-                        className="btn" 
-                        style={isSelected ? { background: '#10b981' } : {}}
+                        className="btn"
                         onClick={() => handleViewMerchant(merchant)}
                         disabled={loading}
                     >
-                        {isSelected ? 'Đang Quản lý' : 'Xem Merchant'}
+                        Xem Merchant
                     </button>
                 </div>
             </div>
@@ -257,7 +253,12 @@ const handleToggleActive = (merchantId, currentStatus) => {
         <style>{styles}</style>
         <div className="admin-selector-wrap">
             <div className="admin-head">
-                <h2>Quản lý Cửa hàng Merchant</h2>
+                    <div>
+                    <h2>Quản lý Cửa hàng Merchant</h2>
+                    <div style={{ fontSize: 14, color: '#333' }}>
+                            Đã đăng nhập với tư cách: <b>{currentUser.name} (SuperAdmin)</b>
+                            </div>
+                    </div>
                 <button 
                     className="btn" 
                     onClick={handleCreateMerchant}

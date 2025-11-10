@@ -1,7 +1,7 @@
 // src/pages/ConfirmCloseSession.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { getOrder, closeSession as apiClose } from "../utils/api";
+import { getOrder, closeSession as apiClose } from "../utils/orderAPI.js";
 import { useOrderCtx } from "../context/OrderContext.jsx";
 
 export default function ConfirmCloseSession() {

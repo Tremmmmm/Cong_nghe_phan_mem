@@ -1,8 +1,8 @@
 // File: src/utils/merchantAPI.js
 
 // 💡 URL CỦA JSON-SERVER (Đảm bảo cổng khớp với lúc bạn chạy)
-const API_URL = 'http://localhost:5181/merchants'; 
-const API_URL_MENUITEMS = 'http://localhost:5181/menuitems';
+const API_URL = 'http://localhost:5181/restaurantSettings'; 
+const API_URL_MENUITEMS = 'http://localhost:5181/menuItems';
 
 // --------------------------------------------------------
 // CÁC HÀM GỌI API ĐẾN JSON-SERVER

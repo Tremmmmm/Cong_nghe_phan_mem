@@ -1,6 +1,6 @@
 // src/pages/AdminServerDashboard.jsx
 import { useEffect, useMemo, useState } from 'react';
-import { getAllOrders } from '../utils/api'; // Giả định hàm này lấy TẤT CẢ đơn hàng trên hệ thống
+import { getAllOrders } from '../utils/orderAPI'; // Giả định hàm này lấy TẤT CẢ đơn hàng trên hệ thống
 import { fetchMerchants } from '../utils/merchantAPI'; // 💡 Import thêm API lấy merchants
 import { formatVND } from '../utils/format';
 
