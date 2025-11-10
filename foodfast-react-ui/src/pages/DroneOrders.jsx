@@ -200,11 +200,13 @@ const Dash = () => <span className="mini">—</span>;
 /* ====================== Main ====================== */
 export default function DroneOrders() {
 const { user, isMerchant, isSuperAdmin } = useAuth();
+
   // Nếu là merchant thì lấy ID, nếu là Super Admin thì null (để lấy tất cả)
   const merchantId = isMerchant ? user?.merchantId : null;
-
-  const { user } = useAuth();
-  const isAdmin = !!user?.isAdmin;
+  
+  // Biến isAdmin có thể lấy trực tiếp từ isSuperAdmin hoặc user.isAdmin tùy logic của bạn
+  // Nếu muốn giữ biến isAdmin như cũ:
+  const isAdmin = !!user?.isAdmin; // Hoặc dùng luôn isSuperAdmin nếu chỉ Super Admin mới là admin
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
