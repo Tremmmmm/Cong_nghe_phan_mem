@@ -1,0 +1,12 @@
+.ff-toast-wrap{
+  position:fixed; right:16px; top:16px; display:flex; flex-direction:column; gap:8px;
+  z-index:9999;
+}
+.ff-toast{
+  background:#111827; color:#fff; padding:10px 14px; border-radius:10px;
+  box-shadow:0 10px 24px rgba(0,0,0,.18); font-weight:600; letter-spacing:.2px;
+  animation:fftoast .2s ease-out;
+}
+.ff-toast.success{ background:#059669; }
+.ff-toast.error{ background:#b91c1c; }
+@keyframes fftoast{ from{ opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none}}
