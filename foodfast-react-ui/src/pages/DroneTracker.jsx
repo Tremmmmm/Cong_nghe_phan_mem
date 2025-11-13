@@ -139,7 +139,7 @@ const patchOrderStatusSafe = async (id, status) => {
 export default function DroneTracker() {
   const { id: rawId } = useParams();
   const orderId = normalizeOrderId(rawId);
-  const { user, isMerchant } = useAuth(); 
+  const { user, isMerchant, isSuperAdmin } = useAuth();; 
 const backHref = isSuperAdmin ? "/admin/drone"
                   : isMerchant   ? "/merchant/drone"
                                   : "/orders";  
