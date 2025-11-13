@@ -624,9 +624,9 @@
         "lat": 10.77814273031675,
         "lng": 106.69208449514083
       },
-      "status": "delivering",
+      "status": "completed",
       "payment_status": "unpaid",
-      "updatedAt": "2025-10-17T01:29:13.177Z",
+      "updatedAt": "2025-11-13T18:02:17.286Z",
       "acceptedAt": "2025-10-17T01:27:45.437Z",
       "readyAt": "2025-10-17T01:28:24.297Z",
       "droneMissionId": "07c8",
@@ -1250,15 +1250,58 @@
         "lat": 10.777561067831371,
         "lng": 106.69280745830257
       },
-      "status": "delivering",
+      "status": "completed",
       "payment": "MOMO",
       "payment_status": "paid",
       "payment_txn_id": "MOCK-1763042479135",
-      "updatedAt": "2025-11-13T14:01:57.131Z",
+      "updatedAt": "2025-11-13T18:02:30.754Z",
       "acceptedAt": "2025-11-13T14:01:37.631Z",
       "readyAt": "2025-11-13T14:01:47.765Z",
       "droneMissionId": "451e",
-      "pickedAt": "2025-11-13T14:01:57.131Z"
+      "pickedAt": "2025-11-13T14:01:57.131Z",
+      "deliveredAt": "2025-11-13T18:02:30.754Z"
+    },
+    {
+      "id": "fb97",
+      "merchantId": "m001",
+      "userId": "7efa",
+      "userEmail": "c01@gmail.com",
+      "customerName": "customer",
+      "phone": "0998989898",
+      "address": "Số 2 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 35000,
+          "image": "http://localhost:5182/beefburger.jpg"
+        }
+      ],
+      "total": 35000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 55000,
+      "couponCode": "",
+      "createdAt": 1763061886049,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "status": "new",
+      "payment": "SIMULATED",
+      "payment_status": "paid"
     }
   ],
   "sessions": [
@@ -4786,7 +4829,7 @@
     },
     {
       "id": "7efa",
-      "name": "customer",
+      "name": "AN",
       "email": "c01@gmail.com",
       "phone": "0998989898",
       "address": {
@@ -4796,7 +4839,28 @@
       },
       "password": "123",
       "username": "customer",
-      "role": "Customer"
+      "role": "Customer",
+      "favorites": [
+        "sg-2"
+      ],
+      "cart": {
+        "merchantId": "m001",
+        "items": [
+          {
+            "id": "sg-2",
+            "name": "Cheese Burger",
+            "price": 52000,
+            "desc": "Burger bò phô mai béo ngậy.",
+            "image": "http://localhost:5182/cheeseburger.webp",
+            "category": "single",
+            "status": "approved",
+            "isAvailable": true,
+            "merchantId": "m001",
+            "merchantName": "Burger King Fast Food",
+            "qty": 2
+          }
+        ]
+      }
     }
   ],
   "merchants": [
@@ -4967,7 +5031,7 @@
       "name": "Beef Burger",
       "price": 35000,
       "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
-      "image": "http://localhost:5182/beefburger.jpg",
+      "image": "http://localhost:5182/cheeseburger.webp",
       "category": "single",
       "status": "approved",
       "description": "",
@@ -5129,9 +5193,23 @@
   ],
   "carts": [
     {
-      "id": "ff_cart_v2:ue:c01@gmail.com",
-      "merchantId": null,
-      "items": []
+      "merchantId": "m001",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "price": 52000,
+          "desc": "Burger bò phô mai béo ngậy.",
+          "image": "http://localhost:5182/cheeseburger.webp",
+          "category": "single",
+          "status": "approved",
+          "isAvailable": true,
+          "merchantId": "m001",
+          "merchantName": "Burger King Fast Food",
+          "qty": 1
+        }
+      ],
+      "id": "ff_cart_v2:ue:c01@gmail.com"
     },
     {
       "id": "ff_cart_v2:g:d176njqs",
@@ -5142,12 +5220,34 @@
       "id": "ff_cart_v2:uid:u001",
       "merchantId": null,
       "items": []
+    },
+    {
+      "id": "ff_cart_v2:g:j38i59it",
+      "merchantId": null,
+      "items": []
+    },
+    {
+      "id": "ff_cart_v2:uid:u002",
+      "merchantId": null,
+      "items": []
+    },
+    {
+      "id": "ff_cart_v2:uid:u002",
+      "merchantId": null,
+      "items": []
+    },
+    {
+      "id": "ff_cart_v2:g:ik7dksmb",
+      "merchantId": null,
+      "items": []
     }
   ],
   "favorites": [
     {
       "id": "ff_fav_v1:ue:c01@gmail.com",
-      "ids": []
+      "ids": [
+        "sg-1"
+      ]
     },
     {
       "id": "ff_cart_v2:ue:c01@gmail.com",
@@ -5159,6 +5259,18 @@
     },
     {
       "id": "ff_fav_v1:uid:u001",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:g:j38i59it",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:uid:u002",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:uid:u002",
       "ids": []
     }
   ]

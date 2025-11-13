@@ -1,9 +1,11 @@
 // src/admin/ResLayout.jsx
-import { NavLink, Outlet, useMatch } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, useMatch } from "react-router-dom";
 import { useEffect, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 
-export default function ResLayout() {
+export default function ResLayout() { 
+  const navigate = useNavigate();
   const { logout } = useAuth();
   // ẩn sidebar + full-width
   const isDroneTracker = !!useMatch("/merchant/drone/:id");

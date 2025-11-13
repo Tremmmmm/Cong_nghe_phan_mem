@@ -508,7 +508,7 @@ const [name, setName] = useState(user?.name ?? localStorage.getItem('lastName') 
           </div>
 
           {/* Coupon */}
-          <div className="field">
+          {/* <div className="field">
             <label>Mã khuyến mãi</label>
             <div className="coupon-row">
               <input
@@ -549,7 +549,7 @@ const [name, setName] = useState(user?.name ?? localStorage.getItem('lastName') 
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
           <button className="btn" type="submit" disabled={loading || !items.length}>
             {loading ? 'Đang mở cổng thanh toán…' : 'Thanh toán & đặt hàng'}

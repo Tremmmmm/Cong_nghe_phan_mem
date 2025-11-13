@@ -4,7 +4,7 @@ import { useCart } from "../context/CartContext.jsx";
 import { formatVND } from "../utils/format";
 
 export default function Cart() {
-  const { items, add, dec, remove, clear, total } = useCart();
+  const { items, add, dec, remove, clear, total, merchantId } = useCart();
   const navigate = useNavigate();
 
   const styles = useMemo(() => `
@@ -56,7 +56,7 @@ export default function Cart() {
               <div className="counter">
                 <button className="pill" onClick={() => dec(it.id)}>-</button>
                 <div style={{minWidth:18,textAlign:'center'}}>{it.qty}</div>
-                <button className="pill" onClick={() => add(it)}>+</button>
+                <button className="pill" onClick={() => add(it, merchantId)}>+</button>
               </div>
 
               <div className="price">{formatVND((it.price || 0) * (it.qty || 0))}</div>

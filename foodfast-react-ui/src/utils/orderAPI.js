@@ -44,7 +44,9 @@ export const createOrder = async (payload) => {
 
 export const placeOrder = createOrder
 
-// 💡 HÀM QUAN TRỌNG: Đã thêm merchantId vào params
+/**
+ * [ĐÃ SỬA] Lấy danh sách đơn hàng (Hỗ trợ lọc theo merchantId và userId)
+ */
 export const myOrders = async ({
   page = 1,
   limit = 10,
@@ -52,29 +54,34 @@ export const myOrders = async ({
   q = '',
   sort = 'createdAt',
   order = 'desc',
-  merchantId = null, // 💡 Thêm tham số này
+  merchantId = null, // Lọc cho Merchant
+  userId = null,     // 💡 THÊM BỘ LỌC CHO CUSTOMER
 } = {}) => {
   const params = {
     _page: page,
     _limit: limit,
     _sort: sort,
     _order: order,
-    _: Date.now(), // cache-buster
-  }
-  
-  // Lọc theo status
+    _: Date.now(),
+  };
   if (status && status !== 'all') {
     params.status = (status === 'new') ? 'new' : status
   }
-  
-  // Lọc theo từ khóa tìm kiếm
-  if (q) params.q = q
+  if (q) params.q = q;
 
-  // 💡 Lọc theo merchantId nếu có
-  if (merchantId) {
-      params.merchantId = merchantId;
+  // 💡 THÊM LOGIC LỌC 
+  if (merchantId) params.merchantId = merchantId;
+  // 💡 LỌC THEO USER ID (Dựa trên db.json, một số đơn có 'userId', số khác 'userEmail')
+  // Chúng ta sẽ ưu tiên 'userId' nếu có
+  if (userId) {
+    params.userId = userId;
   }
-
+  
+  // Nếu bạn muốn hỗ trợ cả 2 (ví dụ: data cũ dùng email, data mới dùng id):
+  else if (userEmail) {
+    params.userEmail = userEmail;
+  }
+  
   const res = await api.get('/orders', { params })
   const total = Number(res.headers['x-total-count'] || 0)
   const rows = res.data || []
