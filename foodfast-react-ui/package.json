@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -k -n web,api \"vite --port 5174 --open\" \"npm:api\"",
-    "api": "json-server --watch api/db.json --port 5181",
+    "api": "json-server --watch api/db.json --port 5181 --static .",
     "build": "vite build",
     "preview": "vite preview"
   },

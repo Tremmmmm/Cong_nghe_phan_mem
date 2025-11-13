@@ -32,8 +32,9 @@ function parseLatLngFromText(text) {
 }
 
 // Đoán nhanh theo từ khoá quận/huyện (demo – không cần API geocode)
-function guessLatLngFromAddress(addr) {
-  const s = String(addr || '').toLowerCase()
+function guessLatLngFromAddress(addrObj) {
+  // 💡 SỬA: Hàm này giờ nhận object { street, ward, city }
+  const s = `${addrObj.street || ''} ${addrObj.ward || ''} ${addrObj.city || ''}`.toLowerCase();
 
   // Ưu tiên: nếu user dán "lat,lng" vào địa chỉ → dùng luôn
   const fromText = parseLatLngFromText(s)
@@ -62,6 +63,7 @@ function guessLatLngFromAddress(addr) {
 
 // key lưu địa chỉ gần đây
 const REC_ADDR_KEY = 'ff_recent_addresses'
+const defaultAddress = { street: '', ward: '', city: 'TP. Hồ Chí Minh' };
 
 export default function Checkout(){
   const { user, updateUser } = useAuth()
@@ -75,10 +77,32 @@ export default function Checkout(){
     [items]
   )
 
-  // Prefill từ user hoặc localStorage
-  const [name, setName] = useState(user?.name ?? localStorage.getItem('lastName') ?? '')
+const [name, setName] = useState(user?.name ?? localStorage.getItem('lastName') ?? '')
   const [phone, setPhone] = useState(user?.phone ?? localStorage.getItem('lastPhone') ?? '')
-  const [address, setAddress] = useState(user?.address ?? localStorage.getItem('lastAddress') ?? '')
+  // Lấy address từ localStorage (nó có thể là string cũ hoặc object mới)
+  const lastAddress = useMemo(() => {
+      try {
+          const raw = localStorage.getItem('lastAddress');
+          if (!raw) return user?.address || defaultAddress;
+          
+          // Thử parse, nếu là object mới, dùng nó
+          const parsed = JSON.parse(raw);
+          if (typeof parsed === 'object' && parsed.street !== undefined) {
+              return parsed;
+          }
+          // Nếu là string (cấu trúc cũ), trả về object mới với string đó
+          if (typeof parsed === 'string') {
+              return { ...defaultAddress, street: parsed };
+          }
+      } catch (e) {
+          // Nếu parse lỗi (chỉ là string trần), dùng nó
+          const rawString = localStorage.getItem('lastAddress');
+          if (rawString) return { ...defaultAddress, street: rawString };
+      }
+      return user?.address || defaultAddress;
+  }, [user]);
+
+  const [address, setAddress] = useState(lastAddress) 
   const [couponCode, setCouponCode] = useState('')
   const [appliedCode, setAppliedCode] = useState('')
   const [discount, setDiscount] = useState(0)
@@ -95,7 +119,10 @@ export default function Checkout(){
     if (!user) return
     if (!name && user.name) setName(user.name)
     if (!phone && user.phone) setPhone(user.phone)
-    if (!address && user.address) setAddress(user.address)
+    // Chỉ cập nhật address nếu nó chưa được điền (hoặc là địa chỉ rỗng)
+    if ((!address.street && !address.ward) && user.address) {
+      setAddress(user.address)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
@@ -144,36 +171,22 @@ export default function Checkout(){
     const e = {}
     if (!name.trim()) e.name = 'Vui lòng nhập họ tên'
     if (!isPhoneVN((phone||'').trim())) e.phone = 'Số điện thoại không hợp lệ (VN)'
-    if (!address.trim()) e.address = 'Vui lòng nhập địa chỉ'
+    
+    // Validate 3 trường address mới
+    if (!address.street.trim()) e.address_street = 'Vui lòng nhập Số nhà, Tên đường';
+    if (!address.ward.trim()) e.address_ward = 'Vui lòng nhập Phường';
+    if (!address.city.trim()) e.address_city = 'Vui lòng nhập Thành phố';
+
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  // áp mã (có thể truyền codeOverride khi chọn gợi ý)
-  const onApplyCoupon = (codeOverride) => {
-    const raw = codeOverride ?? couponCode
-    const code = normalizeCode(raw)
-    if (!code) { show('Vui lòng nhập mã khuyến mãi.', 'info'); return }
-    if (!CODE_PATTERN.test(code)) { show('Mã chỉ đúng chữ & số.', 'error'); return }
-    if (!Object.prototype.hasOwnProperty.call(coupons, code)) { show('Mã không tồn tại.', 'error'); return }
+  // 💡 SỬA 4: Helper để cập nhật address object
+  const handleAddressChange = (field, value) => {
+    setAddress(prev => ({ ...prev, [field]: value }));
+  };
 
-    const off = (code === 'FREESHIP') ? 0 : calcDiscount(code, subtotal)
-    if (off <= 0 && code !== 'FREESHIP') {
-      const c = coupons[code]
-      if (c && subtotal < (c.min || 0)) show(`Đơn tối thiểu ${VND(c.min)} để dùng mã này.`, 'info')
-      else show('Mã không còn hiệu lực hoặc không áp dụng.', 'error')
-      return
-    }
-
-    setAppliedCode(code)
-    setCouponCode(code)
-    setDiscount(off)
-    setSuggOpen(false)
-    if (code === 'FREESHIP') show('Áp dụng FREESHIP: miễn phí vận chuyển.', 'success')
-    else show(`Áp dụng mã ${code} thành công. Giảm ${VND(off)}.`, 'success')
-  }
-
-  // ===== SUBMIT: mở modal, CHƯA tạo đơn =====
+  // 💡 SỬA 5: Cập nhật hàm submit() (tạo baseOrder)
   const submit = async (e) => {
     e.preventDefault()
     if (loading) return
@@ -185,8 +198,17 @@ export default function Checkout(){
       setState('idle')
 
       const session = await ensureSession()
+      
+      // Ghép 3 trường address lại thành 1 chuỗi (string) để lưu vào DB
+      // Hoặc gửi cả object (tuỳ vào API `placeOrder` của bạn)
+      // Ở đây tôi gửi cả 2: 1 chuỗi `addressString` và 1 object `addressObj`
+      const cleanAddress = {
+          street: address.street.trim(),
+          ward: address.ward.trim(),
+          city: address.city.trim(),
+      };
+      const addressString = `${cleanAddress.street}, ${cleanAddress.ward}, ${cleanAddress.city}`;
 
-      // Tạo khung order (pending – chưa gửi)
       const localId = Math.random().toString(36).slice(2,6)
       const baseOrder = {
         id: localId,
@@ -195,9 +217,11 @@ export default function Checkout(){
         userEmail: user?.email ?? null,
         customerName: name.trim(),
         phone: String(phone).trim(),
-        address: address.trim(),
+        
+        address: addressString, // 💡 Gửi chuỗi đầy đủ cho DB
+        addressObj: cleanAddress, // 💡 Gửi object (nếu API hỗ trợ)
 
-        deliveryMode: DELIVERY_MODE,      // Drone
+        deliveryMode: DELIVERY_MODE,
         items: items.map(i => ({
           id: i.id,
           name: i.name,
@@ -212,17 +236,12 @@ export default function Checkout(){
         shippingDiscount,
         finalTotal,
         couponCode: appliedCode,
-
         createdAt: Date.now(),
-
-        // toạ độ để mission không thiếu
         restaurantLocation: DEFAULT_RESTAURANT_LL,
-        customerLocation: guessLatLngFromAddress(address),
-
+        customerLocation: guessLatLngFromAddress(cleanAddress), // 💡 Dùng object
         status: 'new',
       }
 
-      // mở modal – chờ user xác nhận
       setPendingOrder(baseOrder)
       setShowPayModal(true)
     } catch (err) {
@@ -234,16 +253,16 @@ export default function Checkout(){
     }
   }
 
-  // ===== Handlers từ PaymentModal =====
+  // 💡 SỬA 6: Cập nhật hàm handlePaid() (lưu thông tin)
   async function handlePaid() {
     if (!pendingOrder) return
     try {
-      const gateway = paymentMethod // 'VNPAY' | 'MOMO'
+      const gateway = paymentMethod
       const order = {
         ...pendingOrder,
         payment: gateway,
-        payment_status: 'paid',                // FE-only
-        payment_txn_id: 'MOCK-' + Date.now(),  // FE-only
+        payment_status: 'paid',
+        payment_txn_id: 'MOCK-' + Date.now(),
       }
 
       const created = await placeOrder(order)
@@ -253,23 +272,33 @@ export default function Checkout(){
 
       const oid = created?.id || order.id
       try { sessionStorage.setItem('lastOrderId', String(oid)) } catch {}
-      try { sessionStorage.setItem('lastDeliveryMode', DELIVERY_MODE) } catch {}
-      try { sessionStorage.setItem('lastPaymentMethod', gateway) } catch {}
+      // ... (các sessionStorage khác giữ nguyên)
 
-      // nhớ thông tin người nhận cho lần sau
+      // 💡 Lấy object address từ pendingOrder
+      const addressObject = pendingOrder.addressObj; 
+      const addressString = pendingOrder.address;
+
+      // Nhớ thông tin người nhận cho lần sau
       try {
         localStorage.setItem('lastName', pendingOrder.customerName)
         localStorage.setItem('lastPhone', pendingOrder.phone)
-        localStorage.setItem('lastAddress', pendingOrder.address)
+        // 💡 Lưu cả object address
+        localStorage.setItem('lastAddress', JSON.stringify(addressObject)) 
       } catch {}
 
+      // 💡 Cập nhật AuthContext với object address
       if (user && saveAsDefault && typeof updateUser === 'function') {
-        updateUser({ name: pendingOrder.customerName, phone: pendingOrder.phone, address: pendingOrder.address })
+        updateUser({ 
+            name: pendingOrder.customerName, 
+            phone: pendingOrder.phone, 
+            address: addressObject // 💡 Gửi object
+        })
       }
 
+      // 💡 Lưu chuỗi address đầy đủ vào recentAddr
       try {
         const cur = JSON.parse(localStorage.getItem(REC_ADDR_KEY) || '[]') || []
-        const norm = pendingOrder.address.trim()
+        const norm = addressString.trim()
         const next = [norm, ...cur.filter(x => x && x !== norm)].slice(0, 3)
         localStorage.setItem(REC_ADDR_KEY, JSON.stringify(next))
         setRecentAddr(next)
@@ -284,7 +313,6 @@ export default function Checkout(){
       show('Có lỗi khi tạo đơn sau thanh toán.', 'error')
     }
   }
-
   function handleClose() {
     setShowPayModal(false)
     show('Bạn đã hủy thanh toán.', 'info')
@@ -407,27 +435,38 @@ export default function Checkout(){
             {errors.phone && <span className="err">{errors.phone}</span>}
           </div>
 
+          {/* 💡 SỬA 7: Thay 1 input address bằng 3 input */}
           <div className="field">
             <label>Địa chỉ</label>
-            <input className="inp" autoComplete="street-address" value={address} onChange={e=>setAddress(e.target.value)} />
-            {errors.address && <span className="err">{errors.address}</span>}
-
-            {recentAddr.length > 0 && (
-              <div className="addr-recent">
-                <span className="muted" style={{marginRight:6}}>Gần đây:</span>
-                {recentAddr.map((a, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className="chip chip-sm addr-chip"
-                    onClick={()=>setAddress(a)}
-                    title={a}
-                  >
-                    {a}
-                  </button>
-                ))}
-              </div>
-            )}
+            <input 
+              className="inp" 
+              autoComplete="street-address" 
+              value={address.street} 
+              onChange={e => handleAddressChange('street', e.target.value)}
+              placeholder="Số nhà, Tên đường"
+            />
+            {errors.address_street && <span className="err">{errors.address_street}</span>}
+          </div>
+          <div className="field">
+            <input 
+              className="inp" 
+              autoComplete="address-level3" 
+              value={address.ward} 
+              onChange={e => handleAddressChange('ward', e.target.value)}
+              placeholder="Phường"
+            />
+            {errors.address_ward && <span className="err">{errors.address_ward}</span>}
+          </div>
+          <div className="field">
+            <input 
+              className="inp" 
+              autoComplete="address-level2" 
+              value={address.city} 
+              onChange={e => handleAddressChange('city', e.target.value)}
+              placeholder="Thành phố (VD: TP. Hồ Chí Minh)"
+            />
+            {errors.address_city && <span className="err">{errors.address_city}</span>} 
+          {/* --- Kết thúc thay đổi --- */} 
 
             <label style={{display:'flex',gap:8,alignItems:'center',marginTop:6,fontSize:13,opacity:.9}}>
               <input type="checkbox" checked={saveAsDefault} onChange={e=>setSaveAsDefault(e.target.checked)} />

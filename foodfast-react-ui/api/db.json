@@ -1114,6 +1114,49 @@
       "cancelNote": null,
       "cancelledAt": "2025-11-11T07:20:39.540Z",
       "updatedAt": "2025-11-11T07:20:39.540Z"
+    },
+    {
+      "id": "spqt",
+      "sessionId": "908e",
+      "userId": "7efa",
+      "userEmail": "c01@gmail.com",
+      "customerName": "customer",
+      "phone": "0998989898",
+      "address": "Số 2 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "2921",
+          "name": "Khoai tây nghiền chiên giòn",
+          "qty": 1,
+          "price": 29000,
+          "image": "https://cdn.tgdd.vn/2020/11/CookProduct/CheeseStuffedMashedPotatoBallsRecipe3-40screenshot-1200x676.jpg"
+        }
+      ],
+      "total": 29000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 49000,
+      "couponCode": "",
+      "createdAt": 1763017096589,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.778601279903084,
+        "lng": 106.68953175412491
+      },
+      "status": "new",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1763017122073"
     }
   ],
   "sessions": [
@@ -4540,9 +4583,13 @@
     {
       "id": "7efa",
       "name": "customer",
-      "email": "customer",
+      "email": "c01@gmail.com",
       "phone": "0998989898",
-      "address": "customer",
+      "address": {
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
       "password": "123",
       "username": "customer",
       "role": "Customer"
@@ -4630,36 +4677,6 @@
         }
       },
       "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
-    },
-    {
-      "id": "m003",
-      "name": "Trà Sữa KOI",
-      "status": "Pending",
-      "ordersToday": 12,
-      "owner": "koi@milk.com",
-      "phone": "0988998899",
-      "address": "789 Đường C, Quận 5",
-      "contract": "N/A",
-      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
-    },
-    {
-      "id": "m004",
-      "name": "Cơm Tấm Cali",
-      "status": "Active",
-      "ordersToday": 88,
-      "owner": "tam.cali@corp.com",
-      "phone": "0912121212",
-      "address": "101 Đường D, Quận 10",
-      "contract": "2023-11-01 / 2025-11-01",
-      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
-    },
-    {
-      "id": "bfd2",
-      "ordersToday": 0,
-      "status": "Rejected",
-      "name": "Merchant Mới (API) #5",
-      "owner": "new.owner@example.com",
-      "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
     }
   ],
   "restaurantSettings": [
@@ -4667,7 +4684,7 @@
       "storeName": "Burger King Fast Food",
       "address": "123 Đường A, Quận 1",
       "phone": "0909090909",
-      "logo": "http://localhost:5182/logoBK.png",
+      "logo": "https://th.bing.com/th/id/R.f5c899066985159954f5499ac8e1067e?rik=fagP5bor7ZpNDg&pid=ImgRaw&r=0",
       "isManuallyClosed": false,
       "operatingHours": {
         "mon": {
@@ -4680,11 +4697,11 @@
         },
         "wed": {
           "open": 7,
-          "close": 22
+          "close": 23
         },
         "thu": {
           "open": 7,
-          "close": 22
+          "close": 23
         },
         "fri": {
           "open": 8,

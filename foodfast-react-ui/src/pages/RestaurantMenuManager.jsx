@@ -7,22 +7,102 @@ import {
     createMenuItem,
     updateMenuItem,
     deleteMenuItem,
-    updateMenuItemStatus, // 💡 API duyệt/từ chối  
+    updateMenuItemStatus, 
 } from '../utils/menuAPI.js';
 import { formatVND } from '../utils/format.js';
 
-// --- Component Form (Có thể tách ra file riêng) ---
-function MenuItemForm({ initialData = {}, onSubmit, onCancel, isSaving }) {
+// 💡 --- BẮT ĐẦU: Component Modal Quản lý Danh mục MỚI ---
+/**
+ * Modal để Thêm/Xóa danh mục (Category)
+ * @param {Object} props
+ * @param {string[]} props.existingCategories - Danh sách categories hiện tại
+ * @param {function} props.onClose - Hàm để đóng modal
+ * @param {function(string[]): void} props.onSave - Hàm lưu danh sách categories mới
+ */
+function CategoryManagerModal({ existingCategories, onClose, onSave }) {
+    // State nội bộ để quản lý danh sách đang chỉnh sửa
+    const [currentCategories, setCurrentCategories] = useState(existingCategories || []);
+    const [newCategory, setNewCategory] = useState("");
+
+    const handleAddCategory = () => {
+        const trimmed = newCategory.trim();
+        if (trimmed && !currentCategories.includes(trimmed)) {
+            setCurrentCategories(prev => [...prev, trimmed]);
+            setNewCategory(""); // Reset ô input
+        }
+    };
+
+    const handleDeleteCategory = (categoryToDelete) => {
+        // Không cho xóa 2 danh mục gốc
+        if (categoryToDelete === 'single' || categoryToDelete === 'combo') {
+            alert('Không thể xóa danh mục "single" hoặc "combo" gốc.');
+            return;
+        }
+        setCurrentCategories(prev => prev.filter(cat => cat !== categoryToDelete));
+    };
+
+    const handleSave = () => {
+        onSave(currentCategories);
+    };
+
+    return (
+        <div style={modalOverlayStyle}>
+            <div style={{...modalContentStyle, maxWidth: '450px'}}>
+                <h3 style={{ marginTop: 0 }}>Quản lý Danh mục</h3>
+                
+                {/* Form thêm mới */}
+                <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                    <input 
+                        type="text" 
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        placeholder="Tên danh mục mới (vd: Trà sữa, Đồ ăn vặt)" 
+                        style={{ ...inputStyle, flexGrow: 1 }}
+                    />
+                    <button onClick={handleAddCategory} style={{ ...buttonStyle, background: '#3498db' }}>Thêm</button>
+                </div>
+
+                {/* Danh sách categories hiện tại */}
+                <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #eee', borderRadius: 8, padding: 10 }}>
+                    {currentCategories.length === 0 ? (
+                        <p style={{textAlign:'center', color:'#888'}}>Chưa có danh mục nào.</p>
+                    ) : (
+                        currentCategories.map(cat => (
+                            <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 5px', borderBottom: '1px dashed #f0f0f0' }}>
+                                <span style={{fontWeight: 500}}>{cat}</span>
+                                <button 
+                                    onClick={() => handleDeleteCategory(cat)}
+                                    disabled={cat === 'single' || cat === 'combo'}
+                                    style={{...buttonStyle, background: '#e74c3c', fontSize: 12, padding: '4px 8px', opacity: (cat === 'single' || cat === 'combo') ? 0.5 : 1}}
+                                >
+                                    Xóa
+                                </button>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Nút footer */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+                    <button type="button" onClick={onClose} style={{ ...buttonStyle, background: '#ccc' }}>Hủy</button>
+                    <button type="button" onClick={handleSave} style={{ ...buttonStyle, background: '#27ae60' }}>
+                        Lưu Danh mục
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+// --- Component Form (Đã cập nhật) ---
+function MenuItemForm({ initialData = {}, onSubmit, onCancel, isSaving, categories = [] }) { // 💡 Nhận prop categories
     const [formData, setFormData] = useState({
         name: initialData.name || '',
         desc: initialData.desc || '',
         price: initialData.price || '',
-        image: initialData.image || '', // Vẫn lưu URL hoặc path giả lập ở đây
+        image: initialData.image || '', 
         category: initialData.category || 'single',
     });
-// State mới để lưu file được chọn (nếu có)
     const [imageFile, setImageFile] = useState(null); 
-    // State mới để chọn kiểu nhập ảnh: 'url' hoặc 'upload'
     const [imageInputType, setImageInputType] = useState('url'); 
 
     const handleChange = (e) => {
@@ -30,31 +110,18 @@ function MenuItemForm({ initialData = {}, onSubmit, onCancel, isSaving }) {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Hàm xử lý khi chọn file ảnh
     const handleFileChange = (e) => {
-        const file = e.target.files?.[0]; // Lấy file đầu tiên
+        const file = e.target.files?.[0]; 
         if (file) {
             setImageFile(file); 
-            // --- PHẦN GIẢ LẬP UPLOAD ---
-        // 1. (BƯỚC THỦ CÔNG) Nhắc nhở/Thông báo:
-        alert(`PoC: Bạn cần chép file "${file.name}" vào thư mục 'uploads' ở gốc dự án!`); 
-
-        // 2. Tạo URL giả định trỏ đến http-server
-        const imageUrl = `http://localhost:5182/${file.name}`; // Đảm bảo cổng 8080 khớp
-
-        // 3. Cập nhật state formData để lưu URL này vào db.json
-        setFormData(prev => ({ ...prev, image: imageUrl })); 
-        // ---------------------------
-
-        console.log("Selected file:", file);
-        console.log("Generated Image URL for DB:", imageUrl);
-
-    } else {
-        setImageFile(null);
-        setFormData(prev => ({ ...prev, image: initialData.image || '' }));
-    }
-};
-
+            alert(`PoC: Bạn cần chép file "${file.name}" vào thư mục 'uploads' ở gốc dự án!`); 
+            const imageUrl = `http://localhost:5182/${file.name}`; // Đảm bảo cổng 5182 khớp
+            setFormData(prev => ({ ...prev, image: imageUrl })); 
+        } else {
+            setImageFile(null);
+            setFormData(prev => ({ ...prev, image: initialData.image || '' }));
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -63,12 +130,6 @@ function MenuItemForm({ initialData = {}, onSubmit, onCancel, isSaving }) {
             alert("Vui lòng nhập giá hợp lệ.");
             return;
         }
-        
-        // 💡 Xử lý logic submit tùy thuộc vào kiểu ảnh
-        // Ở PoC này, chúng ta chỉ gửi formData (chứa URL hoặc path giả lập)
-        // Trong thực tế, nếu imageFile tồn tại, bạn cần upload file đó lên server trước
-        // rồi mới gọi onSubmit với URL ảnh trả về từ server.
-        
         onSubmit({ ...formData, price: priceNum }); 
     };
 
@@ -77,80 +138,43 @@ function MenuItemForm({ initialData = {}, onSubmit, onCancel, isSaving }) {
             <div style={modalContentStyle}>
                 <h3 style={{ marginTop: 0 }}>{initialData.id ? 'Chỉnh sửa Món ăn' : 'Thêm Món ăn Mới'}</h3>
                 <form onSubmit={handleSubmit}>
-                    {/* Input Name */}
                     <div style={fieldGroupStyle}>
                         <label style={labelStyle}>Tên món:</label>
                         <input type="text" name="name" value={formData.name} onChange={handleChange} style={inputStyle} required />
                     </div>
-                    {/* Input Description */}
                     <div style={fieldGroupStyle}>
                         <label style={labelStyle}>Mô tả:</label>
                         <textarea name="desc" value={formData.desc} onChange={handleChange} style={{...inputStyle, height: '60px'}} />
                     </div>
-                    {/* Input Price */}
                     <div style={fieldGroupStyle}>
-                         <label style={labelStyle}>Giá (VNĐ):</label>
-                         <input type="number" name="price" value={formData.price} onChange={handleChange} style={inputStyle} required min="0" />
+                            <label style={labelStyle}>Giá (VNĐ):</label>
+                            <input type="number" name="price" value={formData.price} onChange={handleChange} style={inputStyle} required min="0" />
                     </div>
-                     {/* Input Image URL */}
                     <div style={fieldGroupStyle}>
                         <label style={labelStyle}>Hình ảnh:</label>
-                        {/* Radio buttons để chọn kiểu nhập */}
                         <div style={{ marginBottom: '10px', display: 'flex', gap: '15px' }}>
-                            <label>
-                                <input 
-                                    type="radio" 
-                                    name="imageType" 
-                                    value="url" 
-                                    checked={imageInputType === 'url'} 
-                                    onChange={() => setImageInputType('url')} 
-                                /> Nhập URL
-                            </label>
-                            <label>
-                                <input 
-                                    type="radio" 
-                                    name="imageType" 
-                                    value="upload" 
-                                    checked={imageInputType === 'upload'} 
-                                    onChange={() => setImageInputType('upload')} 
-                                /> Tải file lên
-                            </label>
+                            <label><input type="radio" name="imageType" value="url" checked={imageInputType === 'url'} onChange={() => setImageInputType('url')} /> Nhập URL</label>
+                            <label><input type="radio" name="imageType" value="upload" checked={imageInputType === 'upload'} onChange={() => setImageInputType('upload')} /> Tải file lên</label>
                         </div>
-
-                        {/* Hiển thị input tương ứng */}
                         {imageInputType === 'url' ? (
-                            <input 
-                                type="url" 
-                                name="image" 
-                                value={formData.image} // Dùng value từ state
-                                onChange={handleChange} // Dùng handler chung
-                                style={inputStyle} 
-                                placeholder="https://example.com/image.jpg" 
-                            />
+                            <input type="url" name="image" value={formData.image} onChange={handleChange} style={inputStyle} placeholder="https://example.com/image.jpg" />
                         ) : (
-                            <input 
-                                type="file" 
-                                name="imageFile" // Tên khác để không ghi đè state formData.image ngay lập tức
-                                accept="image/png, image/jpeg, image/webp" // Chỉ chấp nhận ảnh
-                                onChange={handleFileChange} // Dùng handler riêng cho file
-                                style={inputStyle} 
-                            />
+                            <input type="file" name="imageFile" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} style={inputStyle} />
                         )}
-                        {/* Hiển thị tên file đã chọn (nếu có) */}
-                        {imageFile && imageInputType === 'upload' && (
-                            <p style={{ fontSize: 12, color: '#555', marginTop: 5 }}>Đã chọn: {imageFile.name}</p>
-                        )}
-                         {/* Hiển thị ảnh preview nhỏ (nếu là URL hợp lệ) */}
+                        {imageFile && imageInputType === 'upload' && (<p style={{ fontSize: 12, color: '#555', marginTop: 5 }}>Đã chọn: {imageFile.name}</p>)}
                         {formData.image && formData.image.startsWith('http') && imageInputType === 'url' && (
                             <img src={formData.image} alt="Preview" style={{ maxWidth: '100px', maxHeight: '100px', marginTop: '10px', border: '1px solid #eee' }} />
                         )}
                     </div>
-                    {/* Select Category */}
+                    
+                    {/* 💡 SỬA LẠI DROPDOWN CATEGORY */}
                     <div style={fieldGroupStyle}>
                         <label style={labelStyle}>Loại:</label>
                         <select name="category" value={formData.category} onChange={handleChange} style={inputStyle}>
-                            <option value="single">Món lẻ</option>
-                            <option value="combo">Combo</option>
+                            {/* Map qua danh sách categories động */}
+                            {categories.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
                         </select>
                     </div>
 
@@ -171,25 +195,33 @@ function MenuItemForm({ initialData = {}, onSubmit, onCancel, isSaving }) {
 export default function RestaurantMenuManager() {
     const [menuItems, setMenuItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false); // Trạng thái khi gọi API CUD
+    const [isSaving, setIsSaving] = useState(false); 
     const [showForm, setShowForm] = useState(false);
-    const [editingItem, setEditingItem] = useState(null); // Item đang được sửa
+    const [editingItem, setEditingItem] = useState(null);
     const toast = useToast();
 
-// 💡 --- State MỚI cho Lọc và Phân trang ---
-    const [filterCategory, setFilterCategory] = useState('all'); // 'all', 'single', 'combo'
+    // 💡 STATE MỚI
+    const [categories, setCategories] = useState(['single', 'combo']); // Danh sách danh mục
+    const [showCategoryModal, setShowCategoryModal] = useState(false); // Ẩn/hiện modal category
+
+    const [filterCategory, setFilterCategory] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 10; // Số sản phẩm mỗi trang
-const { currentUser } = useAuth(); // 💡 Lấy user hiện tại
+    const ITEMS_PER_PAGE = 10; 
+    const { currentUser } = useAuth();
     const merchantId = currentUser?.merchantId;
 
-    // --- Load Menu Items (Đã sửa để dùng merchantId) ---
+    // --- Load Menu Items (Đã sửa để load cả categories) ---
     const loadMenuItems = useCallback(async () => {
-        if (!merchantId) return; // Không có ID thì không tải
+        if (!merchantId) return;
         setIsLoading(true);
         try {
-            // 💡 Truyền merchantId vào hàm fetch
             const data = await fetchMenuItems(merchantId); 
+            
+            // 💡 Tự động đọc categories từ data
+            const existingCategories = data.map(item => item.category);
+            const uniqueCategories = [...new Set(['single', 'combo', ...existingCategories])]; // Đảm bảo 2 cái gốc luôn có
+            setCategories(uniqueCategories);
+
             setMenuItems(data.sort((a,b) => (a.name || '').localeCompare(b.name || '')));
         } catch (error) {
             toast.show('❌ Lỗi tải danh sách món ăn.', 'error');
@@ -343,15 +375,26 @@ const { currentUser } = useAuth(); // 💡 Lấy user hiện tại
         <div style={styles.wrap}>
             <div style={styles.header}>
                 <h1 style={{ margin: 0 }}>Quản lý Thực đơn</h1>
-                <button
-                    style={{ ...buttonStyle, background: '#f58134cc' }}
-                    onClick={() => { setEditingItem(null); setShowForm(true); }}
-                    disabled={isSaving}
-                >
-                    + Thêm món mới
-                </button>
+                {/* 💡 THÊM NÚT MỚI VÀ GÓI 2 NÚT VÀO 1 DIV */}
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        style={{ ...buttonStyle, background: '#4bb4ffff' }} // Đổi màu nút
+                        onClick={() => setShowCategoryModal(true)}
+                        disabled={isSaving}
+                    >
+                        + Thêm Danh mục
+                    </button>
+                    <button
+                        style={{ ...buttonStyle, background: '#f58134cc' }}
+                        onClick={() => { setEditingItem(null); setShowForm(true); }}
+                        disabled={isSaving}
+                    >
+                        + Thêm món mới
+                    </button>
+                </div>
             </div>
-{/* 💡 --- GIAO DIỆN BỘ LỌC MỚI --- */}
+            
+            {/* --- Filter UI --- */}
             <div style={styles.filterContainer}>
                 <button
                     style={filterCategory === 'all' ? {...buttonStyle, ...styles.filterButton, ...styles.filterActive} : {...buttonStyle, ...styles.filterButton}}
@@ -359,18 +402,17 @@ const { currentUser } = useAuth(); // 💡 Lấy user hiện tại
                 >
                     Tất cả ({menuItems.length})
                 </button>
-                <button
-                    style={filterCategory === 'single' ? {...buttonStyle, ...styles.filterButton, ...styles.filterActive} : {...buttonStyle, ...styles.filterButton}}
-                    onClick={() => handleFilterChange('single')}
-                >
-                    Món lẻ ({menuItems.filter(i => i.category === 'single').length})
-                </button>
-                <button
-                    style={filterCategory === 'combo' ? {...buttonStyle, ...styles.filterButton, ...styles.filterActive} : {...buttonStyle, ...styles.filterButton}}
-                    onClick={() => handleFilterChange('combo')}
-                >
-                    Combo ({menuItems.filter(i => i.category === 'combo').length})
-                </button>
+                
+                {/* 💡 LỌC THEO CATEGORIES ĐỘNG (Bỏ 'single' và 'combo' cứng) */}
+                {categories.filter(cat => cat !== 'all').map(cat => (
+                        <button
+                        key={cat}
+                        style={filterCategory === cat ? {...buttonStyle, ...styles.filterButton, ...styles.filterActive} : {...buttonStyle, ...styles.filterButton}}
+                        onClick={() => handleFilterChange(cat)}
+                    >
+                        {cat} ({menuItems.filter(i => i.category === cat).length})
+                    </button>
+                ))}
             </div>
 
             {/* 💡 --- DANH SÁCH MÓN ĂN (Dùng paginatedItems) --- */}
@@ -441,14 +483,29 @@ const { currentUser } = useAuth(); // 💡 Lấy user hiện tại
                     </button>
                 </div>
             )}
-
-            {/* Form Thêm/Sửa */}
+{/* --- Render Modals --- */}
             {showForm && (
                 <MenuItemForm
                     initialData={editingItem || {}}
                     onSubmit={editingItem ? handleUpdateItem : handleAddItem}
                     onCancel={() => { setShowForm(false); setEditingItem(null); }}
                     isSaving={isSaving}
+                    categories={categories} // 💡 Truyền categories vào form
+                />
+            )}
+
+            {/* 💡 RENDER MODAL CATEGORY MỚI */}
+            {showCategoryModal && (
+                <CategoryManagerModal
+                    existingCategories={categories}
+                    onClose={() => setShowCategoryModal(false)}
+                    onSave={(newCategoryList) => {
+                        setCategories(newCategoryList); // Cập nhật state
+                        setShowCategoryModal(false);
+                        // Ở PoC này, ta không cần lưu lên DB, 
+                        // nhưng nếu cần, bạn sẽ gọi API 'updateSettings' ở đây.
+                        toast.show('Đã cập nhật danh mục (PoC)', 'success');
+                    }}
                 />
             )}
         </div>  

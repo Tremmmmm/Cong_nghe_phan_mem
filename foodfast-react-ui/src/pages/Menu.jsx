@@ -165,19 +165,31 @@
                         <div className="row">
                             <div className="price">{formatVND(item.price || 0)}</div>
                             <div style={{display:'flex', gap:8}}>
-                                <button className={`heart ${isFav ? "active" : ""}`} onClick={() => fav.toggle(item.id)}>
+                                <button
+                                    type="button"
+                                    className={`heart ${isFav ? "active" : ""}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        fav.toggle(item.id);
+                                    }}
+                                    >
                                     {isFav ? "♥" : "♡"}
-                                </button>
-                                <button 
-                                    className="btn" 
+                                    </button>
+
+                                    <button
+                                    type="button"
+                                    className="btn"
                                     disabled={!isCurrentlyOpen}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         cart.add(item);
                                         toast.show(`Đã thêm ${item.name}`, 'success');
                                     }}
-                                >
+                                    >
                                     + Thêm
-                                </button>
+                                    </button>
                             </div>
                         </div>
                     </div>
