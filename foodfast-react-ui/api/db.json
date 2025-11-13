@@ -1153,10 +1153,112 @@
         "lat": 10.778601279903084,
         "lng": 106.68953175412491
       },
-      "status": "new",
+      "status": "completed",
       "payment": "MOMO",
       "payment_status": "paid",
-      "payment_txn_id": "MOCK-1763017122073"
+      "payment_txn_id": "MOCK-1763017122073",
+      "updatedAt": "2025-11-13T13:17:11.468Z",
+      "acceptedAt": "2025-11-13T13:16:54.026Z",
+      "readyAt": "2025-11-13T13:16:55.934Z",
+      "droneMissionId": "0a4b",
+      "pickedAt": "2025-11-13T13:17:04.589Z",
+      "deliveredAt": "2025-11-13T13:17:11.468Z"
+    },
+    {
+      "id": "nxvr",
+      "sessionId": "908e",
+      "userId": "7efa",
+      "userEmail": "c01@gmail.com",
+      "customerName": "customer",
+      "phone": "0998989898",
+      "address": "Số 2 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-6",
+          "name": "Cola",
+          "qty": 1,
+          "price": 15000,
+          "image": "/assets/images/menu/cocacola.jpg"
+        }
+      ],
+      "total": 15000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 35000,
+      "couponCode": "",
+      "createdAt": 1763041206360,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.784660843549963,
+        "lng": 106.68992522494625
+      },
+      "status": "completed",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1763041231400",
+      "updatedAt": "2025-11-13T13:42:10.864Z",
+      "acceptedAt": "2025-11-13T13:41:06.985Z",
+      "readyAt": "2025-11-13T13:41:10.544Z",
+      "droneMissionId": "222c",
+      "pickedAt": "2025-11-13T13:41:14.347Z"
+    },
+    {
+      "id": "70xj",
+      "sessionId": "908e",
+      "userId": "7efa",
+      "userEmail": "c01@gmail.com",
+      "customerName": "customer",
+      "phone": "0998989898",
+      "address": "Số 2 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "cb-3",
+          "name": "Combo3 Pizza + Coke",
+          "qty": 1,
+          "price": 99000,
+          "image": "/assets/images/menu/combo3.jpg"
+        }
+      ],
+      "total": 99000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 119000,
+      "couponCode": "",
+      "createdAt": 1763042454100,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.777561067831371,
+        "lng": 106.69280745830257
+      },
+      "status": "delivering",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1763042479135",
+      "updatedAt": "2025-11-13T14:01:57.131Z",
+      "acceptedAt": "2025-11-13T14:01:37.631Z",
+      "readyAt": "2025-11-13T14:01:47.765Z",
+      "droneMissionId": "451e",
+      "pickedAt": "2025-11-13T14:01:57.131Z"
     }
   ],
   "sessions": [
@@ -1578,6 +1680,72 @@
         [
           10.784,
           106.684
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "0a4b",
+      "orderId": "spqt",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-11-13T13:17:04.589Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 3,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.778601279903084,
+          106.68953175412491
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "222c",
+      "orderId": "nxvr",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-11-13T13:41:14.347Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 3,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.784660843549963,
+          106.68992522494625
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "451e",
+      "orderId": "70xj",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-11-13T14:01:57.131Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 2,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.777561067831371,
+          106.69280745830257
         ]
       ],
       "currentIndex": 0
@@ -4553,6 +4721,33 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1762418299431
+    },
+    {
+      "id": "cd3a",
+      "missionId": "0a4b",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763039824638
+    },
+    {
+      "id": "499b",
+      "missionId": "222c",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763041274388
+    },
+    {
+      "id": "4a69",
+      "missionId": "451e",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763042517168
     }
   ],
   "users": [
@@ -4921,6 +5116,23 @@
       "category": "single",
       "merchantId": "m001",
       "status": "approved"
+    }
+  ],
+  "carts": [
+    {
+      "id": "ff_cart_v2:ue:c01@gmail.com",
+      "merchantId": null,
+      "items": []
+    }
+  ],
+  "favorites": [
+    {
+      "id": "ff_fav_v1:ue:c01@gmail.com",
+      "ids": []
+    },
+    {
+      "id": "ff_cart_v2:ue:c01@gmail.com",
+      "ids": []
     }
   ]
 }
