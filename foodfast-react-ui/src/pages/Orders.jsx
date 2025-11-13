@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { myOrders } from "../utils/orderAPI.js";
+import { myOrders } from "../utils/orderAPI.js"; // Đảm bảo import từ file mới (nếu đã đổi)
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
-import MENU_ALL from "../data/menuData.js";
+// import MENU_ALL from "../data/menuData.js"; // 💡 Bỏ import dữ liệu tĩnh nếu không cần
 import { estimateETA, etaWindowLabel, formatCountdown } from "../utils/eta";
 
 function VND(n){ return (n||0).toLocaleString('vi-VN') + '₫' }
 const FALLBACK = "/assets/images/Delivery.png";
 
-// chuẩn hoá trạng thái để bật nút theo dõi
+// chuẩn hoá trạng thái
 const normalizeStatus = (s="") => {
   const x = String(s).toLowerCase();
   if (["delivering"].includes(x)) return "delivery";
@@ -17,6 +17,27 @@ const normalizeStatus = (s="") => {
   if (["accepted","preparing","ready"].includes(x)) return "processing";
   if (["new","pending","confirmed"].includes(x)) return "order";
   return "order";
+};
+
+// 💡 Hàm kiểm tra xem đơn hàng có "đang hoạt động" không
+const isActiveOrder = (o) => {
+    const status = (o.status || '').toLowerCase();
+    const excludeStatus = ['completed', 'done', 'delivered', 'cancelled', 'canceled'];
+    return !excludeStatus.includes(status);
+};
+
+// 💡 Hàm kiểm tra xem đơn có phải đặt hôm nay không
+const isToday = (dateString) => {
+    if (!dateString) return false;
+    try {
+        const orderDate = new Date(dateString);
+        const today = new Date();
+        return orderDate.getDate() === today.getDate() &&
+               orderDate.getMonth() === today.getMonth() &&
+               orderDate.getFullYear() === today.getFullYear();
+    } catch (e) {
+        return false;
+    }
 };
 
 export default function Orders() {
@@ -33,20 +54,31 @@ export default function Orders() {
   const [highlightId, setHighlightId] = useState(null);
   const [justClosed, setJustClosed] = useState(closedFlag);
 
-  const menuMap = useMemo(() => {
-    const m = {};
-    for (const it of MENU_ALL) m[it.id] = it;
-    return m;
-  }, []);
+  // 💡 Bỏ menuMap nếu không dùng, hoặc sửa để lấy từ API
+  // const menuMap = useMemo(() => {
+  //   const m = {};
+  //   // for (const it of MENU_ALL) m[it.id] = it; // Dùng dữ liệu tĩnh
+  //   return m;
+  // }, []);
 
   const fetchOrders = async () => {
+    if (!user) { // Nếu chưa login thì không fetch
+        setLoading(false);
+        setOrders([]);
+        return;
+    }
     try {
       setLoading(true);
       setError("");
+      
+      // 💡 Chỉ gọi API cho user hiện tại (nếu API hỗ trợ)
+      // Nếu myOrders chưa hỗ trợ lọc theo user, ta sẽ lọc ở frontend
       const { rows } = await myOrders({
         page: 1, limit: 50, status: "all", q: "",
         sort: "createdAt", order: "desc",
+        // (Nếu API hỗ trợ) userId: user.id
       });
+      
       setOrders(Array.isArray(rows) ? rows : []);
     } catch (e) {
       console.error(e);
@@ -57,7 +89,7 @@ export default function Orders() {
     }
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { fetchOrders(); }, [user]); // 💡 Thêm user vào dependency
 
   useEffect(() => {
     const onFocus = () => fetchOrders();
@@ -88,20 +120,29 @@ export default function Orders() {
   }, [justClosed]);
 
   // Lọc theo user & SẮP XẾP MỚI NHẤT LÊN TRÊN
-  const my = useMemo(() => {
-    const arr = user?.email ? orders.filter(o => o.userEmail === user.email) : orders.slice();
-    // sort: createdAt desc; fallback theo id desc nếu thiếu createdAt
-    arr.sort((a,b) => {
+  // 💡 SỬA LẠI LOGIC LỌC
+  const myCurrentOrders = useMemo(() => {
+    if (!user) return [];
+    
+    // 1. Lọc theo user
+    const userEmail = user.email; // Hoặc user.id tùy vào db.json
+    const my = orders.filter(o => (o.userEmail === userEmail || o.userId === user.id));
+
+    // 2. Lọc các đơn "Hiện tại" (Hôm nay VÀ Chưa xong)
+    const current = my.filter(o => 
+        isActiveOrder(o) && isToday(o.createdAt)
+    );
+    
+    // 3. Sắp xếp (mới nhất lên đầu)
+    current.sort((a,b) => {
       const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
       const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
-      if (tb !== ta) return tb - ta;
-      // fallback theo id (chuỗi số) desc
-      const ia = Number(String(a?.id).replace(/\D/g,'')) || 0;
-      const ib = Number(String(b?.id).replace(/\D/g,'')) || 0;
-      return ib - ia;
+      return tb - ta;
     });
-    return arr;
-  }, [orders, user?.email]);
+    
+    return current;
+  }, [orders, user]);
+
 
   const css = `
     .od-wrap{max-width:1100px;margin:24px auto;padding:0 16px}
@@ -130,9 +171,8 @@ export default function Orders() {
     .dark .card{background:#151515;border-color:#333}
     .dark .label{color:#aaa}
   `;
-
-  const getItemImage = (it) =>
-    it.image || menuMap[it.id]?.image || FALLBACK;
+// 💡 Sửa lại hàm này nếu không dùng menuMap
+  const getItemImage = (it) => it.image || FALLBACK;
 
   // ETA badge + countdown
   function EtaBadge({ order }) {
@@ -171,7 +211,7 @@ export default function Orders() {
         to={`/orders/${orderParam}/tracking`}
         className="btn"
         style={{textDecoration: "none",background: "#ff7a59",color: "#fff",border: "none",borderRadius: "10px",fontWeight: "600",padding: "6px 14px",
-       }}
+        }}
         aria-label={`Xem hành trình đơn #${order?.id}`}
       >
         Xem hành trình
@@ -184,7 +224,7 @@ export default function Orders() {
       <style>{css}</style>
 
       <div className="top">
-        <h2 className="title">Đơn hàng của bạn</h2>
+        <h2 className="title">Đơn hàng hiện tại</h2>
         <button className="btn" onClick={fetchOrders}>Refresh</button>
       </div>
 
@@ -209,10 +249,13 @@ export default function Orders() {
         <div>Đang tải…</div>
       ) : error ? (
         <div style={{color:'#c24a26'}}>{error}</div>
-      ) : my.length === 0 ? (
-        <div>Chưa có đơn hàng nào.</div>
+      ) : !user ? (
+        <div>Vui lòng <Link to="/signin">đăng nhập</Link> để xem đơn hàng.</div>
+      ) : myCurrentOrders.length === 0 ? (
+        <div>Bạn không có đơn hàng nào đang hoạt động hôm nay.</div>
       ) : (
-        my.map(o => (
+        // 💡 Map qua myCurrentOrders
+        myCurrentOrders.map(o => (
           <div className={`card ${String(o.id)===String(highlightId)?'focus':''}`} key={o.id} id={`ord-${o.id}`}>
             <div className="row">
               <div><span className="label">Mã đơn:</span> <strong>{o.id}</strong></div>
@@ -225,14 +268,13 @@ export default function Orders() {
               <div className="label">Người nhận:</div>
               <div><strong>{o.customerName}</strong> • {o.phone}</div>
               <div>{o.address}</div>
-              {/* Bạn chỉ dùng Drone */}
               <div className="muted">Giao bằng: <b>Drone</b></div>
-              <div className="muted"><EtaBadge order={o} /></div>
+              {/* <div className="muted"><EtaBadge order={o} /></div> */}
             </div>
 
             <div className="items">
-              {o.items?.map(it => (
-                <div className="it" key={`${o.id}-${it.id}`}>
+              {o.items?.map((it, idx) => (
+                <div className="it" key={`${o.id}-${idx}`}>
                   <img className="thumb" src={getItemImage(it)} alt={it.name} onError={(e)=>{e.currentTarget.src=FALLBACK}} />
                   <div className="meta">
                     <b>{it.name}</b>

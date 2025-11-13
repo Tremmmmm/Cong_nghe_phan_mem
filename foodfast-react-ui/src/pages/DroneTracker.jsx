@@ -139,9 +139,10 @@ const patchOrderStatusSafe = async (id, status) => {
 export default function DroneTracker() {
   const { id: rawId } = useParams();
   const orderId = normalizeOrderId(rawId);
-  const { user } = useAuth();
-  const backHref = user?.isAdmin ? "/admin/drone" : "/orders";
-
+  const { user, isMerchant } = useAuth(); 
+const backHref = isSuperAdmin ? "/admin/drone"
+                  : isMerchant   ? "/merchant/drone"
+                                  : "/orders";  
   // data
   const [order, setOrder] = useState(null);
   const [mission, setMission] = useState(null);
@@ -174,6 +175,18 @@ export default function DroneTracker() {
   const isCompleted = (s) => ["completed", "done", "delivered"].includes(String(s).toLowerCase());
   const isActive = (s) => String(s).toLowerCase() === "delivering";
 
+  // Chỉ merchant chủ của đơn mới được bấm "Bắt đầu giao hàng"
+  const merchantOwnsThisOrder = isMerchant && (() => {
+    const uMid = String(user?.merchantId ?? "");
+    const cand = [
+      order?.merchantId,
+      order?.restaurant?.merchantId,
+      order?.store?.merchantId,
+      order?.merchant?.id,
+    ].map(v => v != null ? String(v) : "");
+    return uMid && cand.includes(uMid);
+  })();
+  const canStart = merchantOwnsThisOrder && !isCompleted(order?.status);
   /* ----- fetch order + mission ----- */
   useEffect(() => {
     let alive = true;
@@ -516,7 +529,7 @@ export default function DroneTracker() {
         <style>{styles}</style>
         <div className="hdr">
           <h2 style={{ margin: 0 }}>Theo dõi Drone</h2>
-          <Link to={backHref} className="btn secondary" style={{ textDecoration: "none" }}>
+          <Link to={backHref}  className="btn secondary" style={{ textDecoration: "none" }}>
             ← Về danh sách Drone
           </Link>
         </div>
@@ -571,10 +584,11 @@ export default function DroneTracker() {
               <button
                 className="btn ghost"
                 onClick={() => (demoOn ? stopDemoFlight() : startDemoFlight())}
-                disabled={completed}  // ✅ Completed: không cho “Bắt đầu giao hàng”
+                disabled={!canStart}
+                title={!canStart ? "Chỉ chủ cửa hàng của đơn này mới có quyền bắt đầu giao hàng" : ""}
               >
-                {demoOn ? "Dừng giao hàng" : "Bắt đầu giao hàng"}
-              </button>
+                  {demoOn ? "Dừng giao hàng" : "Bắt đầu giao hàng"}
+                </button>
             </div>
             <div id="drone-map" style={{ height: "100%", width: "100%" }} />
           </div>

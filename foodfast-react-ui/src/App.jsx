@@ -104,6 +104,7 @@ export default function App() {
         <Route path="menu" element={<RestaurantMenu />} />
         <Route path="settings" element={<SettingRestaurant />} />
         <Route path="drone" element={<DroneOrders />} />
+        <Route path="drone/:id" element={<DroneTracker />} />
       </Route>
 
       {/* ===== 3. SUPER ADMIN PANEL (/admin) ===== */}
@@ -122,13 +123,14 @@ export default function App() {
         <Route path="merchants/:merchantId" element={<AdminMerchantDetail />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="drone" element={<DroneOrders />} />
+        <Route path="drone/:id" element={<DroneTracker />} />
         {/* <Route path="restaurant" element={<RestaurantOrders />} /> */}
       </Route>
 
       {/* ===== 4. FALLBACKS ===== */}
       {/* Nếu gõ /admin... mà không khớp, về dashboard (của vai trò tương ứng) */}
-      <Route path="/admin*" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route path="/merchant*" element={<Navigate to="/merchant/dashboard" replace />} />
+      <Route path="/admin/*" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="/merchant/*" element={<Navigate to="/merchant/dashboard" replace />} />  
       {/* Gõ linh tinh thì về trang chủ */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

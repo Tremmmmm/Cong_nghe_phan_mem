@@ -100,10 +100,10 @@ const normalizeStatus = (s = "") => {
 // Gom nhóm mission status → 4 nhóm chính (chỉ dùng cho phần thống kê)
 function missionGroup(ms) {
   const s = String(ms || "").toLowerCase();
-  if (["queued", "preflight"].includes(s)) return "waiting";            // Chờ cất cánh
-  if (["in_progress","delivering","flight","takeoff","enroute","descending","returning"].includes(s)) return "active"; // Đang giao/đang bay
-  if (["dropoff", "landed"].includes(s)) return "landed";               // Đã hạ cánh
-  if (["failed", "cancelled"].includes(s)) return "error";              // Lỗi/Huỷ
+  if (["queued","preflight","ready","pickup","waiting"].includes(s)) return "waiting";     // Chờ lấy hàng
+  if (["in_progress","delivering","flight","takeoff","enroute","descending","returning"].includes(s)) return "active"; // Đang bay
+  if (["dropoff","landed","delivered","completed"].includes(s)) return "done";            // Đã giao hàng
+  if (["failed","cancelled","canceled","error"].includes(s)) return "error";              // Lỗi/Hủy
   return null;
 }
 
@@ -114,11 +114,11 @@ function isOrderDone(order) {
 }
 
 // Cho phép xem hành trình? (đang giao cần mission, completed thì luôn cho xem)
-const canTrack = (order, mission) => {
-  const st = normalizeStatus(order?.status);
-  const hasMission = !!mission?.id || !!order?.droneMissionId;
-  return st === "delivery" ? hasMission : st === "done";
-};
+  const canTrack = (order, mission) => {
+    const st = normalizeStatus(order?.status);
+    const hasMission = !!mission?.id || !!order?.droneMissionId;
+    return st === "delivery" && hasMission;
+    };
 
 /* ====================== MissionCell: chỉ 3 trạng thái ====================== */
 /** Hiển thị đúng 3 trạng thái:
@@ -128,26 +128,20 @@ const canTrack = (order, mission) => {
  *  (*) bất kỳ biến thể delivering/delivery… đều gom về Delivery qua normalizeStatus
  */
 function MissionCell3({ order, mission, telemetry }) {
-  const st = normalizeStatus(order?.status); // order | processing | delivery | done | cancelled
-  let label = "Chờ cất cánh";
+  const g = missionGroup(mission?.status);
+  let label = "Chờ lấy hàng";
   let group = "waiting";
+  if (g === "active") { label = "Đang bay"; group = "active"; }
+  else if (g === "done") { label = "Đã giao hàng"; group = "done"; }
+  else if (g === "error") { label = "Lỗi/Hủy"; group = "error"; }
 
-  if (st === "delivery") {
-    label = "Đang giao";
-    group = "active";
-  } else if (st === "done") {
-    label = "Đã hoàn thành";
-    group = "landed";
-  } else {
-    label = "Chờ cất cánh"; // Ready
-    group = "waiting";
-  }
 
   // Màu sắc
   const palette = {
-    waiting: { bg:"#fff7cd", br:"#ffeaa1", tx:"#7a5a00" }, // Chờ cất cánh
-    active:  { bg:"#e8f5ff", br:"#cfe8ff", tx:"#0b68b3" }, // Đang giao
-    landed:  { bg:"#dcfce7", br:"#bbf7d0", tx:"#166534" }, // Đã hoàn thành
+    waiting: { bg:"#fff7cd", br:"#ffeaa1", tx:"#7a5900c2" }, // Chờ lấy hàng
+    active:  { bg:"#e8f5ff", br:"#cfe8ff", tx:"#0b67b3b5" }, // Đang bay
+    done:    { bg:"#dcfce7", br:"#bbf7d0", tx:"#166534b4" }, // Đã giao hàng
+    error:   { bg:"#fde8e8", br:"#f9c7c7", tx:"#b80d0dc1" }, // Lỗi/Hủy
     default: { bg:"#f3f4f6", br:"#e5e7eb", tx:"#111827" },
   };
   const c = palette[group] || palette.default;
@@ -199,15 +193,12 @@ const Dash = () => <span className="mini">—</span>;
 
 /* ====================== Main ====================== */
 export default function DroneOrders() {
-const { user, isMerchant, isSuperAdmin } = useAuth();
-
+const { user, isMerchant, isSuperAdmin } = useAuth(); 
   // Nếu là merchant thì lấy ID, nếu là Super Admin thì null (để lấy tất cả)
   const merchantId = isMerchant ? user?.merchantId : null;
   
   // Biến isAdmin có thể lấy trực tiếp từ isSuperAdmin hoặc user.isAdmin tùy logic của bạn
-  // Nếu muốn giữ biến isAdmin như cũ:
-  const isAdmin = !!user?.isAdmin; // Hoặc dùng luôn isSuperAdmin nếu chỉ Super Admin mới là admin
-
+  // Nếu muốn giữ biến isAdmin như cũ: 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -318,7 +309,7 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
 
   // Tóm tắt theo MISSION (đếm đúng nghĩa)
   const summary = useMemo(() => {
-    const counts = { active: 0, waiting: 0, landed: 0, error: 0, noMission: 0 };
+    const counts = { active: 0, waiting: 0, done: 0, error: 0, noMission: 0 };
 
     for (const o of orders) {
       const m =
@@ -336,7 +327,7 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
       // "Chờ cất cánh" chỉ khi order CHƯA xong
       if (g === "waiting" && !isOrderDone(o)) counts.waiting++;
       else if (g === "active") counts.active++;
-      else if (g === "landed") counts.landed++;
+      else if (g === "done") counts.done++;
       else if (g === "error") counts.error++;
     }
 
@@ -355,9 +346,9 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
       <div className="grid">
         <div className="card"><div className="title">Tổng đơn Drone</div><div className="val">{summary.total}</div></div>
         <div className="card"><div className="title">Đang bay</div><div className="val">{summary.active}</div></div>
-        <div className="card"><div className="title">Chờ cất cánh</div><div className="val">{summary.waiting}</div></div>
-        <div className="card"><div className="title">Đã hạ cánh</div><div className="val">{summary.landed}</div></div>
-        <div className="card"><div className="title">Lỗi/Huỷ</div><div className="val">{summary.error}</div></div>
+        <div className="card"><div className="title">Chờ lấy hàng</div><div className="val">{summary.waiting}</div></div>
+        <div className="card"><div className="title">Đã giao hàng</div><div className="val">{summary.done}</div></div>
+        <div className="card"><div className="title">Lỗi/Hủy</div><div className="val">{summary.error}</div></div>
       </div>
 
       {loading ? (
@@ -399,9 +390,12 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
               const orderParam = encodeURIComponent(String(o.id).replace(/^#/, ""));
               const hasMission = !!m?.id;
               const trackable = canTrack(o, m);
-
+              const href =
+                  isSuperAdmin ? `/admin/drone/${orderParam}` :
+                  isMerchant   ? `/merchant/drone/${orderParam}` :
+                                `/orders/${orderParam}/tracking`;
               // Nhãn Việt cho pill trạng thái ĐƠN
-               const orderCls = normalizeStatus(o.status);
+              const orderCls = normalizeStatus(o.status);
               const orderLabelEN =
                 {
                   order: "Order",
@@ -449,22 +443,18 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
 
                   <td className="cell right">
                     {trackable ? (
-                      <Link
-                        to={isAdmin ? `/admin/drone/${orderParam}` : `/orders/${orderParam}/tracking`}
-                        className="btn"
-                        style={{ textDecoration: "none", minWidth: 140 }}
-                      >
-                        Xem hành trình
-                      </Link>
-                    ) : (
-                      <button
-                        className="btn"
-                        disabled
-                        style={{ minWidth: 140, background: "#d1d5db", color: "#6b7280" }}
-                      >
-                        Xem hành trình
-                      </button>
-                    )}
+                  <Link
+                    to={href}
+                    className="btn"
+                    style={{ textDecoration: "none", minWidth: 140 }}
+                  >
+                    Xem hành trình
+                  </Link>
+                ) : (
+                  <button className="btn" disabled style={{ minWidth: 140, background: "#d1d5db", color: "#6b7280" }}>
+                    Xem hành trình
+                  </button>
+                )}
                   </td>
                 </tr>
               );

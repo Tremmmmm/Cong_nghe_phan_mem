@@ -184,7 +184,7 @@
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
-                                        cart.add(item);
+                                        cart.add(item, merchantId);
                                         toast.show(`Đã thêm ${item.name}`, 'success');
                                     }}
                                     >
@@ -209,7 +209,7 @@
         const todayKey = DAYS_OF_WEEK[currentDayIndex];
 
         return (
-            <div className="menu-wrap">
+            <main  className="menu-wrap" >
                 {/* Header thông tin cửa hàng */}
                 <div className="menu-head">
                     <div>
@@ -264,6 +264,7 @@
                 {menuItems.length === 0 && (
                     <p style={{textAlign:'center', padding: 40, color:'#999'}}>Nhà hàng chưa cập nhật thực đơn.</p>
                 )}
-            </div>
+             
+            </main>
         );
     }

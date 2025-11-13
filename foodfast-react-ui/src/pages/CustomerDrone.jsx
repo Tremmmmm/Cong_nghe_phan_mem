@@ -214,9 +214,9 @@ export default function CustomerDrone() {
       <div className="grid">
         <div className="card"><div className="title">Tổng đơn Drone</div><div className="val">{summary.total}</div></div>
         <div className="card"><div className="title">Đang bay</div><div className="val">{summary.active}</div></div>
-        <div className="card"><div className="title">Chờ cất cánh</div><div className="val">{summary.waiting}</div></div>
-        <div className="card"><div className="title">Đã hạ cánh</div><div className="val">{summary.landed}</div></div>
-        <div className="card"><div className="title">Lỗi/Huỷ</div><div className="val">{summary.error}</div></div>
+        <div className="card"><div className="title">Chờ lấy hàng</div><div className="val">{summary.waiting}</div></div>
+        <div className="title"><div className="title">Đã giao hàng</div><div className="val">{summary.done}</div></div>
+        <div className="card"><div className="title">Lỗi/Hủy</div><div className="val">{summary.error}</div></div>
       </div>
 
       {loading ? (
