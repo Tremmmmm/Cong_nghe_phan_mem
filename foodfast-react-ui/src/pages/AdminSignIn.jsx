@@ -121,7 +121,7 @@ export default function AdminSignIn() {
   return (
     <section className="auth-hero">
       <div className="auth-card">
-        <h1 className="auth-title">Admin Sign In</h1>
+        <h1 className="auth-title">Đăng Nhập Admin</h1>
         <div className="zigzag" />
 
         <form className="form" onSubmit={submit}>
@@ -139,7 +139,7 @@ export default function AdminSignIn() {
             onChange={(e) => setPass(e.target.value)}
           />
           <button className="btn" type="submit" disabled={loading}>
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? "Signing In..." : "Đăng nhập"}
           </button>
         </form>
 

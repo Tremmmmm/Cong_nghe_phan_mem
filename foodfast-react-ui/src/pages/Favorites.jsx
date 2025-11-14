@@ -1,6 +1,8 @@
-import { useEffect, useMemo } from "react";
+// src/pages/Favorites.jsx
+import { useEffect, useMemo, useState } from "react"; // 💡 Thêm useState
 import { Link } from "react-router-dom";
-import MENU_ALL from "../data/menuData";
+// 💡 Bỏ MENU_ALL, import API
+import { fetchMenuItems } from "../utils/menuAPI.js"; // 💡 Giả sử bạn có file này
 import { useFav } from "../context/FavContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
@@ -9,10 +11,22 @@ export default function Favorites() {
   const { ids, toggle, has, count } = useFav();
   const { add } = useCart();
   const toast = useToast();
+  
+  // 💡 1. Fetch menuItems để lấy thông tin (name, price, merchantId)
+  const [menuMap, setMenuMap] = useState(new Map());
+  useEffect(() => {
+    // 💡 Dùng menuAPI.js (file bạn đã có)
+    fetchMenuItems() 
+      .then(items => {
+        setMenuMap(new Map(items.map(item => [item.id, item])));
+      });
+  }, []);
 
-  // map id -> item
-  const items = ids.map(id => MENU_ALL.find(x => x.id === id)).filter(Boolean);
-
+  // 💡 2. Lấy chi tiết món ăn từ map
+  const items = useMemo(() => 
+    ids.map(id => menuMap.get(id)).filter(Boolean),
+    [ids, menuMap]
+  );
   const styles = useMemo(
     () => `
       .fav-wrap{max-width:1140px;margin:24px auto;padding:0 16px}
@@ -57,13 +71,17 @@ export default function Favorites() {
     encodeURIComponent(
       `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'>
         <rect width='100%' height='100%' fill='#f1f1f1'/>
-        <text x='50%' y='50%' text-anchor='middle' fill='#bbb' font-size='20' font-family='Arial'>Food Image</text>
+        <text x='50%' y='50%' text-anchor='middle' fill='#bbb' font-size='20' font-family='Arial'>Hình món</text>
       </svg>`
     );
 
   const handleAddAllToCart = () => {
     if (items.length === 0) return;
-    items.forEach(it => add({ id: it.id, name: it.name, price: it.price, image: it.image }));
+    // 💡 3. Sửa hàm addAll (chỉ thêm nếu cùng 1 nhà hàng)
+    const firstMerchantId = items[0].merchantId;
+    for (const it of items) {
+      add(it, it.merchantId); // Hàm add sẽ tự kiểm tra
+    }
     toast.show(`Đã thêm ${items.length} món vào giỏ`, "success");
   };
 
@@ -80,7 +98,7 @@ export default function Favorites() {
 
       {items.length === 0 ? (
         <div className="empty">
-          Chưa có món yêu thích. Vào trang <Link to="/menu" style={{fontWeight:700}}>Menu</Link> bấm ❤️ để thêm nhé.
+          Chưa có món yêu thích. Vào trang <Link to="/menu" style={{fontWeight:700}}>Thực đơn</Link> bấm ❤️ để thêm nhé.
         </div>
       ) : (
         <>
@@ -92,7 +110,7 @@ export default function Favorites() {
               Thêm tất cả vào giỏ
             </button>
             <button className="btn danger" onClick={handleClearAllFav}>
-              Xoá hết favorites
+              Xoá hết yêu thích
             </button>
           </div>
 
@@ -107,25 +125,30 @@ export default function Favorites() {
                     <div style={{opacity:.7}}>{it.price.toLocaleString()}₫</div>
 
                     <div className="row">
-                      <button
-                        className="btn primary"
-                        onClick={() => {
-                          add({ id: it.id, name: it.name, price: it.price, image: it.image });
-                          toast.show(`Đã thêm ${it.name} vào giỏ`, "success");
-                        }}
-                      >
-                        Thêm vào giỏ
-                      </button>
+                    <button
+                      className="btn primary"
+                      onClick={() => {
+                        // 💡 4. SỬA HÀM ADD (truyền 2 tham số)
+                        add(it, it.merchantId);
+                      }}
+                    >
+                      Thêm vào giỏ
+                    </button>
 
                       <button
                         className="heart"
                         onClick={() => {
                           toggle(it.id);
-                          toast.show(isFav ? `Đã bỏ lưu ${it.name}` : `Đã lưu ${it.name}`, "info");
+                          toast.show(
+                            isFav
+                              ? `Đã bỏ khỏi yêu thích ${it.name}`
+                              : `Đã thêm vào yêu thích ${it.name}`,
+                            "info"
+                          );
                         }}
                         title={isFav ? "Bỏ lưu" : "Lưu"}
                       >
-                        <span role="img" aria-label="heart">❤️</span> {isFav ? "Saved" : "Save"}
+                        <span role="img" aria-label="trái tim">❤️</span> {isFav ? "Bỏ lưu" : "Lưu"}
                       </button>
                     </div>
                   </div>

@@ -1,4 +1,3 @@
-// src/components/Header.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
@@ -11,6 +10,7 @@ import logo from "/assets/images/logo.png";
 export default function Header() {
   const navigate = useNavigate();
 
+  // Lấy thông tin user để kiểm tra đăng nhập
   const { user, signOut } = useAuth();
   const { items } = useCart();
   const { count: favCount } = useFav();
@@ -21,6 +21,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const ddRef = useRef(null);
 
+  // Đóng dropdown khi click ra ngoài
   useEffect(() => {
     const onClick = (e) => {
       if (ddRef.current && !ddRef.current.contains(e.target)) setOpen(false);
@@ -34,7 +35,6 @@ export default function Header() {
     };
   }, []);
 
-  // ✅ useMemo phải nhận 1 function
   const styles = useMemo(() => `
     .ff-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #eee}
     .ff-h-wrap{max-width:1140px;margin:0 auto;padding:10px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
@@ -66,14 +66,13 @@ export default function Header() {
 
     .dropdown{
       position:absolute;right:0;top:calc(100% + 8px);
-      min-width:200px;background:#fff;border:1px solid #eee;border-radius:16px;
+      min-width:220px;background:#fff;border:1px solid #eee;border-radius:16px;
       box-shadow:0 12px 32px rgba(0,0,0,.12);
       overflow:hidden;padding:6px 0;
     }
     .dropdown a,.dropdown button{
       display:flex;align-items:center;justify-content:center;
-      width:100%;height:44px;
-      background:none;border:none;text-decoration:none;cursor:pointer;
+      width:100%;height:44px;background:none;border:none;text-decoration:none;cursor:pointer;
       color:#2b2b2b;font-size:14.5px;font-weight:700;letter-spacing:.2px;text-align:center;padding:0;
       transition:background .15s ease;
     }
@@ -123,33 +122,41 @@ export default function Header() {
         {/* Nav center */}
         <nav className="nav">
           <ul>
-            <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Home</NavLink></li>
-            <li><NavLink to="/menu" className={({isActive})=>isActive?"active":""}>Menu</NavLink></li>
-            <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Favorites</NavLink></li>
-            <li><NavLink to="/orders" className={({isActive})=>isActive?"active":""}>Orders</NavLink></li>
-            <li><NavLink to="/admin" className={({isActive})=>isActive?"active":""}>Admin</NavLink></li>
+            {/* Luôn hiện Trang chủ */}
+            <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Trang chủ</NavLink></li>
+            
+            {/* Ẩn Thực đơn (đã xóa) */}
+            
+            {/* Chỉ hiện Yêu thích khi đã đăng nhập */}
+            {user && (
+              <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Yêu thích</NavLink></li>
+            )}
           </ul>
         </nav>
 
         {/* Right */}
         <div className="right">
           <form className="search" onSubmit={onSearch}>
-            <input placeholder="Search Here..." value={q} onChange={(e)=>setQ(e.target.value)} />
-            <button type="submit" title="Search">🔍</button>
+            <input placeholder="Tìm món ăn..." value={q} onChange={(e)=>setQ(e.target.value)} />
+            <button type="submit" title="Tìm kiếm">🔍</button>
           </form>
 
-          <NavLink to="/favorites" className="icon-box" title="Favorites">
-            <span className="ico" role="img" aria-label="heart">❤️</span>
-            {favCount > 0 && <span className="badge">{favCount}</span>}
-          </NavLink>
+          {/* Chỉ hiện Icon Yêu thích khi đã đăng nhập */}
+          {user && (
+            <NavLink to="/favorites" className="icon-box" title="Yêu thích">
+              <span className="ico" role="img" aria-label="heart">❤️</span>
+              {favCount > 0 && <span className="badge">{favCount}</span>}
+            </NavLink>
+          )}
 
-          <NavLink to="/cart" className="icon-box" title="Cart">
+          {/* Giỏ hàng luôn hiện để khách có thể thêm đồ trước khi đăng nhập */}
+          <NavLink to="/cart" className="icon-box" title="Giỏ hàng">
             <span className="ico" role="img" aria-label="cart">🛒</span>
             {cartCount > 0 && <span className="badge">{cartCount}</span>}
           </NavLink>
 
           {!user ? (
-            <NavLink to="/signin" className={({isActive})=>isActive?"active":""}>Sign In</NavLink>
+            <NavLink to="/signin" className={({isActive})=>isActive?"active":""}>Đăng nhập</NavLink>
           ) : (
             <div className="user" ref={ddRef}>
               <button
@@ -161,17 +168,17 @@ export default function Header() {
               >
                 <span className="avatar">{first}</span>
                 <span className="uname">{user.name || user.email}</span>
-                <span>▾</span>
+                <span aria-hidden>▾</span>
               </button>
               {open && (
-                <div className="dropdown" role="menu">
-                  {/* ✅ My Orders vào /orders */}
-                  <NavLink to="/orders" onClick={()=>setOpen(false)}>My Orders</NavLink>
-                  <NavLink to="/profile" onClick={()=>setOpen(false)}>Settings</NavLink>
-                  {user?.isAdmin && (
-                    <NavLink to="/admin/orders" onClick={()=>setOpen(false)}>Admin Panel</NavLink>
-                  )}
-                  <button onClick={()=>{ signOut(); setOpen(false); navigate("/signin"); }}>Sign Out</button>
+                <div className="dropdown" role="menu" aria-label="User menu">
+                  <NavLink to="/orders" onClick={()=>setOpen(false)}>Đơn của tôi</NavLink>
+                  <NavLink to="/history" onClick={()=>setOpen(false)}>Lịch sử đơn</NavLink>
+                  <NavLink to="/profile" onClick={()=>setOpen(false)}>Cài đặt</NavLink>
+                    
+                  <button onClick={()=>{ signOut(); setOpen(false); navigate("/signin"); }}>
+                    Đăng xuất
+                  </button>
                 </div>
               )}
             </div>

@@ -14,6 +14,7 @@ export default function Footer() {
     .ff-brand{
       display:flex; flex-direction:column; gap:10px; color:#555;
     }
+      .ff-brand div{ margin:0;font-size:20px;text-align:center;line-height:1.1;font-weight:900;color:#ff6b35;font-family: 'Times New Roman', Times, serif;}
     .ff-brand-logo{ height:34px; width:auto; }
     .ff-title{
       font-weight:800; font-size:20px; color:#222; margin-bottom:8px;
@@ -65,17 +66,8 @@ export default function Footer() {
         {/* Brand + tagline */}
         <div className="ff-brand">
           <img className="ff-brand-logo" src="/assets/images/logo.png" alt="FoodFast" onError={(e)=>{e.currentTarget.style.display='none'}} />
-          <div>You'll wonder how you ever lived without us.</div>
-        </div>
-
-        {/* Open Hours */}
-        <div>
-          <div className="ff-title">Open Hours</div>
-          <ul className="ff-list">
-            <li className="ff-hours-li"><span className="ff-dot" /> Mon–Thurs : 9am – 22pm</li>
-            <li className="ff-hours-li"><span className="ff-dot" /> Fri–Sun : 11am – 22pm</li>
-          </ul>
-        </div>
+          <div>FASTFOOD</div>
+        </div> 
 
         {/* Links */}
         <div>
@@ -83,7 +75,7 @@ export default function Footer() {
           <ul className="ff-list">
             <li><Link className="ff-link" to="/">Home</Link></li>
             <li><Link className="ff-link" to="/menu">Menu</Link></li>
-            <li><Link className="ff-link" to="/favorites">Our Team</Link></li>
+            <li><Link className="ff-link" to="/">Our Team</Link></li>
           </ul>
         </div>
 
@@ -91,9 +83,9 @@ export default function Footer() {
         <div>
           <div className="ff-title">Company</div>
           <ul className="ff-list">
-            <li><a className="ff-link" href="#" onClick={(e)=>e.preventDefault()}>Terms &amp; Conditions</a></li>
-            <li><a className="ff-link" href="#" onClick={(e)=>e.preventDefault()}>Privacy Policy</a></li>
-            <li><a className="ff-link" href="#" onClick={(e)=>e.preventDefault()}>Cookie Policy</a></li>
+            <li><a className="ff-link" href="/" onClick={(e)=>e.preventDefault()}>Terms &amp; Conditions</a></li>
+            <li><a className="ff-link" href="/" onClick={(e)=>e.preventDefault()}>Privacy Policy</a></li>
+            <li><a className="ff-link" href="/" onClick={(e)=>e.preventDefault()}>Cookie Policy</a></li>
           </ul>
         </div>
       </div>

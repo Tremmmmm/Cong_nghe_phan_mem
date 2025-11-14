@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { formatVND } from "../utils/format";
 
 export default function Cart() {
-  const { items, add, dec, remove, clear, total } = useCart();
+  const { items, add, dec, remove, clear, total, merchantId } = useCart();
   const navigate = useNavigate();
 
   const styles = useMemo(() => `
@@ -49,16 +50,16 @@ export default function Cart() {
               <img className="thumb" src={it.image || "/assets/images/placeholder.png"} alt={it.name} />
               <div>
                 <div className="name">{it.name}</div>
-                <div style={{opacity:.7}}>{it.price.toLocaleString()}₫</div>
+                <div style={{opacity:.7}}>{formatVND(it.price)}</div>
               </div>
 
               <div className="counter">
                 <button className="pill" onClick={() => dec(it.id)}>-</button>
                 <div style={{minWidth:18,textAlign:'center'}}>{it.qty}</div>
-                <button className="pill" onClick={() => add(it)}>+</button>
+                <button className="pill" onClick={() => add(it, merchantId)}>+</button>
               </div>
 
-              <div className="price">{(it.price * it.qty).toLocaleString()}₫</div>
+              <div className="price">{formatVND((it.price || 0) * (it.qty || 0))}</div>
 
               <div style={{gridColumn:'1 / -1'}}>
                 <button className="btn danger" onClick={() => remove(it.id)}>Xoá</button>
@@ -66,7 +67,7 @@ export default function Cart() {
             </div>
           ))}
 
-          <div className="total">Tổng: {total.toLocaleString()}₫</div>
+          <div className="total">Tổng: {formatVND(total)}</div>
           <div className="row-end">
             <button className="btn-ghost" onClick={clear}>Xoá giỏ</button>
             <button className="btn" onClick={() => navigate("/checkout")} disabled={items.length === 0}>

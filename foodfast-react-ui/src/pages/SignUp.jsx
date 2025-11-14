@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { isPhoneVN } from "../utils/validators";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function SignUp() {
     name: "", address: "", email: "", phone: "", pass1: "", pass2: ""
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const styles = useMemo(
     () => `
@@ -38,6 +40,7 @@ export default function SignUp() {
       linear-gradient(45deg,  #ffb54d 25%, transparent 25%) 0px 0/12px 12px;}
     .form{ width:min(560px, 92%); margin:0 auto; display:grid; gap:14px;}
     .input{ height:44px; border-radius:12px; border:1px solid #e6e6ea; padding:0 14px; background:#fff; outline:none; font-size:14px; box-shadow: inset 0 3px 6px rgba(0,0,0,.06);}
+    .err{ color:#c24a26; font-size:12px; margin:-6px 2px 6px }
     .btn{ margin: 6px auto 0; height:44px; min-width:160px; padding:0 22px; border-radius:26px; border:none; cursor:pointer; color:#fff; font-weight:700;
       background: linear-gradient(135deg, #ffa62b, #ff7a59); box-shadow: 0 6px 14px rgba(255,122,89,.35);}
     .btn[disabled]{ opacity:.6; cursor:not-allowed }
@@ -60,28 +63,39 @@ export default function SignUp() {
     }
   }, [styles]);
 
-  const bind = (k) => ({
+  const bind = (k, extra = {}) => ({
     value: form[k],
     onChange: (e) => setForm({ ...form, [k]: e.target.value }),
+    ...extra,
   });
 
   const submit = async (e) => {
     e.preventDefault();
-    const { name, email, phone, pass1, pass2 } = form;
-    if (!name || !email || !pass1 || !pass2) {
-      toast.show("Vui lòng điền các trường bắt buộc", "error");
-      return;
-    }
-    if (pass1 !== pass2) {
-      toast.show("Mật khẩu nhập lại không khớp", "error");
-      return;
-    }
+    const { name, email, phone, address, pass1, pass2 } = form;
+
+    // validate tối thiểu
+    const errs = {};
+    if (!name) errs.name = 'Vui lòng nhập tên';
+    if (!email) errs.email = 'Vui lòng nhập email';
+    if (phone && !isPhoneVN(phone)) errs.phone = 'Số điện thoại không hợp lệ (VN)';
+    if (!pass1) errs.pass1 = 'Nhập mật khẩu';
+    if (!pass2) errs.pass2 = 'Nhập lại mật khẩu';
+    if (pass1 && pass2 && pass1 !== pass2) errs.pass2 = 'Mật khẩu nhập lại không khớp';
+
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+
     try {
       setLoading(true);
-      // map đúng API của AuthContext bạn: signUp({ name, email, phone, password })
-      await auth.signUp({ name, email, phone, password: pass1 });
+      // map đúng API AuthContext: signUp({ name, email, phone, address, password })
+      await auth.signUp({ name, email, phone, address, password: pass1 });
+      // lưu “last profile” để checkout auto-fill nếu chưa đăng nhập lại
+      try {
+        localStorage.setItem('lastName', name);
+        localStorage.setItem('lastPhone', phone || '');
+        localStorage.setItem('lastAddress', address || '');
+      } catch {}
       toast.show("Đăng ký thành công", "success");
-      // signUp của bạn đang setUser ngay -> đã login, điều hướng về trang chủ
       navigate("/", { replace: true });
     } catch (err) {
       toast.show("Đăng ký thất bại", "error");
@@ -94,16 +108,33 @@ export default function SignUp() {
   return (
     <section className="auth-hero">
       <div className="auth-card">
-        <h1 className="auth-title">Sign Up</h1>
+        <h1 className="auth-title">Đăng Ký</h1>
         <div className="zigzag" />
         <form className="form" onSubmit={submit}>
-          <input className="input" placeholder="Enter your Name" {...bind("name")} />
-          <input className="input" placeholder="Enter your Address" {...bind("address")} />
-          <input className="input" placeholder="Enter your Email ID" {...bind("email")} />
-          <input className="input" placeholder="Enter your Mobile number" {...bind("phone")} />
-          <input className="input" type="password" placeholder="Enter your Password" {...bind("pass1")} />
-          <input className="input" type="password" placeholder="Re-Enter your Password" {...bind("pass2")} />
-          <button className="btn" type="submit" disabled={loading}>{loading ? "Signing Up..." : "Sign Up"}</button>
+          <input className="input" placeholder="Enter your Name" autoComplete="name" {...bind("name")} />
+          {errors.name && <div className="err">{errors.name}</div>}
+
+          <input className="input" placeholder="Enter your Address" autoComplete="street-address" {...bind("address")} />
+
+          <input className="input" placeholder="Enter your Email ID" autoComplete="email" {...bind("email")} />
+          {errors.email && <div className="err">{errors.email}</div>}
+
+          <input className="input" placeholder="Enter your Mobile number" inputMode="tel" autoComplete="tel"
+            {...bind("phone", {
+              onBlur: (e) =>
+                setErrors(er => ({ ...er, phone: (!e.target.value || isPhoneVN(e.target.value)) ? null : 'Số điện thoại không hợp lệ (VN)' }))
+            })} />
+          {errors.phone && <div className="err">{errors.phone}</div>}
+
+          <input className="input" type="password" placeholder="Enter your Password" autoComplete="new-password" {...bind("pass1")} />
+          {errors.pass1 && <div className="err">{errors.pass1}</div>}
+
+          <input className="input" type="password" placeholder="Re-Enter your Password" autoComplete="new-password" {...bind("pass2")} />
+          {errors.pass2 && <div className="err">{errors.pass2}</div>}
+
+          <button className="btn" type="submit" disabled={loading}>
+            {loading ? "Signing Up..." : "Đăng Ký"}
+          </button>
         </form>
 
         <div className="links">
