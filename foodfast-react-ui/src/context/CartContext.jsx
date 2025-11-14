@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext.jsx';
 import { useToast } from './ToastContext.jsx';
 
 // 1. ĐỊNH NGHĨA API
-const API_BASE_URL = 'http://192.168.1.205:5181'; // ⬅️ Sửa lỗi <!DOCTYPE
+const API_BASE_URL = 'http://192.168.31.252:5181'; // ⬅️ Sửa lỗi <!DOCTYPE
 const API_ENDPOINT = `${API_BASE_URL}/carts`;      // ⬅️ Dùng /carts
 
 const CartCtx = createContext(null); 

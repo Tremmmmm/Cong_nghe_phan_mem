@@ -377,13 +377,13 @@ export default function RestaurantMenuManager() {
                 <h1 style={{ margin: 0 }}>Quản lý Thực đơn</h1>
                 {/* 💡 THÊM NÚT MỚI VÀ GÓI 2 NÚT VÀO 1 DIV */}
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
+                    {/* <button
                         style={{ ...buttonStyle, background: '#4bb4ffff' }} // Đổi màu nút
                         onClick={() => setShowCategoryModal(true)}
                         disabled={isSaving}
                     >
                         + Thêm Danh mục
-                    </button>
+                    </button> */}
                     <button
                         style={{ ...buttonStyle, background: '#f58134cc' }}
                         onClick={() => { setEditingItem(null); setShowForm(true); }}

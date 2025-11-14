@@ -898,12 +898,13 @@
         "lat": 10.779462460559436,
         "lng": 106.68716883627258
       },
-      "status": "accepted",
+      "status": "ready",
       "payment": "VNPAY",
       "payment_status": "paid",
       "payment_txn_id": "MOCK4RQZ4N",
-      "updatedAt": "2025-11-06T08:37:58.856Z",
-      "acceptedAt": "2025-11-06T08:37:58.856Z"
+      "updatedAt": "2025-11-14T02:08:41.881Z",
+      "acceptedAt": "2025-11-06T08:37:58.856Z",
+      "readyAt": "2025-11-14T02:08:41.881Z"
     },
     {
       "id": "8xm3",
@@ -953,12 +954,12 @@
         "lat": 10.784,
         "lng": 106.684
       },
-      "status": "ready",
+      "status": "accepted",
       "payment": "MOMO",
       "payment_status": "paid",
       "payment_txn_id": "MOCK-1762418015430",
-      "updatedAt": "2025-11-06T08:39:31.792Z",
-      "acceptedAt": "2025-11-06T08:36:24.800Z",
+      "updatedAt": "2025-11-14T02:09:08.350Z",
+      "acceptedAt": "2025-11-14T02:09:08.350Z",
       "readyAt": "2025-11-06T08:39:31.792Z",
       "droneMissionId": "b857",
       "pickedAt": "2025-11-06T08:38:19.378Z"
@@ -1064,18 +1065,20 @@
         "lat": 10.775845728283272,
         "lng": 106.69232868389962
       },
-      "status": "ready",
+      "status": "completed",
       "payment": "MOMO",
       "payment_status": "paid",
       "payment_txn_id": "MOCK-1762418161080",
-      "updatedAt": "2025-11-11T07:21:31.417Z",
+      "updatedAt": "2025-11-14T01:19:46.204Z",
       "acceptedAt": "2025-11-06T08:36:23.617Z",
-      "readyAt": "2025-11-11T07:21:31.417Z"
+      "readyAt": "2025-11-11T07:21:31.417Z",
+      "droneMissionId": "e2d0",
+      "pickedAt": "2025-11-14T01:13:45.455Z"
     },
     {
       "id": "8iio",
       "sessionId": "908e",
-      "userId": "7efa",
+      "userId": null,
       "userEmail": "customer",
       "customerName": "customer",
       "phone": "0998989898",
@@ -1087,7 +1090,7 @@
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "http://localhost:5182/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         }
       ],
       "total": 52000,
@@ -1118,7 +1121,7 @@
     {
       "id": "spqt",
       "sessionId": "908e",
-      "userId": "7efa",
+      "userId": null,
       "userEmail": "c01@gmail.com",
       "customerName": "customer",
       "phone": "0998989898",
@@ -1167,7 +1170,7 @@
     {
       "id": "nxvr",
       "sessionId": "908e",
-      "userId": "7efa",
+      "userId": null,
       "userEmail": "c01@gmail.com",
       "customerName": "customer",
       "phone": "0998989898",
@@ -1215,7 +1218,7 @@
     {
       "id": "70xj",
       "sessionId": "908e",
-      "userId": "7efa",
+      "userId": null,
       "userEmail": "c01@gmail.com",
       "customerName": "customer",
       "phone": "0998989898",
@@ -1264,7 +1267,7 @@
     {
       "id": "fb97",
       "merchantId": "m001",
-      "userId": "7efa",
+      "userId": null,
       "userEmail": "c01@gmail.com",
       "customerName": "customer",
       "phone": "0998989898",
@@ -1299,9 +1302,66 @@
         "lat": 10.776889,
         "lng": 106.700806
       },
-      "status": "new",
+      "status": "completed",
       "payment": "SIMULATED",
-      "payment_status": "paid"
+      "payment_status": "paid",
+      "updatedAt": "2025-11-14T02:09:35.053Z",
+      "acceptedAt": "2025-11-14T02:09:03.049Z",
+      "readyAt": "2025-11-14T02:09:04.283Z",
+      "droneMissionId": "3e64",
+      "pickedAt": "2025-11-14T02:09:16.821Z"
+    },
+    {
+      "id": "cfbb",
+      "merchantId": "m001",
+      "userId": "7efa",
+      "userEmail": "c01@gmail.com",
+      "customerName": "AN",
+      "phone": "0998989898",
+      "address": "Số 2 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "cb-2",
+          "name": "Combo2 Chicken + Fries",
+          "qty": 1,
+          "price": 69000,
+          "image": "/assets/images/menu/combo2.webp"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        }
+      ],
+      "total": 121000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 141000,
+      "couponCode": "",
+      "createdAt": 1763085963809,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "status": "ready",
+      "payment": "SIMULATED",
+      "payment_status": "paid",
+      "updatedAt": "2025-11-14T02:08:43.587Z",
+      "acceptedAt": "2025-11-14T02:08:32.198Z",
+      "readyAt": "2025-11-14T02:08:43.587Z"
     }
   ],
   "sessions": [
@@ -1798,6 +1858,50 @@
         [
           10.777561067831371,
           106.69280745830257
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "e2d0",
+      "orderId": "1xae",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-11-14T01:13:45.458Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 2,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.775845728283272,
+          106.69232868389962
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "3e64",
+      "orderId": "fb97",
+      "restaurantId": null,
+      "customerId": null,
+      "startTime": "2025-11-14T02:09:16.821Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 0,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.776889,
+          106.700806
         ]
       ],
       "currentIndex": 0
@@ -4800,6 +4904,24 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1763042517168
+    },
+    {
+      "id": "124a",
+      "missionId": "e2d0",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763082825515
+    },
+    {
+      "id": "b805",
+      "missionId": "3e64",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763086156861
     }
   ],
   "users": [
@@ -4807,9 +4929,17 @@
       "id": "u001",
       "username": "svadmin",
       "password": "123",
-      "name": "Super Admin",
+      "name": "Super Admin ",
       "role": "SuperAdmin",
-      "merchantId": null
+      "merchantId": "m001"
+    },
+    {
+      "id": "u003",
+      "username": "customer",
+      "password": "123",
+      "name": "customer ",
+      "role": "customer",
+      "merchantId": "m001"
     },
     {
       "id": "u002",
@@ -4828,39 +4958,12 @@
       "merchantId": "m002"
     },
     {
-      "id": "7efa",
-      "name": "AN",
-      "email": "c01@gmail.com",
-      "phone": "0998989898",
-      "address": {
-        "street": "Số 2 Nguyễn Trãi",
-        "ward": "Phường Chợ Quán",
-        "city": "TP. Hồ Chí Minh"
-      },
+      "id": "u_1763085292769",
+      "username": "new.owner@example.com",
       "password": "123",
-      "username": "customer",
-      "role": "Customer",
-      "favorites": [
-        "sg-2"
-      ],
-      "cart": {
-        "merchantId": "m001",
-        "items": [
-          {
-            "id": "sg-2",
-            "name": "Cheese Burger",
-            "price": 52000,
-            "desc": "Burger bò phô mai béo ngậy.",
-            "image": "http://localhost:5182/cheeseburger.webp",
-            "category": "single",
-            "status": "approved",
-            "isAvailable": true,
-            "merchantId": "m001",
-            "merchantName": "Burger King Fast Food",
-            "qty": 2
-          }
-        ]
-      }
+      "name": "Admin (Cửa hàng Mới #2769)",
+      "role": "Merchant",
+      "merchantId": "m_1763085292769"
     }
   ],
   "merchants": [
@@ -4945,6 +5048,12 @@
         }
       },
       "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
+    },
+    {
+      "id": "m_1763085292769",
+      "owner": "new.owner@example.com",
+      "status": "Pending",
+      "ordersToday": 0
     }
   ],
   "restaurantSettings": [
@@ -5023,6 +5132,15 @@
         }
       },
       "id": "m002"
+    },
+    {
+      "storeName": "Bún bò",
+      "address": "Sô 6 Lê Đại Hành, Phường Diên Hồng, TP.HCM",
+      "phone": "0965656565",
+      "logo": "",
+      "isManuallyClosed": true,
+      "operatingHours": {},
+      "id": "m_1763085292769"
     }
   ],
   "menuItems": [
@@ -5044,7 +5162,7 @@
       "name": "Cheese Burger",
       "price": 52000,
       "desc": "Burger bò phô mai béo ngậy.",
-      "image": "http://localhost:5182/cheeseburger.webp",
+      "image": "/assets/images/menu/cheeseburger.webp",
       "category": "single",
       "status": "approved",
       "isAvailable": true,
@@ -5189,26 +5307,22 @@
       "category": "single",
       "merchantId": "m001",
       "status": "approved"
+    },
+    {
+      "id": "5993",
+      "name": "Xe may",
+      "desc": ".....",
+      "price": 1000000,
+      "image": "http://localhost:5182/beefburger.jpg",
+      "category": "single",
+      "merchantId": "m001",
+      "status": "pending"
     }
   ],
   "carts": [
     {
-      "merchantId": "m001",
-      "items": [
-        {
-          "id": "sg-2",
-          "name": "Cheese Burger",
-          "price": 52000,
-          "desc": "Burger bò phô mai béo ngậy.",
-          "image": "http://localhost:5182/cheeseburger.webp",
-          "category": "single",
-          "status": "approved",
-          "isAvailable": true,
-          "merchantId": "m001",
-          "merchantName": "Burger King Fast Food",
-          "qty": 1
-        }
-      ],
+      "merchantId": null,
+      "items": [],
       "id": "ff_cart_v2:ue:c01@gmail.com"
     },
     {
@@ -5240,13 +5354,31 @@
       "id": "ff_cart_v2:g:ik7dksmb",
       "merchantId": null,
       "items": []
+    },
+    {
+      "id": "ff_cart_v2:uid:u_1763085292769",
+      "merchantId": null,
+      "items": []
+    },
+    {
+      "id": "ff_cart_v2:g:x1oykgty",
+      "merchantId": null,
+      "items": []
+    },
+    {
+      "id": "ff_cart_v2:uid:u003",
+      "merchantId": null,
+      "items": []
     }
   ],
   "favorites": [
     {
       "id": "ff_fav_v1:ue:c01@gmail.com",
       "ids": [
-        "sg-1"
+        "sg-1",
+        "sg-3",
+        "8b7a",
+        "2434"
       ]
     },
     {
@@ -5271,6 +5403,18 @@
     },
     {
       "id": "ff_fav_v1:uid:u002",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:uid:u_1763085292769",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:g:x1oykgty",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:uid:u003",
       "ids": []
     }
   ]

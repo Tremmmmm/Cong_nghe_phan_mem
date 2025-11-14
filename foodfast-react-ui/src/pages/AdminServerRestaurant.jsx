@@ -7,8 +7,10 @@ import {
     fetchMerchants, 
     createMerchant, 
     updateMerchant, // Import hàm cập nhật
-    deleteMerchant 
-} from "../utils/merchantAPI.js"; 
+    deleteMerchant,
+    // 💡 1. Import API_BASE_URL từ file API
+    API_BASE_URL 
+} from "../utils/merchantAPI.js";
 
 export default function AdminServerRestaurant() {
     const [merchants, setMerchants] = useState([]); 
@@ -97,20 +99,33 @@ export default function AdminServerRestaurant() {
     };
 
     // Hành động tạo cửa hàng (giả lập)
-    const handleCreateMerchant = () => {
-        setLoading(true); 
+    // 💡 SỬA LẠI HÀM NÀY
+    const handleCreateMerchant = async () => {
+        setLoading(true);
+        
+        // 1. Chuẩn bị dữ liệu cơ bản
+        // (ID, tên... sẽ được tạo bên trong hàm createMerchant)
         const newMerchantData = {
-            name: `Merchant Mới (API) #${merchants.length + 1}`, 
             owner: 'new.owner@example.com' 
+            // Bạn có thể thêm 'name' ở đây nếu muốn
+            // name: `Cửa hàng Mới (từ Admin)` 
         };
         
-        createMerchant(newMerchantData) // GỌI API
-            .then(newMerchant => {
-                setMerchants(prev => [...prev, newMerchant]);
-                toast.show(`✅ Đã tạo Merchant: ${newMerchant.name}`, 'success');
-            })
-            .catch(() => toast.show('Lỗi tạo Merchant.', 'error'))
-            .finally(() => setLoading(false));
+        try {
+            // 2. CHỈ GỌI MỘT HÀM createMerchant
+            // (Vì file merchantAPI.js đã tự tạo cả 2 bản ghi)
+            const finalNewEntry = await createMerchant(newMerchantData);
+
+            // 3. Cập nhật UI
+            setMerchants(prev => [...prev, finalNewEntry]);
+            toast.show(`✅ Đã tạo Merchant: ${finalNewEntry.storeName}`, 'success');
+
+        } catch (error) {
+            console.error("Lỗi tạo Merchant:", error);
+            toast.show('Lỗi tạo Merchant. Vui lòng thử lại.', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Hành động xóa (GỌI API DELETE)
