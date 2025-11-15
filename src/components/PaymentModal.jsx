@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import QRCode from 'react-qr-code'
-import momoLogo from '..public/assets/momo-2.svg'
-import vnpayLogo from '..public/assets/VNPAY_1.svg' // ✅ logo VNPay thật
+import momoLogo from '../public/assets/momo-2.svg'
+import vnpayLogo from '../public/assets/VNPAY_1.svg' // ✅ logo VNPay thật
 
 export default function PaymentModal({
   open = false,
