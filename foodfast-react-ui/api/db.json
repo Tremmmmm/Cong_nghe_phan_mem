@@ -44,7 +44,7 @@
     }
   ],
   "orders": [
-    { 
+    {
       "id": "d259",
       "customerName": "Chi Vo",
       "phone": "0936455952",
@@ -200,7 +200,7 @@
       "createdAt": 1758039485757,
       "status": "cancelled"
     },
-    { 
+    {
       "id": "05e9",
       "merchantId": "m001",
       "customerName": "haha",
@@ -1393,7 +1393,7 @@
           "price": 99000,
           "image": "/assets/images/menu/combo3.jpg"
         }
-      ], 
+      ],
       "total": 99000,
       "discount": 0,
       "shippingFee": 20000,
@@ -5293,9 +5293,38 @@
       "storeName": "Bún bò",
       "address": "Sô 6 Lê Đại Hành, Phường Diên Hồng, TP.HCM",
       "phone": "0965656565",
-      "logo": "",
+      "logo": "https://comnieusaigon.com/bun-bo-hue-dac-san-dan-da-lam-say-long-biet-bao-thuc-khach",
       "isManuallyClosed": true,
-      "operatingHours": {},
+      "operatingHours": {
+        "mon": {
+          "open": 1,
+          "close": 22
+        },
+        "tue": {
+          "open": 1,
+          "close": 22
+        },
+        "wed": {
+          "open": 1,
+          "close": 22
+        },
+        "thu": {
+          "open": 1,
+          "close": 22
+        },
+        "fri": {
+          "open": 1,
+          "close": 22
+        },
+        "sat": {
+          "open": 1,
+          "close": 22
+        },
+        "sun": {
+          "open": 1,
+          "close": 22
+        }
+      },
       "id": "m_1763085292769"
     }
   ],
@@ -5571,7 +5600,7 @@
     },
     {
       "id": "ff_fav_v1:uid:u003",
-      "ids": [] 
+      "ids": []
     }
   ]
 }
