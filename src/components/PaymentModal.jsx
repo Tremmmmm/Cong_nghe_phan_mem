@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import QRCode from 'react-qr-code'
-import momoLogo from '../public/assets/momo-2.svg'
-import vnpayLogo from '../public/assets/VNPAY_1.svg' // ✅ logo VNPay thật
+
+// 💡 ĐÃ SỬA: Bỏ dòng import từ public gây lỗi
+// import momoLogo from '../public/assets/momo-2.svg'
+// import vnpayLogo from '../public/assets/VNPAY_1.svg'
 
 export default function PaymentModal({
   open = false,
@@ -34,7 +36,8 @@ export default function PaymentModal({
             helpLink: '#b1006b',
             chipBg: '#ffe1ef',
             chipText: '#b1006b',
-            headerLogo: momoLogo,
+            // 💡 ĐÃ SỬA: Dùng đường dẫn chuỗi trực tiếp từ thư mục public
+            headerLogo: '/assets/momo-2.svg', 
           }
         : {
             brand: 'VNPay',
@@ -46,7 +49,8 @@ export default function PaymentModal({
             helpLink: '#0a5bd8',
             chipBg: '#e7f0ff',
             chipText: '#0a5bd8',
-            headerLogo: vnpayLogo,
+            // 💡 ĐÃ SỬA: Dùng đường dẫn chuỗi trực tiếp từ thư mục public
+            headerLogo: '/assets/VNPAY_1.svg',
           },
     [method]
   )
@@ -160,7 +164,7 @@ export default function PaymentModal({
           ['--subtle']: theme.subtle,
           ['--help-link']: theme.helpLink,
           ['--chipText']: theme.chipText,
-          ['--backlink-color']: theme.headColor, // ✅ màu link quay về theo cổng
+          ['--backlink-color']: theme.headColor, 
         }}
       >
         {/* Header */}
