@@ -4,7 +4,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useFav } from "../context/FavContext.jsx";
 
-import logo from "public/assets/images/logo.png";
+import logo from "/assets/images/logo.png";
 
 export default function Header() {
   const navigate = useNavigate();

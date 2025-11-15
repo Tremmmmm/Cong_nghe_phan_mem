@@ -428,7 +428,7 @@ export default function RestaurantMenuManager() {
                         return (
                             <div key={item.id} style={styles.itemCard}>
                                 {/* ... (Render Card giữ nguyên) ... */}
-                                <img src={item.image || 'public/assets/images/menu/placeholder.png'} alt={item.name} style={styles.itemImage} onError={(e)=>{e.target.src='public/assets/images/menu/placeholder.png'}}/>
+                                <img src={item.image || '/assets/images/menu/placeholder.png'} alt={item.name} style={styles.itemImage} onError={(e)=>{e.target.src='/assets/images/menu/placeholder.png'}}/>
                                 <div style={styles.itemInfo}>
                                     <div style={styles.itemRow}>
                                         <strong style={{ fontSize: 16 }}>{item.name || '(Chưa có tên)'}</strong>

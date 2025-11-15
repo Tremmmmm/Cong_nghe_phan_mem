@@ -47,7 +47,7 @@ export default function Cart() {
         <>
           {items.map((it) => (
             <div className="item" key={it.id}>
-              <img className="thumb" src={it.image || "public/assets/images/placeholder.png"} alt={it.name} />
+              <img className="thumb" src={it.image || "/assets/images/placeholder.png"} alt={it.name} />
               <div>
                 <div className="name">{it.name}</div>
                 <div style={{opacity:.7}}>{formatVND(it.price)}</div>

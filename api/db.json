@@ -5,42 +5,42 @@
       "name": "Menu Combo 1",
       "description": "No.1 best seller",
       "price": 69000,
-      "image": "public/assets/images/menu-1.png"
+      "image": "/assets/images/menu-1.png"
     },
     {
       "id": "2",
       "name": "Menu Combo 2",
       "description": "Pizza + drink",
       "price": 119000,
-      "image": "public/assets/images/menu-2.png"
+      "image": "/assets/images/menu-2.png"
     },
     {
       "id": "3",
       "name": "Menu Combo 3",
       "description": "Burger + fries",
       "price": 99000,
-      "image": "public/assets/images/menu-3.png"
+      "image": "/assets/images/menu-3.png"
     },
     {
       "id": "4",
       "name": "Menu Combo 4",
       "description": "Family size",
       "price": 149000,
-      "image": "public/assets/images/menu-4.png"
+      "image": "/assets/images/menu-4.png"
     },
     {
       "id": "5",
       "name": "Menu Combo 5",
       "description": "Special treat",
       "price": 129000,
-      "image": "public/assets/images/menu-5.png"
+      "image": "/assets/images/menu-5.png"
     },
     {
       "id": "6",
       "name": "Menu Combo 6",
       "description": "Super deal",
       "price": 159000,
-      "image": "public/assets/images/menu-6.png"
+      "image": "/assets/images/menu-6.png"
     }
   ],
   "orders": [
@@ -297,14 +297,14 @@
           "name": "Beef Burger",
           "qty": 2,
           "price": 45000,
-          "image": "public/assets/images/menu/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         },
         {
           "id": "sg-2",
           "name": "Cheese Burger",
           "qty": 2,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         }
       ],
       "total": 194000,
@@ -330,21 +330,21 @@
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         },
         {
           "id": "sg-4",
           "name": "French Fries",
           "qty": 1,
           "price": 29000,
-          "image": "public/assets/images/menu/frenchfries.jpg"
+          "image": "/assets/images/menu/frenchfries.jpg"
         },
         {
           "id": "sg-5",
           "name": "Cheese Pizza (slice)",
           "qty": 1,
           "price": 39000,
-          "image": "public/assets/images/menu/cheesepizza.webp"
+          "image": "/assets/images/menu/cheesepizza.webp"
         }
       ],
       "total": 120000,
@@ -372,7 +372,7 @@
           "name": "Beef Burger",
           "qty": 1,
           "price": 45000,
-          "image": "public/assets/images/menu/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         }
       ],
       "total": 45000,
@@ -458,21 +458,21 @@
           "name": "Beef Burger",
           "qty": 3,
           "price": 45000,
-          "image": "public/assets/images/menu/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         },
         {
           "id": "cb-3",
           "name": "Combo3 Pizza + Coke",
           "qty": 1,
           "price": 99000,
-          "image": "public/assets/images/menu/combo3.jpg"
+          "image": "/assets/images/menu/combo3.jpg"
         },
         {
           "id": "sg-2",
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         }
       ],
       "total": 286000,
@@ -508,42 +508,42 @@
           "name": "Combo1 Burger + Coke",
           "qty": 1,
           "price": 59000,
-          "image": "public/assets/images/menu/combo1.webp"
+          "image": "/assets/images/menu/combo1.webp"
         },
         {
           "id": "cb-2",
           "name": "Combo2 Chicken + Fries",
           "qty": 1,
           "price": 69000,
-          "image": "public/assets/images/menu/combo2.webp"
+          "image": "/assets/images/menu/combo2.webp"
         },
         {
           "id": "cb-3",
           "name": "Combo3 Pizza + Coke",
           "qty": 1,
           "price": 99000,
-          "image": "public/assets/images/menu/combo3.jpg"
+          "image": "/assets/images/menu/combo3.jpg"
         },
         {
           "id": "sg-6",
           "name": "Cola",
           "qty": 1,
           "price": 15000,
-          "image": "public/assets/images/menu/cocacola.jpg"
+          "image": "/assets/images/menu/cocacola.jpg"
         },
         {
           "id": "sg-5",
           "name": "Cheese Pizza (slice)",
           "qty": 1,
           "price": 39000,
-          "image": "public/assets/images/menu/cheesepizza.webp"
+          "image": "/assets/images/menu/cheesepizza.webp"
         },
         {
           "id": "sg-4",
           "name": "French Fries",
           "qty": 1,
           "price": 29000,
-          "image": "public/assets/images/menu/frenchfries.jpg"
+          "image": "/assets/images/menu/frenchfries.jpg"
         }
       ],
       "total": 310000,
@@ -587,14 +587,14 @@
           "name": "Combo1 Burger + Coke",
           "qty": 2,
           "price": 59000,
-          "image": "public/assets/images/menu/combo1.webp"
+          "image": "/assets/images/menu/combo1.webp"
         },
         {
           "id": "cb-2",
           "name": "Combo2 Chicken + Fries",
           "qty": 2,
           "price": 69000,
-          "image": "public/assets/images/menu/combo2.webp"
+          "image": "/assets/images/menu/combo2.webp"
         }
       ],
       "total": 256000,
@@ -638,35 +638,35 @@
           "name": "French Fries",
           "qty": 1,
           "price": 29000,
-          "image": "public/assets/images/menu/frenchfries.jpg"
+          "image": "/assets/images/menu/frenchfries.jpg"
         },
         {
           "id": "sg-5",
           "name": "Cheese Pizza (slice)",
           "qty": 1,
           "price": 39000,
-          "image": "public/assets/images/menu/cheesepizza.webp"
+          "image": "/assets/images/menu/cheesepizza.webp"
         },
         {
           "id": "sg-6",
           "name": "Cola",
           "qty": 1,
           "price": 15000,
-          "image": "public/assets/images/menu/cocacola.jpg"
+          "image": "/assets/images/menu/cocacola.jpg"
         },
         {
           "id": "cb-2",
           "name": "Combo2 Chicken + Fries",
           "qty": 1,
           "price": 69000,
-          "image": "public/assets/images/menu/combo2.webp"
+          "image": "/assets/images/menu/combo2.webp"
         },
         {
           "id": "cb-1",
           "name": "Combo1 Burger + Coke",
           "qty": 1,
           "price": 59000,
-          "image": "public/assets/images/menu/combo1.webp"
+          "image": "/assets/images/menu/combo1.webp"
         }
       ],
       "total": 211000,
@@ -710,14 +710,14 @@
           "name": "Combo2 Chicken + Fries",
           "qty": 1,
           "price": 69000,
-          "image": "public/assets/images/menu/combo2.webp"
+          "image": "/assets/images/menu/combo2.webp"
         },
         {
           "id": "cb-1",
           "name": "Combo1 Burger + Coke",
           "qty": 1,
           "price": 59000,
-          "image": "public/assets/images/menu/combo1.webp"
+          "image": "/assets/images/menu/combo1.webp"
         }
       ],
       "total": 128000,
@@ -761,7 +761,7 @@
           "name": "Beef Burger",
           "qty": 1,
           "price": 45000,
-          "image": "public/assets/images/menu/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         }
       ],
       "total": 45000,
@@ -804,7 +804,7 @@
           "name": "Beef Burger",
           "qty": 1,
           "price": 45000,
-          "image": "public/assets/images/menu/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         }
       ],
       "total": 45000,
@@ -848,7 +848,7 @@
           "name": "Beef Burger",
           "qty": 1,
           "price": 45000,
-          "image": "public/assets/images/menu/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         }
       ],
       "total": 45000,
@@ -891,14 +891,14 @@
           "name": "Beef Burger",
           "qty": 1,
           "price": 45000,
-          "image": "public/assets/images/menu/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         },
         {
           "id": "sg-2",
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         }
       ],
       "total": 97000,
@@ -942,42 +942,42 @@
           "name": "Fried Chicken",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/friedchicken.webp"
+          "image": "/assets/images/menu/friedchicken.webp"
         },
         {
           "id": "sg-5",
           "name": "Cheese Pizza (slice)",
           "qty": 1,
           "price": 39000,
-          "image": "public/assets/images/menu/cheesepizza.webp"
+          "image": "/assets/images/menu/cheesepizza.webp"
         },
         {
           "id": "sg-6",
           "name": "Cola",
           "qty": 1,
           "price": 15000,
-          "image": "public/assets/images/menu/cocacola.jpg"
+          "image": "/assets/images/menu/cocacola.jpg"
         },
         {
           "id": "sg-4",
           "name": "French Fries",
           "qty": 1,
           "price": 29000,
-          "image": "public/assets/images/menu/frenchfries.jpg"
+          "image": "/assets/images/menu/frenchfries.jpg"
         },
         {
           "id": "cb-2",
           "name": "Combo2 Chicken + Fries",
           "qty": 2,
           "price": 69000,
-          "image": "public/assets/images/menu/combo2.webp"
+          "image": "/assets/images/menu/combo2.webp"
         },
         {
           "id": "sg-2",
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         }
       ],
       "total": 325000,
@@ -1022,21 +1022,21 @@
           "name": "Combo2 Chicken + Fries",
           "qty": 2,
           "price": 69000,
-          "image": "public/assets/images/menu/combo2.webp"
+          "image": "/assets/images/menu/combo2.webp"
         },
         {
           "id": "sg-2",
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         },
         {
           "id": "sg-4",
           "name": "French Fries",
           "qty": 1,
           "price": 29000,
-          "image": "public/assets/images/menu/frenchfries.jpg"
+          "image": "/assets/images/menu/frenchfries.jpg"
         }
       ],
       "total": 219000,
@@ -1078,21 +1078,21 @@
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         },
         {
           "id": "sg-3",
           "name": "Fried Chicken",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/friedchicken.webp"
+          "image": "/assets/images/menu/friedchicken.webp"
         },
         {
           "id": "sg-6",
           "name": "Cola",
           "qty": 1,
           "price": 15000,
-          "image": "public/assets/images/menu/cocacola.jpg"
+          "image": "/assets/images/menu/cocacola.jpg"
         }
       ],
       "total": 119000,
@@ -1189,7 +1189,7 @@
           "name": "Fried Chicken",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/friedchicken.webp"
+          "image": "/assets/images/menu/friedchicken.webp"
         },
         {
           "id": "8b7a",
@@ -1203,7 +1203,7 @@
           "name": "Combo1 Burger + Coke",
           "qty": 1,
           "price": 59000,
-          "image": "public/assets/images/menu/combo1.webp"
+          "image": "/assets/images/menu/combo1.webp"
         }
       ],
       "total": 146000,
@@ -1246,7 +1246,7 @@
           "name": "Cheese Burger",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/cheeseburger.webp"
+          "image": "/assets/images/menu/cheeseburger.webp"
         }
       ],
       "total": 52000,
@@ -1343,7 +1343,7 @@
           "name": "Cola",
           "qty": 1,
           "price": 15000,
-          "image": "public/assets/images/menu/cocacola.jpg"
+          "image": "/assets/images/menu/cocacola.jpg"
         }
       ],
       "total": 15000,
@@ -1391,7 +1391,7 @@
           "name": "Combo3 Pizza + Coke",
           "qty": 1,
           "price": 99000,
-          "image": "public/assets/images/menu/combo3.jpg"
+          "image": "/assets/images/menu/combo3.jpg"
         }
       ],
       "total": 99000,
@@ -1487,14 +1487,14 @@
           "name": "Combo2 Chicken + Fries",
           "qty": 1,
           "price": 69000,
-          "image": "public/assets/images/menu/combo2.webp"
+          "image": "/assets/images/menu/combo2.webp"
         },
         {
           "id": "sg-3",
           "name": "Fried Chicken",
           "qty": 1,
           "price": 52000,
-          "image": "public/assets/images/menu/friedchicken.webp"
+          "image": "/assets/images/menu/friedchicken.webp"
         }
       ],
       "total": 121000,
@@ -5347,7 +5347,7 @@
       "name": "Cheese Burger",
       "price": 52000,
       "desc": "Burger bò phô mai béo ngậy.",
-      "image": "public/assets/images/menu/cheeseburger.webp",
+      "image": "/assets/images/menu/cheeseburger.webp",
       "category": "single",
       "status": "approved",
       "isAvailable": true,
@@ -5359,7 +5359,7 @@
       "name": "Fried Chicken",
       "price": 52000,
       "desc": "Gà rán giòn rụm, vị cay nhẹ.",
-      "image": "public/assets/images/menu/friedchicken.webp",
+      "image": "/assets/images/menu/friedchicken.webp",
       "category": "single",
       "status": "approved",
       "isAvailable": true,
@@ -5371,7 +5371,7 @@
       "name": "French Fries",
       "price": 29000,
       "desc": "Khoai tây chiên giòn, muối nhẹ.",
-      "image": "public/assets/images/menu/frenchfries.jpg",
+      "image": "/assets/images/menu/frenchfries.jpg",
       "category": "single",
       "status": "approved",
       "isAvailable": true,
@@ -5383,7 +5383,7 @@
       "name": "Cheese Pizza (slice)",
       "price": 39000,
       "desc": "Pizza phô mai lát, nướng lò.",
-      "image": "public/assets/images/menu/cheesepizza.webp",
+      "image": "/assets/images/menu/cheesepizza.webp",
       "category": "single",
       "status": "approved",
       "isAvailable": true,
@@ -5395,7 +5395,7 @@
       "name": "Cola",
       "price": 15000,
       "desc": "Nước ngọt có ga 330ml.",
-      "image": "public/assets/images/menu/cocacola.jpg",
+      "image": "/assets/images/menu/cocacola.jpg",
       "category": "single",
       "status": "approved",
       "isAvailable": true,
@@ -5407,7 +5407,7 @@
       "name": "Combo1 Burger + Coke",
       "price": 59000,
       "desc": "Burger bò + Cola 330ml.",
-      "image": "public/assets/images/menu/combo1.webp",
+      "image": "/assets/images/menu/combo1.webp",
       "category": "combo",
       "status": "approved",
       "isAvailable": true,
@@ -5419,7 +5419,7 @@
       "name": "Combo2 Chicken + Fries",
       "price": 69000,
       "desc": "2 miếng gà rán + Khoai tây chiên.",
-      "image": "public/assets/images/menu/combo2.webp",
+      "image": "/assets/images/menu/combo2.webp",
       "category": "combo",
       "status": "approved",
       "isAvailable": true,
@@ -5431,7 +5431,7 @@
       "name": "Combo3 Pizza + Coke",
       "price": 99000,
       "desc": "Pizza phô mai (m) + Cola 330ml.",
-      "image": "public/assets/images/menu/combo3.jpg",
+      "image": "/assets/images/menu/combo3.jpg",
       "category": "combo",
       "status": "approved",
       "isAvailable": true,

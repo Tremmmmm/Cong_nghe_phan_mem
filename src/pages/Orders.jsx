@@ -6,7 +6,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { estimateETA, etaWindowLabel, formatCountdown } from "../utils/eta";
 
 function VND(n){ return (n||0).toLocaleString('vi-VN') + '₫' }
-const FALLBACK = "public/assets/images/Delivery.png";
+const FALLBACK = "/assets/images/Delivery.png";
 
 // chuẩn hoá trạng thái
 const normalizeStatus = (s="") => {

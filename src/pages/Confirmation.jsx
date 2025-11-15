@@ -5,7 +5,7 @@ import { getOrder } from "../utils/orderAPI";
 import { formatVND } from "../utils/format";
 import { estimateETA, etaWindowLabel, formatArrivalClock, formatCountdown } from "../utils/eta";
 
-const FALLBACK = "public/assets/images/Delivery.png";
+const FALLBACK = "/assets/images/Delivery.png";
 const VND = (n) => formatVND(n);
 
 function useQuery() {
@@ -153,7 +153,7 @@ export default function Confirmation() {
               </div>
             </div>
             <div className="card center">
-              <img src="public/assets/images/Delivery.png" alt="Fast Delivery" style={{maxWidth:360,width:'100%'}} />
+              <img src="/assets/images/Delivery.png" alt="Fast Delivery" style={{maxWidth:360,width:'100%'}} />
               <div className="muted">Dự kiến giao trong ~45 phút.</div>
             </div>
           </div>

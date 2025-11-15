@@ -65,7 +65,7 @@ export default function Footer() {
       <div className="wrap">
         {/* Brand + tagline */}
         <div className="ff-brand">
-          <img className="ff-brand-logo" src="public/assets/images/logo.png" alt="FoodFast" onError={(e)=>{e.currentTarget.style.display='none'}} />
+          <img className="ff-brand-logo" src="/assets/images/logo.png" alt="FoodFast" onError={(e)=>{e.currentTarget.style.display='none'}} />
           <div>FASTFOOD</div>
         </div> 
 

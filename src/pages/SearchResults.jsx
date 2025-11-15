@@ -82,7 +82,7 @@ export default function SearchResults() {
                   loading="lazy"
                   decoding="async"
                   sizes="(max-width: 640px) 100vw, 360px"
-                  onError={e=>{e.currentTarget.src='public/assets/images/Delivery.png'}}
+                  onError={e=>{e.currentTarget.src='/assets/images/Delivery.png'}}
                 />
                 <div className="card-body">
                   <div className="name">{it.name}</div>
