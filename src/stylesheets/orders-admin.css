@@ -1,0 +1,31 @@
+/* assets/stylesheets/orders-admin.css */
+
+/* Card đơn hàng */
+.order-card{ background:#fff; border-radius:16px; padding:16px; margin-bottom:14px; box-shadow:0 8px 22px rgba(0,0,0,.06); }
+.order-head{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:10px; }
+.order-head-right{ display:flex; gap:10px; align-items:center; }
+.order-items{ border-top:1px dashed #e5e7eb; border-bottom:1px dashed #e5e7eb; padding:8px 0; margin:8px 0; }
+.order-item-row{ display:grid; grid-template-columns:1fr auto auto; gap:10px; padding:6px 0; }
+.sum{ font-weight:800; color:#0f172a; }
+.badge{ padding:4px 8px; border-radius:999px; font-weight:700; font-size:12px; background:#eef2ff; color:#3730a3; }
+.badge.new{ background:#e0f2fe; color:#075985; }
+.badge.confirmed{ background:#dcfce7; color:#166534; }
+.badge.preparing{ background:#fef9c3; color:#854d0e; }
+.badge.delivering{ background:#e0e7ff; color:#3730a3; }
+.badge.delivered{ background:#f0fdf4; color:#166534; }
+.badge.cancelled{ background:#fee2e2; color:#991b1b; }
+
+/* Header cart badge (nếu bạn chưa có) */
+.ff-cart-link { position: relative; display: grid; place-items:center; padding: 8px 10px; }
+.ff-badge {
+  position: absolute; top: 0; right: 0; transform: translate(40%, -40%);
+  background: #ef4444; color: #fff; font-size: 12px; font-weight: 700;
+  min-width: 18px; height: 18px; border-radius: 999px; display: grid; place-items: center; padding: 0 4px;
+}
+/* --- Timeline & actions (Orders) --- */
+.steps{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+.step{ padding:4px 10px; border-radius:999px; font-weight:700; font-size:12px; background:#f1f5f9; color:#334155; }
+.step.active{ background:#e0f2fe; color:#0369a1; }
+.step.done{ background:#dcfce7; color:#166534; }
+.order-actions{ display:flex; gap:8px; align-items:center; }
+.order-actions .ff-btn{ padding:6px 10px; }

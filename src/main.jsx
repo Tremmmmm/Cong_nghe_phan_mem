@@ -2,10 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-import "./style.css";
-import '/assets/stylesheets/orders-admin.css';
-import '/assets/stylesheets/toast.css';
-import '/assets/stylesheets/theme.css';
+import "./stylesheets/style.css";
+import './stylesheets/orders-admin.css';
+import './stylesheets/toast.css';
+import './stylesheets/theme.css';
 
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
