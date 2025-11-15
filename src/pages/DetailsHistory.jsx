@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import MENU_ALL from '../data/menuData.js'
 
-const FALLBACK = '/assets/images/Delivery.png'
+const FALLBACK = 'public/assets/images/Delivery.png'
 const VND = (n) => (n || 0).toLocaleString('vi-VN') + '₫'
 
 // Map DB → 4 trạng thái chuẩn

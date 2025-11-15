@@ -165,10 +165,10 @@ export default function Home() {
               >
                 <div className="merchant-logo-box">
                     <img 
-                        src={merchant.logo || '/assets/images/placeholder_restaurant.png'} 
+                        src={merchant.logo || 'public/assets/images/placeholder_restaurant.png'} 
                         alt={`${merchant.storeName} logo`} 
                         className="merchant-logo" 
-                        onError={(e) => { e.target.src = '/assets/images/placeholder_restaurant.png'; }} 
+                        onError={(e) => { e.target.src = 'public/assets/images/placeholder_restaurant.png'; }} 
                         loading="lazy"
                     />
                 </div>
@@ -202,11 +202,11 @@ export default function Home() {
                   className="dish-card-img-link"
                 >
                   <img 
-                    src={item.image || '/assets/images/menu/placeholder.png'} 
+                    src={item.image || 'public/assets/images/menu/placeholder.png'} 
                     alt={item.name} 
                     className="dish-card-img" 
                     loading="lazy"
-                    onError={(e) => { e.target.src = '/assets/images/menu/placeholder.png'; }}
+                    onError={(e) => { e.target.src = 'public/assets/images/menu/placeholder.png'; }}
                   />
                 </Link>
 
