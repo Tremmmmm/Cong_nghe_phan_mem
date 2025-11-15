@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-import '/assets/stylesheets/style.css';
+import "./style.css";
 import '/assets/stylesheets/orders-admin.css';
 import '/assets/stylesheets/toast.css';
 import '/assets/stylesheets/theme.css';
