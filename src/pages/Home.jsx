@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+// 💡 QUAN TRỌNG: Bây giờ chúng ta dùng lại import từ file API đã sửa
 import { fetchMerchants, fetchMenuItems } from '../utils/merchantAPI.js'; 
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -10,33 +11,33 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
-  const navigate = useNavigate();
   const toast = useToast();
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Load song song cả merchants và menu items (cho phần gợi ý)
+      // Gọi API thông qua file merchantAPI.js (đã được bạn sửa link server chuẩn)
       const [merchantsData, menuItemsData] = await Promise.all([
           fetchMerchants(),
           fetchMenuItems()
       ]);
 
-      // Chỉ hiện merchants đã được duyệt setMerchants(merchantsData.filter(m => m.status === 'approved'));
       setMerchants(merchantsData);
       
-      // Lấy một số món ăn để hiển thị (ví dụ 8 món đầu tiên)
-      setMenuItems(menuItemsData.slice(0, 8));
+      // Lấy 8 món đầu tiên để hiển thị
+      // Kiểm tra kỹ dữ liệu trả về có phải mảng không để tránh lỗi
+      const safeMenuData = Array.isArray(menuItemsData) ? menuItemsData : [];
+      setMenuItems(safeMenuData.slice(0, 8));
 
     } catch (err) {
-      setError('Không thể tải dữ liệu trang chủ.');
       console.error("Failed to fetch home data:", err);
-      toast.show('Không thể tải dữ liệu trang chủ.', 'error');
+      setError('Không thể tải dữ liệu trang chủ.');
+      // Không show toast lỗi ngay để tránh spam nếu server đang ngủ
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -50,7 +51,7 @@ export default function Home() {
 
     .section-title { font-size: 28px; font-weight: 800; color: #333; margin-top: 40px; margin-bottom: 20px; }
 
-    /* --- Style cho danh sách quán ăn (Merchant List) --- */
+    /* --- Style Merchant List --- */
     .merchant-list { 
         display: grid; 
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
@@ -64,9 +65,9 @@ export default function Home() {
         cursor: pointer; 
         transition: transform .2s ease, box-shadow .2s ease; 
         box-shadow: 0 4px 12px rgba(0,0,0,.05);
-        text-decoration: none; /* Bỏ gạch chân cho Link */
-        color: inherit; /* Giữ màu chữ gốc */
-        display: block; /* Để Link bao trọn thẻ div */
+        text-decoration: none; 
+        color: inherit; 
+        display: block; 
     }
     .merchant-card:hover { 
         transform: translateY(-5px); 
@@ -91,7 +92,7 @@ export default function Home() {
     .merchant-address { font-size: 14px; color: #666; margin: 0 0 5px 0; }
     .merchant-hours { font-size: 13px; margin: 0; }
 
-    /* --- Style cho danh sách món ăn (Dish Grid) --- */
+    /* --- Style Dish Grid --- */
     .dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
     .dish-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.05); transition: box-shadow .2s ease; }
     .dish-card:hover { box-shadow: 0 6px 16px rgba(0,0,0,.1); }
@@ -104,7 +105,6 @@ export default function Home() {
     .dish-card-price { font-size: 16px; font-weight: 700; color: #ff7a59; }
     .dish-card-desc { font-size: 13px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
 
-    /* Dark mode */
     .dark .hero { background: #221b18; }
     .dark .hero h1 { color: #eee; }
     .dark .hero p { color: #bbb; }
@@ -126,8 +126,8 @@ export default function Home() {
     }
   }, [styles]);
 
-  if (loading) return <div className="home-wrap" style={{textAlign: 'center', padding: '50px'}}>Đang tải dữ liệu...</div>;
-  if (error) return <div className="home-wrap" style={{textAlign: 'center', padding: '50px', color: 'red'}}>{error}</div>;
+  if (loading) return <div className="home-wrap" style={{textAlign: 'center', padding: '50px'}}>Đang tải dữ liệu... (Nếu lâu quá, hãy F5 lại)</div>;
+  if (error) return <div className="home-wrap" style={{textAlign: 'center', padding: '50px', color: 'red'}}>{error} <br/> <button onClick={loadData} style={{marginTop: 10, padding: '8px 16px'}}>Thử lại</button></div>;
 
   const currentHour = new Date().getHours();
   const currentDayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
@@ -144,14 +144,13 @@ export default function Home() {
         <p>Đặt món ngon từ các nhà hàng yêu thích của bạn!</p>
       </div>
 
-      {/* --- PHẦN 1: DANH SÁCH QUÁN ĂN (Dạng thẻ lớn) --- */}
+      {/* --- LIST QUÁN ĂN --- */}
       <h2 className="section-title">Nhà hàng nổi bật</h2>
       <div className="merchant-list">
         {merchants.length === 0 ? (
           <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>Chưa có nhà hàng nào hoạt động.</p>
         ) : (
           merchants.map(merchant => {
-            // Kiểm tra giờ mở cửa
             const openHour = merchant.operatingHours?.[currentDayKey]?.open;
             const closeHour = merchant.operatingHours?.[currentDayKey]?.close;
             const isOpen = openHour !== undefined && closeHour !== undefined && 
@@ -160,7 +159,7 @@ export default function Home() {
 
             return (
               <Link 
-                to={`/merchant/${merchant.id}/menu`} // 💡 Trỏ đến trang MENU của merchant
+                to={`/merchant/${merchant.id}/menu`}
                 key={merchant.id} 
                 className="merchant-card"
               >
@@ -176,7 +175,6 @@ export default function Home() {
                 <div className="merchant-info">
                   <h3 className="merchant-name">{merchant.storeName}</h3>
                   <p className="merchant-address">{merchant.address}</p>
-                  {/* Chỉ hiển thị nếu có thông tin giờ */}
                   {(openHour !== undefined && closeHour !== undefined) ? (
                       <p className="merchant-hours" style={{ color: isOpen ? '#27ae60' : '#e74c3c', fontWeight: '600' }}>
                         {isOpen ? `Đang mở cửa (Đóng lúc ${closeHour}h)` : 'Đang đóng cửa'}
@@ -191,7 +189,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* --- PHẦN 2: MÓN ĂN GỢI Ý (Dạng thẻ nhỏ) --- */}
+      {/* --- LIST MÓN ĂN --- */}
       <h2 className="section-title" style={{marginTop: '50px'}}>Món ngon gần bạn</h2>
       <div className="dish-grid">
           {menuItems.length === 0 ? (
@@ -199,7 +197,6 @@ export default function Home() {
           ) : (
             menuItems.map((item) => (
               <div key={item.id} className="dish-card">
-                {/* Link ảnh món ăn cũng trỏ về menu của merchant đó */}
                 <Link 
                   to={`/merchant/${item.merchantId}/menu`}
                   className="dish-card-img-link"
@@ -215,7 +212,6 @@ export default function Home() {
 
                 <div className="dish-card-body">
                   <h4 className="dish-card-title">{item.name}</h4>
-                  {/* Tên quán (nếu có trong data món ăn, hoặc phải join dữ liệu) */}
                   <p className="dish-card-merchant">
                       {merchants.find(m => m.id === item.merchantId)?.storeName || item.merchantName}
                   </p>  

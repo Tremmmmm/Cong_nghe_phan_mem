@@ -1,18 +1,15 @@
 // File: src/utils/merchantAPI.js
-// 💡 PHIÊN BẢN ĐÃ SỬA LỖI API VÀ LOGIC CREATE/DELETE
 
-// 💡 URL CỦA JSON-SERVER (Giữ nguyên)
-const API_URL_SETTINGS = 'http://localhost:5181/restaurantSettings'; 
-const API_URL_MENUITEMS = 'http://localhost:5181/menuItems';
-const API_URL_MERCHANTS = 'http://localhost:5181/merchants';
-// 💡 THÊM 1: Thêm đường dẫn tới /users
-const API_URL_USERS = 'http://localhost:5181/users';
+// 💡 Lấy link từ biến môi trường (ưu tiên) hoặc dùng localhost (dự phòng)
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5181';
 
-// 💡 Thêm export hằng số này để file khác (như AdminServerRestaurant.jsx) có thể dùng
-export const API_BASE_URL = 'http://localhost:5181';
+const API_URL_SETTINGS = `${API_BASE_URL}/restaurantSettings`;
+const API_URL_MENUITEMS = `${API_BASE_URL}/menuItems`;
+const API_URL_MERCHANTS = `${API_BASE_URL}/merchants`;
+const API_URL_USERS = `${API_BASE_URL}/users`;
 
 // --------------------------------------------------------
-// CÁC HÀM GỌI API (Phần này code của bạn đã đúng)
+// CÁC HÀM GỌI API (Giữ nguyên logic, chỉ đổi biến URL)
 // --------------------------------------------------------
 export async function fetchMerchants() {
     try {
@@ -40,7 +37,7 @@ export async function fetchMerchants() {
         throw error; 
     }
 }
-// ... (Hàm fetchMerchantSettingById)
+
 export async function fetchMerchantSettingById(merchantId) {
     try {
         const response = await fetch(`${API_URL_SETTINGS}/${merchantId}`);
@@ -54,7 +51,7 @@ export async function fetchMerchantSettingById(merchantId) {
         throw error;
     }
 }
-// ... (Hàm fetchMerchantContractById)
+
 export async function fetchMerchantContractById(merchantId) {
     try {
         const response = await fetch(`${API_URL_MERCHANTS}/${merchantId}`);
@@ -68,7 +65,7 @@ export async function fetchMerchantContractById(merchantId) {
         throw error;
     }
 }
-// ... (Hàm fetchMenuItems)
+
 export async function fetchMenuItems() {  
     try {
         const response = await fetch(API_URL_MENUITEMS); 
@@ -82,10 +79,10 @@ export async function fetchMenuItems() {
         throw error;
     }
 }
-// ... (Hàm updateMerchant)
+
 export async function updateMerchant(merchantId, updates) {
     try {
-        const response = await fetch(`${API_URL_SETTINGS}/${merchantId}`, { // ⬅️ Chỉ update Settings
+        const response = await fetch(`${API_URL_SETTINGS}/${merchantId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updates), 
@@ -98,36 +95,26 @@ export async function updateMerchant(merchantId, updates) {
     }
 }
 
-
 // --------------------------------------------------------
-// 💡 CÁC HÀM ĐÃ SỬA LỖI
+// LOGIC CREATE/DELETE (Đã sửa URL)
 // --------------------------------------------------------
 
-/**
- * [POST] Thêm Merchant mới
- * 💡 SỬA LỖI: Hàm này phải tạo 3 bản ghi (settings, merchant, user)
- */
 export async function createMerchant(newMerchantData) {
-    // 1. Tạo ID Merchant (dùng cho cả 3 bảng)
     const newMerchantId = `m_${Date.now()}`;
     const defaultName = newMerchantData.name || `Cửa hàng Mới #${newMerchantId.slice(-4)}`;
-    
-    // 💡 TẠO THÔNG TIN USER MỚI
-    const newUserId = `u_${Date.now()}`; // ID riêng cho user
+    const newUserId = `u_${Date.now()}`;
     const newUsername = newMerchantData.owner || `merchant_${newMerchantId.slice(-4)}`;
     
-    // 2. Payload cho /merchants (bảng "pháp lý")
     const merchantPayload = {
         ...newMerchantData,
         id: newMerchantId,
-        owner: newUsername, // Dùng username mới làm owner
+        owner: newUsername,
         status: 'Pending',
         ordersToday: 0,
     };
     
-    // 3. Payload cho /restaurantSettings (bảng "hoạt động")
     const settingsPayload = {
-        id: newMerchantId, // ID phải khớp với /merchants
+        id: newMerchantId,
         storeName: defaultName,
         address: 'Chưa cập nhật địa chỉ',
         phone: '',
@@ -136,18 +123,16 @@ export async function createMerchant(newMerchantData) {
         operatingHours: {}
     };
 
-    // 💡 THÊM 2: Payload cho /users (bảng "tài khoản")
     const userPayload = {
         id: newUserId,
         username: newUsername,
-        password: "123", // 💡 Mật khẩu mặc định
-        name: `Admin (${defaultName})`, // Tên tài khoản
+        password: "123",
+        name: `Admin (${defaultName})`,
         role: 'Merchant',
-        merchantId: newMerchantId // 💡 Liên kết tài khoản này với cửa hàng
+        merchantId: newMerchantId
     };
 
     try {
-        // 💡 THÊM 3: Gọi cả 3 API POST song song
         const [merchantRes, settingsRes, userRes] = await Promise.all([
             fetch(API_URL_MERCHANTS, {
                 method: 'POST',
@@ -159,7 +144,6 @@ export async function createMerchant(newMerchantData) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settingsPayload)
             }),
-            // 💡 GỌI API THỨ 3
             fetch(API_URL_USERS, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -168,24 +152,19 @@ export async function createMerchant(newMerchantData) {
         ]);
 
         if (!merchantRes.ok || !settingsRes.ok || !userRes.ok) {
-            throw new Error('Tạo 1 trong 3 bản ghi (merchant, settings, user) thất bại');
+            throw new Error('Tạo 1 trong 3 bản ghi thất bại');
         }
 
-        // 5. Trả về dữ liệu đã gộp (giống fetchMerchants)
         const newMerchant = await merchantRes.json();
         const newSettings = await settingsRes.json();
-        return { ...newMerchant, ...newSettings }; // Trả về 1 merchant hoàn chỉnh
+        return { ...newMerchant, ...newSettings };
 
     } catch (error) {
-        console.error("Error creating merchant (and user):", error);
+        console.error("Error creating merchant:", error);
         throw error;
     }
 }
 
-/**
- * [GET] Lấy chi tiết 1 Merchant bằng ID
- * 💡 SỬA LỖI: Hàm này phải gộp dữ liệu (giống fetchMerchants)
- */
 export async function fetchMerchantById(merchantId) {
     try {
         const [setting, contract] = await Promise.all([
@@ -199,12 +178,7 @@ export async function fetchMerchantById(merchantId) {
     }
 }
 
-/**
- * [DELETE] Xóa Merchant
- * 💡 SỬA LỖI: Hàm này phải xóa ở cả 3 bảng
- */
 export async function deleteMerchant(merchantId) {
-    // 💡 Lưu ý: Cần tìm user liên quan đến merchantId này để xóa
     let userIdToDelete = null;
     try {
         const usersRes = await fetch(`${API_URL_USERS}?merchantId=${merchantId}`);
@@ -217,25 +191,17 @@ export async function deleteMerchant(merchantId) {
     }
     
     try {
-        // 1. Xóa ở /merchants
-        const res1 = fetch(`${API_URL_MERCHANTS}/${merchantId}`, { 
-            method: 'DELETE',
-        });
-        // 2. Xóa ở /restaurantSettings
-        const res2 = fetch(`${API_URL_SETTINGS}/${merchantId}`, {
-            method: 'DELETE',
-        });
-        // 3. Xóa user (nếu tìm thấy)
+        const res1 = fetch(`${API_URL_MERCHANTS}/${merchantId}`, { method: 'DELETE' });
+        const res2 = fetch(`${API_URL_SETTINGS}/${merchantId}`, { method: 'DELETE' });
         const res3 = userIdToDelete 
             ? fetch(`${API_URL_USERS}/${userIdToDelete}`, { method: 'DELETE' })
-            : Promise.resolve(true); // (Tạo 1 promise rỗng nếu không có user)
+            : Promise.resolve(true);
 
-        const [response1, response2, response3] = await Promise.all([res1, res2, res3]);
+        const [response1, response2] = await Promise.all([res1, res2, res3]);
 
-        if (!response1.ok && !response2.ok) { // Chỉ cần 1 trong 2 (merchant/setting) OK
-             throw new Error(`Không thể xóa merchant (Cả 2 API đều lỗi)`);
+        if (!response1.ok && !response2.ok) {
+             throw new Error(`Không thể xóa merchant`);
         }
-        
         return true; 
     } catch (error) {
         console.error(`Error deleting merchant ${merchantId}:`, error);

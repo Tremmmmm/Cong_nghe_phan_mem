@@ -1,8 +1,10 @@
+// File: src/utils/orderAPI.js
+
 import axios from 'axios'
 
-// API json-server (menu, orders, sessions, payments)
+// 💡 Tự động lấy URL từ biến môi trường
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5181', // đồng bộ 5181
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5181',
   withCredentials: false,
   timeout: 10000,
   headers: {
@@ -11,11 +13,9 @@ export const api = axios.create({
   },
 })
 
-// ====== MENU (Có thể giữ hoặc chuyển sang menuAPI.js tùy bạn) ======
 export const getMenu = (params = {}) =>
   api.get('/menu', { params }).then((r) => r.data)
 
-// ====== SESSIONS (PoC) ======
 export const createSession = async () => {
   const payload = { status: 'open', startedAt: new Date().toISOString() }
   const { data } = await api.post('/sessions', payload)
@@ -24,13 +24,10 @@ export const createSession = async () => {
 
 export const closeSession = async (sessionId) => {
   const payload = { status: 'closed', endedAt: new Date().toISOString() }
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   const { data } = await api.patch(`/sessions/${sessionId}`, payload) 
   return data
 }
 
-// ====== ORDERS ======
-// Ép status 'new' để nhà hàng thao tác ngay; giữ 'unpaid' cho COD
 export const createOrder = async (payload) => {
   const sanitized = {
     ...payload,
@@ -45,9 +42,6 @@ export const createOrder = async (payload) => {
 
 export const placeOrder = createOrder
 
-/**
- * Lấy danh sách đơn hàng (Hỗ trợ lọc theo merchantId, userId, userEmail)
- */
 export const myOrders = async ({
   page = 1,
   limit = 10,
@@ -57,7 +51,7 @@ export const myOrders = async ({
   order = 'desc',
   merchantId = null, 
   userId = null, 
-  userEmail = null, // ✅ BẠN THÊM CÁI NÀY LÀ ĐÚNG
+  userEmail = null,
 } = {}) => {
   const params = {
     _page: page,
@@ -88,12 +82,10 @@ export const myOrders = async ({
 
 export const updateOrderStatus = (id, patch) => {
   const data = typeof patch === 'string' ? { status: patch } : patch
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   return api.patch(`/orders/${id}`, data).then((r) => r.data)
 }
 
 export const getOrder = (id) =>
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   api.get(`/orders/${id}?_=${Date.now()}`).then((r) => r.data)
 
 export const getAllOrders = async (merchantId = null) => {
@@ -110,7 +102,6 @@ export const getAllOrders = async (merchantId = null) => {
   return res.data || []
 }
 
-// ====== PAYMENT (PoC mock) ======
 export const createPayment = async ({ orderId, amount, method = 'CARD' }) => {
   const payload = {
     orderId,
@@ -125,7 +116,6 @@ export const createPayment = async ({ orderId, amount, method = 'CARD' }) => {
 }
 
 export const capturePayment = async (paymentId) => {
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   const { data } = await api.patch(`/payments/${paymentId}`, {
     status: 'captured',
     updatedAt: new Date().toISOString(),
@@ -134,16 +124,12 @@ export const capturePayment = async (paymentId) => {
 }
 
 export const patchOrder = (id, payload) =>
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   api.patch(`/orders/${id}`, payload).then((r) => r.data)
 
-// ===== DRONE MISSIONS / POSITIONS =====
 export const getOrderById = (id) =>
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   api.get(`/orders/${id}`).then((r) => r.data)
 
 export const getMissionById = (id) =>
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   api.get(`/droneMissions/${id}`).then((r) => r.data)
 
 export const createDemoMission = async ({ origin, destination }) => {
@@ -164,7 +150,6 @@ export const getDronePositions = async ({ missionId, since = 0 }) => {
     _order: 'asc',
   })
   if (since && Number(since) > 0) q.set('timestamp_gte', String(since))
-  // 💡 SỬA LẠI DÙNG BACKTICK (`)
   const { data } = await api.get(`/dronePositions?${q.toString()}`)
   return data
 }

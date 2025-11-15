@@ -1,13 +1,14 @@
-const API_URL = 'http://localhost:5181/restaurantSettings';
+// File: src/utils/settingsAPI.js
 
-// [GET] Lấy cài đặt theo ID cửa hàng
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5181';
+const API_URL = `${API_BASE_URL}/restaurantSettings`;
+
 export const fetchSettings = async (merchantId) => {
-  if (!merchantId) throw new Error("Thiếu merchantId khi gọi API fetchSettings");
-  
+  if (!merchantId) throw new Error("Thiếu merchantId");
   try {
       const res = await fetch(`${API_URL}/${merchantId}`);
       if (!res.ok) {
-          if (res.status === 404) return null; // Chưa có cài đặt -> trả về null
+          if (res.status === 404) return null;
           throw new Error(`Lỗi tải cài đặt (Status: ${res.status})`);
       }
       return await res.json();
@@ -17,20 +18,16 @@ export const fetchSettings = async (merchantId) => {
   }
 };
 
-// [PUT] Cập nhật cài đặt (Ghi đè hoặc tạo mới nếu chưa có)
 export const updateSettings = async (merchantId, data) => {
-    if (!merchantId) throw new Error("Thiếu merchantId khi gọi API updateSettings");
-    
-    // Đảm bảo data gửi lên có ID trùng với merchantId
+    if (!merchantId) throw new Error("Thiếu merchantId");
     const payload = { ...data, id: merchantId };
-    
     try {
         const res = await fetch(`${API_URL}/${merchantId}`, {
-            method: 'PUT', // PUT sẽ tạo mới nếu ID chưa tồn tại (với json-server)
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error(`Lỗi lưu cài đặt (Status: ${res.status})`);
+        if (!res.ok) throw new Error(`Lỗi lưu cài đặt`);
         return await res.json();
     } catch (error) {
         console.error("Error updating settings:", error);
@@ -38,10 +35,8 @@ export const updateSettings = async (merchantId, data) => {
     }
 };
 
-// [PATCH] Cập nhật một phần (Ví dụ: chỉ bật/tắt trạng thái đóng cửa)
 export const patchSettings = async (merchantId, partialData) => {
-   if (!merchantId) throw new Error("Thiếu merchantId khi gọi API patchSettings");
-   
+   if (!merchantId) throw new Error("Thiếu merchantId");
    try {
        const res = await fetch(`${API_URL}/${merchantId}`, {
         method: 'PATCH',
@@ -49,12 +44,10 @@ export const patchSettings = async (merchantId, partialData) => {
         body: JSON.stringify(partialData),
       });
       if (!res.ok) {
-          // Nếu lỗi 404 (chưa có bản ghi để patch), thử dùng PUT để tạo mới
           if (res.status === 404) {
-              console.warn("Settings not found for PATCH, trying PUT to create...");
-              return await updateSettings(merchantId, partialData); // Gọi updateSettings để tạo mới
+              return await updateSettings(merchantId, partialData);
           }
-          throw new Error(`Lỗi cập nhật trạng thái (Status: ${res.status})`);
+          throw new Error(`Lỗi cập nhật trạng thái`);
       }
       return await res.json();
    } catch (error) {
