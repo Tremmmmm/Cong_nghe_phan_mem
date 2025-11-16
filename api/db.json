@@ -5542,6 +5542,32 @@
           "merchantId": "m001",
           "merchantName": "Burger King Fast Food",
           "qty": 1
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "price": 52000,
+          "desc": "Gà rán giòn rụm, vị cay nhẹ.",
+          "image": "/assets/images/menu/friedchicken.webp",
+          "category": "single",
+          "status": "approved",
+          "isAvailable": true,
+          "merchantId": "m001",
+          "merchantName": "Burger King Fast Food",
+          "qty": 1
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "price": 29000,
+          "desc": "Khoai tây chiên giòn, muối nhẹ.",
+          "image": "/assets/images/menu/frenchfries.jpg",
+          "category": "single",
+          "status": "approved",
+          "isAvailable": true,
+          "merchantId": "m001",
+          "merchantName": "Burger King Fast Food",
+          "qty": 1
         }
       ],
       "id": "ff_cart_v2:ue:c001@gmail.com"

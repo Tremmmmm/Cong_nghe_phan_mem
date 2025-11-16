@@ -93,44 +93,105 @@
 
 
         // --- Styles (Giữ nguyên) ---
-        const styles = useMemo(() => `
-            .menu-wrap{max-width:1140px;margin:24px auto;padding:0 16px}
-            .menu-head{display:flex;align-items:end;gap:12px;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #eee}
-            .menu-head h2{margin:0;font-size:28px;color:#333}
-            .store-info { font-size: 15px; color: #666; }
-            
-            .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px}
-            .card{border:1px solid #eee;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column;position:relative; transition:transform .2s, box-shadow .2s}
-            .card:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,.08)}
-            .thumb{aspect-ratio:16/10;background:#f9f9f9;display:block;width:100%;object-fit:cover}
-            .body{padding:15px;display:flex;flex-direction:column;gap:8px;flex-grow:1}
-            .name{font-weight:700;font-size:17px;color:#222}
-            .desc{color:#666;font-size:14px;flex-grow:1}
-            .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:15px}
-            .price{font-weight:800;font-size:18px;color:#ff7a59}
-            
-            .btn{border:none;background:#ff7a59;color:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:14px;transition:0.2s}
-            .btn:hover{background:#e66a4d}
-            .btn:disabled{background:#ccc;cursor:not-allowed;opacity:0.7}
-            
-            .heart{border:1px solid #eee;background:#fff;color:#ccc;padding:8px;border-radius:8px;cursor:pointer;font-size:18px;transition:0.2s}
-            .heart.active{color:#e74c3c;border-color:#ffdada;background:#fff5f5}
-            
-            .section-title{font-size:22px;font-weight:700;margin:30px 0 15px;color:#444}
+       const styles = useMemo(() => `
+    .menu-wrap{max-width:1140px;margin:24px auto;padding:0 16px}
+    
+    /* --- HERO & HEADER --- */
+    .menu-head { margin-top: 20px; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+    .menu-head h2 { font-size: 22px; margin: 0 0 4px; color: #333; }
+    .store-addr { font-size: 13px; color: #666; margin-bottom: 4px; }
+    .store-status { font-size: 13px; font-weight: 600; }
 
-            .closed-overlay {position:absolute;inset:0;background:rgba(255,255,255,0.7);z-index:5;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
-            .closed-tag {background:#333;color:#fff;padding:6px 12px;border-radius:20px;font-weight:600;font-size:14px}
-            
-            .operating-hours-box { background:#f9f9f9; border:1px solid #eee; border-radius:12px; padding:15px 20px; margin-bottom:30px; display:flex; flex-wrap:wrap; gap:15px; justify-content:center }
-            .hour-item { display:flex; flex-direction:column; align-items:center; padding:8px 12px; background:#fff; border-radius:8px; border:1px solid #eee; min-width:80px }
-            .hour-day { font-weight:700; color:#555; font-size:14px; margin-bottom:4px }
-            .hour-time { font-size:13px; color:#777 }
-            .hour-item.today { border-color:#ff7a59; background:#fff5f2 }
-            .hour-item.today .hour-day { color:#ff7a59 }
+    /* --- GIỜ HOẠT ĐỘNG (DESKTOP) --- */
+    .operating-hours-box { 
+        background: #f9f9f9; border: 1px solid #eee; border-radius: 12px; padding: 12px; margin-bottom: 20px; 
+    }
+    .hours-desktop-grid { 
+        display: flex; gap: 10px; flex-wrap: wrap; /* Desktop hiện hết */
+    }
+    
+    /* --- GIỜ HOẠT ĐỘNG (MOBILE CSS) --- */
+    .hours-mobile-summary { display: none; } /* Ẩn trên desktop */
 
-            .store-closed-alert { background:#fff4f4; color:#d63031; border:1px solid #ffcaca; padding:12px; border-radius:8px; text-align:center; margin-bottom:20px; font-weight:600 }
-        `, []);
+    @media (max-width: 639px) {
+        /* Ẩn danh sách đầy đủ mặc định */
+        .hours-desktop-grid { 
+            display: none; 
+            flex-direction: column; gap: 8px; margin-top: 10px;
+            border-top: 1px dashed #ddd; padding-top: 10px;
+        }
+        /* Hiện danh sách khi có class expanded */
+        .hours-desktop-grid.expanded { display: flex; }
 
+        /* Hiện thanh tóm tắt có thể bấm được */
+        .hours-mobile-summary {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 4px; cursor: pointer;
+            font-size: 13px; font-weight: 600; color: #444;
+        }
+        .chevron { transition: transform 0.2s; font-size: 10px; margin-left: 6px; }
+        .chevron.rotated { transform: rotate(180deg); }
+        
+        .hour-item { width: 100%; flex-direction: row; justify-content: space-between; padding: 8px 12px; }
+    }
+
+    /* Item ngày tháng chung */
+    .hour-item { 
+        display: flex; flex-direction: column; align-items: center; 
+        padding: 8px 12px; background: #fff; border-radius: 8px; border: 1px solid #eee; 
+        min-width: 70px; 
+    }
+    .hour-day { font-size: 12px; font-weight: 700; color: #666; }
+    .hour-time { font-size: 11px; color: #888; }
+    
+    .hour-item.today { border-color: #ff7a59; background: #fff5f2; }
+    .hour-item.today .hour-day { color: #ff7a59; }
+
+
+    /* --- GRID MÓN ĂN --- */
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff; display: flex; flex-direction: column; position: relative; }
+    .thumb { aspect-ratio: 16/10; width: 100%; object-fit: cover; }
+    .body { padding: 12px; flex-grow: 1; display: flex; flex-direction: column; }
+    .name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+    .desc { font-size: 13px; color: #666; margin-bottom: 10px; flex-grow: 1; }
+    .row { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+    .price { font-weight: 800; color: #ff7a59; }
+    .btn { border: none; background: #ff7a59; color: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-weight: 600; font-size: 13px; }
+    .heart { border: 1px solid #eee; background: #fff; color: #ccc; padding: 6px; border-radius: 8px; cursor: pointer; font-size: 18px; margin-right: 8px; }
+    .heart.active { color: #e74c3c; background: #fff5f5; border-color: #ffdada; }
+    .section-title { font-size: 18px; font-weight: 700; margin: 24px 0 12px; color: #333; border-left: 4px solid #ff7a59; padding-left: 10px; }
+
+    /* Mobile Responsive Cards */
+    @media (max-width: 639px) {
+        .grid { grid-template-columns: 1fr; gap: 12px; }
+        .card { flex-direction: row; height: 110px; }
+        .thumb { width: 110px; height: 100%; aspect-ratio: 1/1; flex-shrink: 0; }
+        .desc { display: none; }
+        .body { padding: 10px; justify-content: space-between; }
+        .menu-head { margin-top: 10px; }
+    }
+
+    .store-closed-alert { background:#fff4f4; color:#d63031; border:1px solid #ffcaca; padding:10px; border-radius:8px; text-align:center; margin-bottom:16px; font-size: 13px; font-weight:600; }
+    .closed-overlay { position:absolute; inset:0; background:rgba(255,255,255,0.7); z-index:5; display:flex; align-items:center; justify-content:center; }
+    .closed-tag { background:#333; color:#fff; padding:4px 10px; border-radius:20px; font-weight:600; font-size:12px; }
+    
+    .dark .menu-wrap { color: #eee; }
+    .dark .card { background: #151515; border-color: #333; }
+    .dark .operating-hours-box { background: #1f1f1f; border-color: #333; }
+    .dark .hour-item { background: #2a2a2a; border-color: #333; }
+    .dark .hours-mobile-summary { color: #eee; }
+    `, []);
+
+    useEffect(() => {
+        const styleId = "menu-page-style";
+        if (!document.getElementById(styleId)) {
+            const tag = document.createElement("style");
+            tag.id = styleId;
+            tag.innerHTML = styles;
+            document.head.appendChild(tag);
+        }
+    }, [styles]);
         useEffect(() => {
             const styleId = "menu-page-style";
             if (!document.getElementById(styleId)) {
