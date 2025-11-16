@@ -5,47 +5,44 @@ export default function Footer() {
   const styles = useMemo(
     () => `
     .ff-footer{
-      background:#f4f4f6; border-top:1px solid #e9e9ef;
+      background:#f4f4f6; border-top:1px solid #e9e9ef; margin-top: auto; /* Đẩy footer xuống đáy nếu trang ngắn */
     }
     .ff-footer .wrap{
-      max-width:1140px; margin:0 auto; padding:28px 16px;
-      display:grid; grid-template-columns:2fr 1.4fr 1fr 1fr; gap:28px;
+      max-width:1140px; margin:0 auto; padding:40px 16px;
+      display:grid; grid-template-columns: 1.5fr 1fr 1fr; /* Chia cột thoáng hơn */
+      gap:30px;
     }
     .ff-brand{
-      display:flex; flex-direction:column; gap:10px; color:#555;
+      display:flex; flex-direction:column; gap:12px; color:#555; align-items: flex-start;
     }
-      .ff-brand div{ margin:0;font-size:20px;text-align:center;line-height:1.1;font-weight:900;color:#ff6b35;font-family: 'Times New Roman', Times, serif;}
-    .ff-brand-logo{ height:34px; width:auto; }
+    .ff-brand div{ margin:0;font-size:24px;line-height:1;font-weight:900;color:#ff6b35;font-family: 'Times New Roman', Times, serif;}
+    .ff-brand-logo{ height:40px; width:auto; object-fit: contain; }
+    
     .ff-title{
-      font-weight:800; font-size:20px; color:#222; margin-bottom:8px;
+      font-weight:800; font-size:18px; color:#222; margin-bottom:12px;
       font-family: ui-serif, Georgia, "Times New Roman", serif;
     }
-    .ff-list{ list-style:none; padding:0; margin:0; display:grid; gap:8px; color:#444; }
-    .ff-link{ color:#444; text-decoration:none; }
-    .ff-link:hover{ color:#ff7a59; }
-    .ff-hours-li{ display:flex; align-items:center; gap:10px; }
-    .ff-dot{
-      width:18px; height:18px; border-radius:50%;
-      background: radial-gradient(circle at 30% 30%, #ffcc8a, #ff7a59);
-      display:inline-block;
+    .ff-list{ list-style:none; padding:0; margin:0; display:flex; flex-direction: column; gap:10px; color:#444; }
+    .ff-link{ color:#555; text-decoration:none; font-size: 15px; transition: color 0.2s; }
+    .ff-link:hover{ color:#ff7a59; text-decoration: underline; }
+    
+    .ff-footnote{ text-align:center; padding:20px 16px; color:#888; font-size: 14px; border-top:1px solid #e9e9ef; background: #efeff1; }
+
+    /* --- RESPONSIVE MOBILE --- */
+    @media (max-width: 768px) {
+      .ff-footer .wrap{ 
+          grid-template-columns: 1fr; /* 1 cột duy nhất trên mobile */
+          gap: 30px; 
+          text-align: center; /* Căn giữa cho đẹp */
+      }
+      .ff-brand { align-items: center; } /* Căn giữa logo */
     }
-    .ff-footnote{ text-align:center; padding:14px 0 22px; color:#777; border-top:1px solid #e9e9ef; }
-    /* responsive */
-    @media (max-width:980px){
-      .ff-footer .wrap{ grid-template-columns:1.5fr 1fr 1fr; }
-      .ff-brand{ grid-column:1 / -1; }
-    }
-    @media (max-width:640px){
-      .ff-footer .wrap{ grid-template-columns:1fr 1fr; }
-    }
-    @media (max-width:460px){
-      .ff-footer .wrap{ grid-template-columns:1fr; }
-    }
+
     /* dark mode */
     .dark .ff-footer{ background:#121214; border-top-color:#2a2a2f; }
     .dark .ff-brand, .dark .ff-list, .dark .ff-link{ color:#d1d1d6; }
     .dark .ff-title{ color:#f3f3f7; }
-    .dark .ff-footnote{ color:#a9a9b2; border-top-color:#2a2a2f; }
+    .dark .ff-footnote{ color:#a9a9b2; border-top-color:#2a2a2f; background: #0c0c0e; }
     `,
     []
   );
@@ -63,34 +60,37 @@ export default function Footer() {
   return (
     <footer className="ff-footer">
       <div className="wrap">
-        {/* Brand + tagline */}
+        {/* Brand */}
         <div className="ff-brand">
           <img className="ff-brand-logo" src="/assets/images/logo.png" alt="FoodFast" onError={(e)=>{e.currentTarget.style.display='none'}} />
           <div>FASTFOOD</div>
+          <p style={{fontSize: 14, margin:0, lineHeight: 1.5}}>
+            Đặt món nhanh chóng, giao hàng tận nơi với công nghệ Drone tiên tiến.
+          </p>
         </div> 
 
         {/* Links */}
         <div>
-          <div className="ff-title">Links</div>
+          <div className="ff-title">Khám phá</div>
           <ul className="ff-list">
-            <li><Link className="ff-link" to="/">Home</Link></li>
-            <li><Link className="ff-link" to="/menu">Menu</Link></li>
-            <li><Link className="ff-link" to="/">Our Team</Link></li>
+            <li><Link className="ff-link" to="/">Trang chủ</Link></li>
+            <li><Link className="ff-link" to="/">Về chúng tôi</Link></li>
+            {/* <li><Link className="ff-link" to="/menu">Thực đơn</Link></li> */}
           </ul>
         </div>
 
         {/* Company */}
         <div>
-          <div className="ff-title">Company</div>
+          <div className="ff-title">Chính sách</div>
           <ul className="ff-list">
-            <li><a className="ff-link" href="/" onClick={(e)=>e.preventDefault()}>Terms &amp; Conditions</a></li>
-            <li><a className="ff-link" href="/" onClick={(e)=>e.preventDefault()}>Privacy Policy</a></li>
-            <li><a className="ff-link" href="/" onClick={(e)=>e.preventDefault()}>Cookie Policy</a></li>
+            <li><Link className="ff-link" to="/">Điều khoản sử dụng</Link></li>
+            <li><Link className="ff-link" to="/">Chính sách bảo mật</Link></li>
+            <li><Link className="ff-link" to="/">Hỗ trợ khách hàng</Link></li>
           </ul>
         </div>
       </div>
 
-      <div className="ff-footnote">© 2025 FoodFast Delivery</div>
+      <div className="ff-footnote">© 2025 FoodFast Delivery. All rights reserved.</div>
     </footer>
   );
 }
