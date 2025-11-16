@@ -473,9 +473,9 @@ export default function RestaurantOrders() {
       const etaMin = Math.ceil((haversineKm(origin, dest) / speedKmh) * 60);
 
       const payload = {
-        orderId: String(ord.id),
-        restaurantId: ord.restaurantId || null,
-        customerId: ord.customerId || null,
+        orderId: String(ord.id),// 💡 Bổ sung thêm 2 trường này khi tạo mission mới
+        merchantId: ord.merchantId, 
+        customerId: ord.userId,
         startTime: new Date().toISOString(),
         status: "in_progress",
         vehicle: "drone",

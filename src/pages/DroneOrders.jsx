@@ -11,50 +11,21 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5181";
 /* ====================== Telemetry helpers ====================== */
 async function getLatestTelemetry(missionId) {
   if (!missionId) return null;
-
-  // lấy theo missionId
-  try {
-    const qs = new URLSearchParams({
-      missionId: String(missionId),
-      _sort: "timestamp",
-      _order: "desc",
-      _limit: "1",
-    });
+  const fetchOne = async (qs) => {
     const r = await fetch(`${API_BASE}/dronePositions?${qs.toString()}`);
-    if (r.ok) {
-      const arr = await r.json();
-      if (arr?.[0]) {
-        const t = arr[0];
-        return {
-          ...t,
-          ts: typeof t.timestamp === "string" ? Date.parse(t.timestamp) : t.timestamp,
-        };
-      }
-    }
-  } catch {}
-
-  // fallback theo droneId (DB cũ)
+    if (!r.ok) return null;
+    const arr = await r.json();
+    if (!arr?.[0]) return null;
+    const t = arr[0];
+    return { ...t, ts: typeof t.timestamp === "string" ? Date.parse(t.timestamp) : t.timestamp };
+  };
   try {
-    const qs = new URLSearchParams({
-      droneId: String(missionId),
-      _sort: "timestamp",
-      _order: "desc",
-      _limit: "1",
-    });
-    const r = await fetch(`${API_BASE}/dronePositions?${qs.toString()}`);
-    if (r.ok) {
-      const arr = await r.json();
-      if (arr?.[0]) {
-        const t = arr[0];
-        return {
-          ...t,
-          ts: typeof t.timestamp === "string" ? Date.parse(t.timestamp) : t.timestamp,
-        };
-      }
-    }
-  } catch {}
-
-  return null;
+    const q1 = new URLSearchParams({ missionId: String(missionId), _sort: "timestamp", _order: "desc", _limit: "1" });
+    const t1 = await fetchOne(q1);
+    if (t1) return t1;
+    const q2 = new URLSearchParams({ droneId: String(missionId), _sort: "timestamp", _order: "desc", _limit: "1" });
+    return await fetchOne(q2);
+  } catch { return null; }
 }
 
 async function getMission(missionId) {
@@ -63,30 +34,20 @@ async function getMission(missionId) {
     const res = await fetch(`${API_BASE}/droneMissions/${encodeURIComponent(missionId)}`);
     if (!res.ok) return null;
     return res.json();
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function findMissionByOrderId(orderId) {
   try {
-    const qs = new URLSearchParams({
-      orderId: String(orderId),
-      _sort: "startTime",
-      _order: "desc",
-      _limit: "1",
-    });
+    const qs = new URLSearchParams({ orderId: String(orderId), _sort: "startTime", _order: "desc", _limit: "1" });
     const res = await fetch(`${API_BASE}/droneMissions?${qs.toString()}`);
     if (!res.ok) return null;
     const arr = await res.json();
     return arr?.[0] || null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 /* ====================== Status helpers ====================== */
-// Chuẩn hoá trạng thái đơn (chỉ dùng để hiển thị pill nhỏ)
 const normalizeStatus = (s = "") => {
   const x = s.toLowerCase();
   if (["delivering"].includes(x)) return "delivery";
@@ -97,36 +58,27 @@ const normalizeStatus = (s = "") => {
   return "order";
 };
 
-// Gom nhóm mission status → 4 nhóm chính (chỉ dùng cho phần thống kê)
 function missionGroup(ms) {
   const s = String(ms || "").toLowerCase();
-  if (["queued","preflight","ready","pickup","waiting"].includes(s)) return "waiting";     // Chờ lấy hàng
-  if (["in_progress","delivering","flight","takeoff","enroute","descending","returning"].includes(s)) return "active"; // Đang bay
-  if (["dropoff","landed","delivered","completed"].includes(s)) return "done";            // Đã giao hàng
-  if (["failed","cancelled","canceled","error"].includes(s)) return "error";              // Lỗi/Hủy
+  if (["queued","preflight","ready","pickup","waiting"].includes(s)) return "waiting";     
+  if (["in_progress","delivering","flight","takeoff","enroute","descending","returning"].includes(s)) return "active"; 
+  if (["dropoff","landed","delivered","completed"].includes(s)) return "done";            
+  if (["failed","cancelled","canceled","error"].includes(s)) return "error";              
   return null;
 }
 
-// Đơn đã hoàn thành?
 function isOrderDone(order) {
   const os = String(order?.status || "").toLowerCase();
   return ["completed", "done", "delivered"].includes(os);
 }
 
-// Cho phép xem hành trình? (đang giao cần mission, completed thì luôn cho xem)
-  const canTrack = (order, mission) => {
+const canTrack = (order, mission) => {
     const st = normalizeStatus(order?.status);
     const hasMission = !!mission?.id || !!order?.droneMissionId;
     return st === "delivery" && hasMission;
-    };
+};
 
-/* ====================== MissionCell: chỉ 3 trạng thái ====================== */
-/** Hiển thị đúng 3 trạng thái:
- *  - Ready        → "Chờ cất cánh"
- *  - Delivery(*)  → "Đang giao"
- *  - Completed    → "Đã hoàn thành"
- *  (*) bất kỳ biến thể delivering/delivery… đều gom về Delivery qua normalizeStatus
- */
+/* ====================== UI Components ====================== */
 function MissionCell3({ order, mission, telemetry }) {
   const g = missionGroup(mission?.status);
   let label = "Chờ lấy hàng";
@@ -135,70 +87,49 @@ function MissionCell3({ order, mission, telemetry }) {
   else if (g === "done") { label = "Đã giao hàng"; group = "done"; }
   else if (g === "error") { label = "Lỗi/Hủy"; group = "error"; }
 
-
-  // Màu sắc
   const palette = {
-    waiting: { bg:"#fff7cd", br:"#ffeaa1", tx:"#7a5900c2" }, // Chờ lấy hàng
-    active:  { bg:"#e8f5ff", br:"#cfe8ff", tx:"#0b67b3b5" }, // Đang bay
-    done:    { bg:"#dcfce7", br:"#bbf7d0", tx:"#166534b4" }, // Đã giao hàng
-    error:   { bg:"#fde8e8", br:"#f9c7c7", tx:"#b80d0dc1" }, // Lỗi/Hủy
+    waiting: { bg:"#fff7cd", br:"#ffeaa1", tx:"#7a5900" },
+    active:  { bg:"#e8f5ff", br:"#cfe8ff", tx:"#0b67b3" },
+    done:    { bg:"#dcfce7", br:"#bbf7d0", tx:"#166534" },
+    error:   { bg:"#fde8e8", br:"#f9c7c7", tx:"#b80d0d" },
     default: { bg:"#f3f4f6", br:"#e5e7eb", tx:"#111827" },
   };
   const c = palette[group] || palette.default;
-
-  // Dòng cập nhật (nếu có telemetry)
   const updated = telemetry?.ts ? new Date(telemetry.ts).toLocaleTimeString("vi-VN") : "—";
 
   return (
-    <>
-      <span
-        style={{
-          display:"inline-block",
-          padding:"4px 10px",
-          borderRadius:999,
-          border:`1px solid ${c.br}`,
-          background:c.bg,
-          color:c.tx,
-          fontWeight:700,
-          fontSize:12,
-        }}
-      >
+    <div className="mission-status-box">
+      <span style={{
+          display:"inline-block", padding:"4px 10px", borderRadius:999,
+          border:`1px solid ${c.br}`, background:c.bg, color:c.tx,
+          fontWeight:700, fontSize:12, whiteSpace: "nowrap"
+        }}>
         {label}
       </span>
       <div className="mini" style={{marginTop:4, lineHeight:1.2, opacity:.8}}>
         Cập nhật: {updated}
       </div>
-    </>
+    </div>
   );
 }
 
 function CoordText({ lat, lng }) {
   const has = Number.isFinite(lat) && Number.isFinite(lng);
-  if (!has) {
-    return (
-      <div className="coord">
-        <span className="coord-line mini">—</span>
-        <span className="coord-line mini">—</span>
-      </div>
-    );
-  }
+  if (!has) return <span className="mini">—</span>;
   return (
     <div className="coord" title={`${lat}, ${lng}`}>
-      <span className="coord-line mini">{lat.toFixed(6)}</span>
-      <span className="coord-line mini">{lng.toFixed(6)}</span>
+      <div className="coord-line mini">{lat.toFixed(5)}</div>
+      <div className="coord-line mini">{lng.toFixed(5)}</div>
     </div>
   );
 }
 const Dash = () => <span className="mini">—</span>;
 
-/* ====================== Main ====================== */
+/* ====================== Main Page ====================== */
 export default function DroneOrders() {
-const { user, isMerchant, isSuperAdmin } = useAuth(); 
-  // Nếu là merchant thì lấy ID, nếu là Super Admin thì null (để lấy tất cả)
+  const { user, isMerchant, isSuperAdmin } = useAuth(); 
   const merchantId = isMerchant ? user?.merchantId : null;
   
-  // Biến isAdmin có thể lấy trực tiếp từ isSuperAdmin hoặc user.isAdmin tùy logic của bạn
-  // Nếu muốn giữ biến isAdmin như cũ: 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -206,71 +137,89 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
   const [missionByOrderId, setMissionByOrderId] = useState({});
   const [teleByMission, setTeleByMission] = useState({});
 
+  // 💡 CSS Mobile-First & Desktop Responsive
   const styles = `
-    .wrap{padding:24px 0}
-    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
-    .btn{height:36px;border:none;border-radius:10px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:600}
-    .btn:hover{filter:brightness(0.95)}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
-    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
-    .title{font-weight:800;margin:0 0 6px}
-    .val{font-size:22px;font-weight:900}
-    .table{width:100%;border-collapse:separate;border-spacing:0 8px;table-layout:fixed;font-variant-numeric:tabular-nums}
-    .row{background:#fff;border:1px solid #eee;border-radius:12px}
-    .cell{padding:10px 12px;vertical-align:middle}
-    .cell.right{text-align:right}
-    .cell.center{text-align:center}
-    .cell.money {text-align: center;padding-left: 0;padding-right: 0;display: flex;justify-content: center;align-items: center;}
-    .money-val {display: inline-block;width: 100%;text-align: center;font-variant-numeric: tabular-nums;}
-    .cell.customer{text-align:center}
-    .cell.coord{white-space:normal;text-align:center}
-    .coord{font-variant-numeric:tabular-nums;line-height:1.2}
-    .coord-line{display:block}
-    .header{font-size:12px;color:#666;padding-bottom:6px}
-    .mini{font-size:12px;opacity:.75}
-    .cell .mini{display:block}
-    .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#f7f7f7;border:1px solid #e8e8e8;text-transform:capitalize;font-weight:700}
-    .badge.order{background:#fff0e9;border-color:#ffd8c6;color:#c24a26}
-    .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
-    .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
-    .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
-    .badge.cancelled{background:#fde8e8;border-color:#f9c7c7;color:#b80d0d}
+    .wrap{padding:20px 16px; max-width: 1200px; margin: 0 auto;}
+    
+    /* Header */
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px; flex-wrap: wrap;}
+    .topbar h2 { font-size: 24px; color: #333; }
+    .btn{height:36px;border:none;border-radius:8px;background:#111;color:#fff;padding:0 16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:600; font-size: 14px; transition: opacity 0.2s;}
+    .btn:hover{opacity: 0.9;}
+    .btn:disabled{background:#d1d5db;color:#6b7280; cursor: not-allowed}
+
+    /* Summary Cards */
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);}
+    .title{font-weight:600;margin:0 0 6px; font-size: 13px; color: #666; text-transform: uppercase;}
+    .val{font-size:24px;font-weight:800; color: #333;}
+
+    /* --- DESKTOP TABLE STYLE --- */
+    .desktop-view { display: block; overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #eee; }
+    .table{width:100%;border-collapse:collapse; min-width: 900px;}
+    .row{border-bottom:1px solid #f0f0f0;}
+    .row:last-child {border-bottom: none;}
+    .cell{padding:14px 16px;vertical-align:middle; font-size: 14px;}
+    .cell.right{text-align:right} .cell.center{text-align:center}
+    .header{font-size:13px;color:#666;background: #f9fafb; font-weight: 600; text-transform: uppercase;}
+    
+    .mini{font-size:12px;color: #888;}
+    .money-val { font-weight: 700; color: #333; }
+
+    .badge{display:inline-block;padding:3px 8px;border-radius:6px;background:#f3f4f6;border:1px solid #e5e7eb;text-transform:capitalize;font-weight:600;font-size:12px; margin-left: 6px;}
+    .badge.delivery{background:#e0f2fe;color:#0369a1;border-color:#bae6fd}
+    .badge.done{background:#dcfce7;color:#15803d;border-color:#86efac}
+    .badge.cancelled{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+
+    /* --- MOBILE CARD STYLE (Ẩn Table, Hiện Card) --- */
+    .mobile-view { display: none; grid-template-columns: 1fr; gap: 16px; }
+
+    /* RESPONSIVE QUERY */
+    @media (max-width: 900px) {
+        .desktop-view { display: none; } /* Ẩn bảng trên màn nhỏ */
+        .mobile-view { display: grid; }  /* Hiện dạng thẻ */
+        
+        .m-card { 
+            background: #fff; border: 1px solid #eee; border-radius: 12px; 
+            padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .m-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed #eee; padding-bottom: 12px; }
+        .m-id { font-size: 16px; font-weight: 800; color: #333; }
+        .m-time { font-size: 12px; color: #999; margin-top: 2px; }
+        
+        .m-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; }
+        .m-label { color: #888; margin-bottom: 2px; font-size: 11px; text-transform: uppercase; }
+        .m-val { font-weight: 600; color: #333; }
+
+        .m-mission { background: #f9fafb; padding: 10px; border-radius: 8px; margin-top: 4px; }
+        .m-actions { margin-top: 8px; }
+        .m-btn { width: 100%; height: 40px; border-radius: 8px; background: #ff7a59; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; text-decoration: none; border: none; }
+        .m-btn:disabled { background: #e5e7eb; color: #9ca3af; }
+    }
   `;
 
   const load = async () => {
     setLoading(true);
     try {
       const res = await myOrders({ 
-          page: 1, 
-          limit: 10000, 
-          status: "all", 
-          q: "", 
-          sort: "createdAt", 
-          order: "desc",
-          merchantId: merchantId // <-- Thêm tham số này
+          page: 1, limit: 10000, status: "all", q: "", sort: "createdAt", order: "desc",
+          merchantId: merchantId 
       });
       const arr = Array.isArray(res) ? res : res?.rows || res?.data || [];
-      // CHỈ lấy các đơn ở 3 cột: Ready / Delivering / Completed
       const drones = arr.filter((o) => {
         const s = String(o.status || "").toLowerCase();
-        const isDelivering = s.includes("deliver"); // delivering / delivery
+        const isDelivering = s.includes("deliver");
         const isDone = ["completed", "done", "delivered"].includes(s);
-
-        // Ready CHỈ hiện nếu đã là đơn Drone (đã gán giao bằng drone)
         const isReady = s.includes("ready");
-        const isDrone =
-          String(o.deliveryMode || "").toLowerCase() === "drone" ||
-          String(o.courier || "").toLowerCase() === "drone" ||
-          !!o.droneMissionId;
-
+        const isDrone = String(o.deliveryMode || "").toLowerCase() === "drone" || String(o.courier || "").toLowerCase() === "drone" || !!o.droneMissionId;
         return isDelivering || isDone || (isReady && isDrone);
       });
 
-      // Sắp xếp: đơn cập nhật/tạo gần nhất nằm trên đầu
       const sorted = [...drones].sort((a, b) => {
         const ta = Date.parse(a?.updatedAt || a?.createdAt || 0);
         const tb = Date.parse(b?.updatedAt || b?.createdAt || 0);
-        return tb - ta; // mới hơn trước
+        return tb - ta;
       });
       setOrders(sorted);
 
@@ -278,8 +227,7 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
         drones.map(async (o) => (o.droneMissionId ? await getMission(o.droneMissionId) : await findMissionByOrderId(o.id)))
       );
 
-      const mMap = {};
-      const mOrderMap = {};
+      const mMap = {}, mOrderMap = {};
       missionList.forEach((m) => {
         if (m?.id) {
           mMap[m.id] = m;
@@ -297,42 +245,40 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
         else if (t.droneId) tMap[t.droneId] = t;
       });
       setTeleByMission(tMap);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // 🔕 Bỏ auto-refresh (chỉ load một lần, bấm nút "Làm mới" để cập nhật)
-  useEffect(() => {
-    load();
-  }, [merchantId]); // <-- Thêm merchantId
+  useEffect(() => { load(); }, [merchantId]);
 
-  // Tóm tắt theo MISSION (đếm đúng nghĩa)
   const summary = useMemo(() => {
     const counts = { active: 0, waiting: 0, done: 0, error: 0, noMission: 0 };
-
     for (const o of orders) {
-      const m =
-        missionById[o.droneMissionId] ||
-        missionByOrderId[String(o.id)] ||
-        null;
-
-      if (!m) { // chưa tạo mission → không cộng vào waiting
-        counts.noMission++;
-        continue;
-      }
-
+      const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)];
+      if (!m) { counts.noMission++; continue; }
       const g = missionGroup(m.status);
-
-      // "Chờ cất cánh" chỉ khi order CHƯA xong
       if (g === "waiting" && !isOrderDone(o)) counts.waiting++;
       else if (g === "active") counts.active++;
       else if (g === "done") counts.done++;
       else if (g === "error") counts.error++;
     }
-
     return { total: orders.length, ...counts };
   }, [orders, missionById, missionByOrderId]);
+
+  // Render content helper
+  const renderContent = (o) => {
+    const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)] || null;
+    const t = m ? (teleByMission[m.id] || teleByMission[o.droneMissionId]) : null;
+    const lat = Number(t?.lat), lng = Number(t?.lng);
+    const orderParam = encodeURIComponent(String(o.id).replace(/^#/, ""));
+    const hasMission = !!m?.id;
+    const trackable = canTrack(o, m);
+    const href = isSuperAdmin ? `/admin/drone/${orderParam}` : isMerchant ? `/merchant/drone/${orderParam}` : `/orders/${orderParam}/tracking`;
+    
+    const orderCls = normalizeStatus(o.status);
+    const orderLabelEN = { order: "Order", processing: "Ready", delivery: "Delivering", done: "Completed", cancelled: "Cancelled" }[orderCls] || (o.status || "—");
+
+    return { o, m, t, lat, lng, trackable, href, orderCls, orderLabelEN, hasMission };
+  };
 
   return (
     <section className="ff-container wrap">
@@ -340,127 +286,136 @@ const { user, isMerchant, isSuperAdmin } = useAuth();
 
       <div className="topbar">
         <h2 style={{ margin: 0 }}>Drone (theo dõi)</h2>
-        <button className="btn" onClick={load}>Làm mới</button>
+        <button className="btn" onClick={load}>↻ Làm mới</button>
       </div>
 
       <div className="grid">
-        <div className="card"><div className="title">Tổng đơn Drone</div><div className="val">{summary.total}</div></div>
-        <div className="card"><div className="title">Đang bay</div><div className="val">{summary.active}</div></div>
-        <div className="card"><div className="title">Chờ lấy hàng</div><div className="val">{summary.waiting}</div></div>
-        <div className="card"><div className="title">Đã giao hàng</div><div className="val">{summary.done}</div></div>
-        <div className="card"><div className="title">Lỗi/Hủy</div><div className="val">{summary.error}</div></div>
+        <div className="card"><div className="title">ĐANG BAY</div><div className="val" style={{color:'#0b67b3'}}>{summary.active}</div></div>
+        <div className="card"><div className="title">CHỜ LẤY</div><div className="val" style={{color:'#7a5900'}}>{summary.waiting}</div></div>
+        <div className="card"><div className="title">ĐÃ GIAO</div><div className="val" style={{color:'#166534'}}>{summary.done}</div></div>
+        <div className="card"><div className="title">LỖI</div><div className="val" style={{color:'#b80d0d'}}>{summary.error}</div></div>
       </div>
 
       {loading ? (
-        <div className="card">Đang tải…</div>
+        <div className="card" style={{textAlign:'center', padding: 40}}>Đang tải dữ liệu...</div>
       ) : !orders.length ? (
-        <div className="card">Không có đơn Drone.</div>
+        <div className="card" style={{textAlign:'center', padding: 40}}>Chưa có đơn giao bằng Drone.</div>
       ) : (
-        <table className="table">
-          <colgroup>
-            <col style={{ width: "16%" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "11%" }} />
-            <col style={{ width: "16%" }} />
-            <col style={{ width: "8%"  }} />
-            <col style={{ width: "8%"  }} />
-            <col style={{ width: "15%" }} />
-            <col style={{ width: "8%"  }} />
-          </colgroup>
-
-          <thead>
-            <tr className="row">
-              <th className="cell header">Đơn</th>
-              <th className="cell header">Khách</th>
-              <th className="cell header right">Số tiền</th>
-              <th className="cell header center">Mission</th>
-              <th className="cell header center">Tốc độ</th>
-              <th className="cell header center">ETA</th>
-              <th className="cell header center">Toạ độ</th>
-              <th className="cell header right">Thao tác</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {orders.map((o) => {
-              const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)] || null;
-              const t = m ? (teleByMission[m.id] || teleByMission[o.droneMissionId]) : null;
-
-              const lat = t?.lat, lng = t?.lng;
-              const orderParam = encodeURIComponent(String(o.id).replace(/^#/, ""));
-              const hasMission = !!m?.id;
-              const trackable = canTrack(o, m);
-              const href =
-                  isSuperAdmin ? `/admin/drone/${orderParam}` :
-                  isMerchant   ? `/merchant/drone/${orderParam}` :
-                                `/orders/${orderParam}/tracking`;
-              // Nhãn Việt cho pill trạng thái ĐƠN
-              const orderCls = normalizeStatus(o.status);
-              const orderLabelEN =
-                {
-                  order: "Order",
-                  processing: "Ready",
-                  delivery: "Delivering",
-                  done: "Completed",
-                  cancelled: "Cancelled",
-                }[orderCls] || (o.status || "—");
-
-              return (
-                <tr key={o.id} className="row">
-                  <td className="cell">
-                    <div>
-                      <b>#{o.id}</b>{" "}
-                      <span className={`badge ${orderCls}`}>{orderLabelEN}</span>
-                    </div>
-                    <span className="mini">
-                      {o.createdAt ? new Date(o.createdAt).toLocaleString("vi-VN") : "—"}
-                    </span>
-                  </td>
-
-                  <td className="cell customer">
-                    <div><b>{o.customerName}</b></div>
-                    <span className="mini">{o.phone || "—"}</span>
-                  </td>
-
-                  <td className="cell money">
-                    <span className="money-val">{VND(o.finalTotal ?? o.total ?? 0)}</span>
-                  </td>
-
-                  <td className="cell center">
-                    {hasMission ? (
-                      <MissionCell3 order={o} mission={m} telemetry={t} />
-                    ) : (
-                      <span className="mini">Chưa có mission</span>
-                    )}
-                  </td>
-
-                  <td className="cell center">{t?.speed != null ? `${Number(t.speed).toFixed(1)} km/h` : <Dash />}</td>
-                  <td className="cell center">{Number.isFinite(m?.eta) ? `≈ ${m.eta} phút` : <Dash />}</td>
-
-                  <td className="cell coord">
-                    <CoordText lat={lat} lng={lng} />
-                  </td>
-
-                  <td className="cell right">
-                    {trackable ? (
-                  <Link
-                    to={href}
-                    className="btn"
-                    style={{ textDecoration: "none", minWidth: 140 }}
-                  >
-                    Xem hành trình
-                  </Link>
-                ) : (
-                  <button className="btn" disabled style={{ minWidth: 140, background: "#d1d5db", color: "#6b7280" }}>
-                    Xem hành trình
-                  </button>
-                )}
-                  </td>
+        <>
+          {/* --- DESKTOP TABLE VIEW --- */}
+          <div className="desktop-view">
+            <table className="table">
+              <colgroup>
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "8%"  }} />
+                <col style={{ width: "8%"  }} />
+                <col style={{ width: "10%" }} />
+                <col style={{ width: "10%"  }} />
+              </colgroup>
+              <thead>
+                <tr className="row">
+                  <th className="cell header">Đơn hàng</th>
+                  <th className="cell header">Khách hàng</th>
+                  <th className="cell header center">Tiền</th>
+                  <th className="cell header center">Trạng thái Mission</th>
+                  <th className="cell header center">Tốc độ</th>
+                  <th className="cell header center">ETA</th>
+                  <th className="cell header center">Vị trí</th>
+                  <th className="cell header right"></th>
                 </tr>
-              );
+              </thead>
+              <tbody>
+                {orders.map((o) => {
+                  const { m, t, lat, lng, trackable, href, orderCls, orderLabelEN, hasMission } = renderContent(o);
+                  return (
+                    <tr key={o.id} className="row">
+                      <td className="cell">
+                        <div style={{fontWeight:700}}>#{o.id} <span className={`badge ${orderCls}`}>{orderLabelEN}</span></div>
+                        <span className="mini">{o.createdAt ? new Date(o.createdAt).toLocaleString("vi-VN") : "—"}</span>
+                      </td>
+                      <td className="cell">
+                        <div style={{fontWeight:600}}>{o.customerName}</div>
+                        <span className="mini">{o.phone || "—"}</span>
+                      </td>
+                      <td className="cell center"><span className="money-val">{VND(o.finalTotal ?? o.total ?? 0)}</span></td>
+                      <td className="cell center">
+                        {hasMission ? <MissionCell3 order={o} mission={m} telemetry={t} /> : <Dash />}
+                      </td>
+                      <td className="cell center">{Number.isFinite(t?.speed) ? `${Number(t.speed).toFixed(1)} km/h` : <Dash />}</td>
+                      <td className="cell center">{Number.isFinite(m?.eta) ? `~${m.eta} p` : <Dash />}</td>
+                      <td className="cell center"><CoordText lat={lat} lng={lng} /></td>
+                      <td className="cell right">
+                        <Link to={trackable ? href : '#'} className="btn" style={{ minWidth: 120, background: trackable ? '#ff7a59' : '#e5e7eb', color: trackable ? '#fff' : '#9ca3af', pointerEvents: trackable ? 'auto' : 'none' }}>
+                          Xem hành trình
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* --- MOBILE CARD VIEW --- */}
+          <div className="mobile-view">
+            {orders.map((o) => {
+               const { m, t, lat, lng, trackable, href, orderCls, orderLabelEN, hasMission } = renderContent(o);
+               return (
+                <div className="m-card" key={o.id}>
+                  <div className="m-head">
+                    <div>
+                      <div className="m-id">#{o.id}</div>
+                      <div className="m-time">{o.createdAt ? new Date(o.createdAt).toLocaleString("vi-VN") : "—"}</div>
+                    </div>
+                    <span className={`badge ${orderCls}`}>{orderLabelEN}</span>
+                  </div>
+                  
+                  <div className="m-body">
+                    <div>
+                      <div className="m-label">Khách hàng</div>
+                      <div className="m-val">{o.customerName}</div>
+                      <div className="mini">{o.phone}</div>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div className="m-label">Tổng tiền</div>
+                      <div className="m-val" style={{color:'#ff7a59'}}>{VND(o.finalTotal ?? o.total ?? 0)}</div>
+                    </div>
+                  </div>
+
+                  <div className="m-mission">
+                     <div style={{display:'flex', justifyContent:'space-between', marginBottom: 6}}>
+                        <span className="m-label">Trạng thái bay</span>
+                        {hasMission ? <MissionCell3 order={o} mission={m} telemetry={t} /> : <span className="mini">Chưa có</span>}
+                     </div>
+                     <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:4, textAlign:'center'}}>
+                        <div>
+                            <div className="m-label">Tốc độ</div>
+                            <div style={{fontWeight:600}}>{Number.isFinite(t?.speed) ? `${t.speed.toFixed(0)} km/h` : '-'}</div>
+                        </div>
+                        <div>
+                            <div className="m-label">ETA</div>
+                            <div style={{fontWeight:600}}>{Number.isFinite(m?.eta) ? `${m.eta}p` : '-'}</div>
+                        </div>
+                        <div>
+                           <div className="m-label">Vị trí</div>
+                           <CoordText lat={lat} lng={lng} />
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="m-actions">
+                      <Link to={href} className="m-btn" style={{ opacity: trackable ? 1 : 0.5, pointerEvents: trackable ? 'auto' : 'none' }}>
+                         Xem Bản Đồ Hành Trình
+                      </Link>
+                  </div>
+                </div>
+               )
             })}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </section>
   );
