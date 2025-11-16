@@ -39,7 +39,7 @@ export default function Header() {
     .nav{display:flex;justify-content:center}
     .nav ul{display:flex;gap:22px;margin:0;padding:0;list-style:none}
     .nav a{text-decoration:none;color:#333;font-weight:600}
-    .nav a.active{color:#ff6b35}
+    .nav a.active{color:#eb9e2f}
 
     .right{display:flex;align-items:center;gap:12px}
     .search{display:flex;align-items:center;border:1px solid #e6e6ea;border-radius:22px;height:36px;overflow:hidden}
@@ -56,7 +56,7 @@ export default function Header() {
 
     .user{position:relative}
     .user-btn{display:flex;align-items:center;gap:8px;border:1px solid #eee;background:#fafafa;border-radius:99px;padding:6px 12px;cursor:pointer}
-    .avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#ff6b35;color:#fff;font-weight:800}
+    .avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#eb9e2f;color:#fff;font-weight:800}
     .uname{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 
     .dropdown{

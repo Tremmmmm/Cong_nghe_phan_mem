@@ -35,7 +35,7 @@ export default function ConfirmCloseSession() {
     padding: "10px 18px",
     borderRadius: 10,
     border: "none",
-    background: "#ff6b35",
+    background: "#eb9e2f",
     color: "#fff",
     fontWeight: 700,
     cursor: "pointer",

@@ -15,7 +15,7 @@ export default function Footer() {
     .ff-brand{
       display:flex; flex-direction:column; gap:12px; color:#555; align-items: flex-start;
     }
-    .ff-brand div{ margin:0;font-size:24px;line-height:1;font-weight:900;color:#ff6b35;font-family: 'Times New Roman', Times, serif;}
+    .ff-brand div{ margin:0;font-size:24px;line-height:1;font-weight:900;color:#;font-family: 'Times New Roman', Times, serif;}
     .ff-brand-logo{ height:40px; width:auto; object-fit: contain; }
     
     .ff-title{

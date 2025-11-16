@@ -41,7 +41,7 @@ export default function Header() {
     .nav{display:flex;justify-content:center}
     .nav ul{display:flex;gap:22px;margin:0;padding:0;list-style:none}
     .nav a{text-decoration:none;color:#333;font-weight:600;white-space:nowrap}
-    .nav a.active{color:#ff6b35}
+    .nav a.active{color:#eb9e2f}
 
     .right{display:flex;align-items:center;gap:12px;justify-content:flex-end}
     .search{display:flex;align-items:center;border:1px solid #e6e6ea;border-radius:22px;height:36px;overflow:hidden; max-width: 100%}
@@ -53,12 +53,12 @@ export default function Header() {
     .icon-box .ico{font-size:18px;line-height:1}
     .icon-box .badge{
       position:absolute;right:-4px;top:-6px;min-width:18px;height:18px;padding:0 5px;display:grid;place-items:center;border-radius:12px;
-      font-size:11px;font-weight:700;background:#ffe8e0;color:#d24c1f;border:1px solid #ffb199;box-shadow:0 2px 6px rgba(0,0,0,.15)
+      font-size:11px;font-weight:700;background:#ffddb0;color:#eb9e2f;border:1px solid #ab3a20;box-shadow:0 2px 6px rgba(0,0,0,.15)
     }
 
     .user{position:relative}
     .user-btn{display:flex;align-items:center;gap:8px;border:1px solid #eee;background:#fafafa;border-radius:99px;padding:6px 12px;cursor:pointer;max-width:180px}
-    .avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#ff6b35;color:#fff;font-weight:800;flex-shrink:0}
+    .avatar{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#eb9e2f;color:#fff;font-weight:800;flex-shrink:0}
     .uname{max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 
     .dropdown{
@@ -121,7 +121,7 @@ export default function Header() {
     }
 
     .dark .ff-header{background:#111;border-color:#333}
-    .dark .nav a{color:#ddd}.dark .nav a.active{color:#ffb199}
+    .dark .nav a{color:#ddd}.dark .nav a.active{color:#ab3a20}
     .dark .search{border-color:#333}.dark .search input{background:transparent;color:#ddd}
     .dark .search button{background:#222;color:#eee}
     .dark .icon-box{background:#151515;box-shadow:0 6px 14px rgba(0,0,0,.25), inset 0 0 0 1px #333;color:#eee}
@@ -211,7 +211,7 @@ export default function Header() {
                   <NavLink to="/profile" onClick={()=>setOpen(false)}>Cài đặt</NavLink>
                   
                   {(user.isAdmin || user.isSuperAdmin || user.isMerchant) && (
-                    <NavLink to={user.isSuperAdmin ? "/admin" : "/merchant"} onClick={()=>setOpen(false)} style={{color:'#ff6b35'}}>
+                    <NavLink to={user.isSuperAdmin ? "/admin" : "/merchant"} onClick={()=>setOpen(false)} style={{color:'#eb9e2f'}}>
                        Trang quản trị
                     </NavLink>
                   )}

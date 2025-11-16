@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-// 💡 QUAN TRỌNG: Bây giờ chúng ta dùng lại import từ file API đã sửa
 import { fetchMerchants, fetchMenuItems } from '../utils/merchantAPI.js'; 
 import { useAuth } from '../context/AuthContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
@@ -11,109 +10,134 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const toast = useToast();
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Gọi API thông qua file merchantAPI.js (đã được bạn sửa link server chuẩn)
       const [merchantsData, menuItemsData] = await Promise.all([
           fetchMerchants(),
           fetchMenuItems()
       ]);
 
-      setMerchants(merchantsData);
-      
-      // Lấy 8 món đầu tiên để hiển thị
-      // Kiểm tra kỹ dữ liệu trả về có phải mảng không để tránh lỗi
-      const safeMenuData = Array.isArray(menuItemsData) ? menuItemsData : [];
-      setMenuItems(safeMenuData.slice(0, 8));
+      setMerchants(merchantsData.filter(m =>m.status === 'Active'));
+      setMenuItems(menuItemsData.slice(0, 8)); // Lấy 8 món gợi ý
 
     } catch (err) {
-      console.error("Failed to fetch home data:", err);
       setError('Không thể tải dữ liệu trang chủ.');
-      // Không show toast lỗi ngay để tránh spam nếu server đang ngủ
+      console.error("Failed to fetch home data:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   const styles = useMemo(() => `
-    .home-wrap { max-width: 1140px; margin: 0 auto; padding: 20px 16px; }
-    .hero { background: #fbe9e2; padding: 40px; border-radius: 18px; margin-bottom: 30px; text-align: center; }
-    .hero h1 { font-size: 48px; font-weight: 900; color: #333; margin: 0 0 10px; }
-    .hero p { font-size: 18px; color: #555; }
+    .home-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; background: #ffffffff; min-height: 100vh; }
+    
+    /* --- Hero Banner --- */
+    .hero { 
+        background: linear-gradient(135deg, #eb9a2f 0%, #f7c37e 100%); 
+        padding: 30px 20px; 
+        border-radius: 16px; 
+        margin-bottom: 24px; 
+        text-align: center; 
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(255, 122, 89, 0.3);
+    }
+    .hero h1 { font-size: 28px; font-weight: 800; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .hero p { font-size: 15px; opacity: 0.9; margin: 0; }
 
-    .section-title { font-size: 28px; font-weight: 800; color: #333; margin-top: 40px; margin-bottom: 20px; }
+    .section-title { font-size: 18px; font-weight: 700; color: #333; margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
+    .section-title::before { content: ''; display: block; width: 4px; height: 18px; background: #ff7a59; border-radius: 2px; }
 
-    /* --- Style Merchant List --- */
-    .merchant-list { 
+    /* --- Merchant List (Scroll ngang) --- */
+    .merchant-scroll-container {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 12px; /* Chừa chỗ cho scrollbar */
+        scrollbar-width: none; /* Ẩn scrollbar Firefox */
+    }
+    .merchant-scroll-container::-webkit-scrollbar { display: none; } /* Ẩn scrollbar Chrome */
+
+    .merchant-item {
+        min-width: 140px;
+        width: 140px;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+    }
+    .merchant-item:active { transform: scale(0.98); }
+    
+    .merchant-logo-box {
+        width: 100%;
+        height: 100px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .merchant-logo {
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+    }
+    .merchant-info { padding: 8px; text-align: center; }
+    .merchant-name { font-size: 13px; font-weight: 700; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+    .merchant-status { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    .status-open { color: #27ae60; background: #eafaf1; }
+    .status-closed { color: #e74c3c; background: #fdedec; }
+
+    /* --- Dish Grid (2 cột mobile, 4 cột PC) --- */
+    .dish-grid { 
         display: grid; 
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-        gap: 25px; 
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 12px; 
     }
-    .merchant-card { 
+    @media (min-width: 768px) {
+        .dish-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .merchant-item { min-width: 180px; width: 180px; }
+        .merchant-logo-box { height: 120px; }
+    }
+
+    .dish-card { 
         background: #fff; 
-        border: 1px solid #eee; 
-        border-radius: 12px; 
+        border-radius: 8px; 
         overflow: hidden; 
-        cursor: pointer; 
-        transition: transform .2s ease, box-shadow .2s ease; 
-        box-shadow: 0 4px 12px rgba(0,0,0,.05);
-        text-decoration: none; 
-        color: inherit; 
-        display: block; 
-    }
-    .merchant-card:hover { 
-        transform: translateY(-5px); 
-        box-shadow: 0 6px 16px rgba(0,0,0,.1); 
-    }
-    .merchant-logo-box { 
-        height: 150px; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05); 
         display: flex; 
-        justify-content: center; 
-        align-items: center; 
-        background: #f9f9f9; 
-        border-bottom: 1px solid #eee; 
-        overflow: hidden; 
+        flex-direction: column;
     }
-    .merchant-logo { 
-        width: 100%; 
-        height: 100%; 
+    .dish-img-link { display: block; position: relative; padding-top: 100%; /* Vuông */ }
+    .dish-img { 
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
         object-fit: cover; 
     }
-    .merchant-info { padding: 15px; }
-    .merchant-name { font-size: 20px; font-weight: 700; color: #333; margin: 0 0 8px 0; }
-    .merchant-address { font-size: 14px; color: #666; margin: 0 0 5px 0; }
-    .merchant-hours { font-size: 13px; margin: 0; }
+    .dish-body { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .dish-title { font-size: 14px; font-weight: 600; color: #333; margin: 0 0 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .dish-merchant { font-size: 11px; color: #888; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+    .dish-price { font-size: 15px; font-weight: 700; color: #ff7a59; }
 
-    /* --- Style Dish Grid --- */
-    .dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-    .dish-card { border: 1px solid #eee; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.05); transition: box-shadow .2s ease; }
-    .dish-card:hover { box-shadow: 0 6px 16px rgba(0,0,0,.1); }
-    .dish-card-img-link { display: block; position: relative; }
-    .dish-card-img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; }
-    .dish-card-body { padding: 12px 16px 16px; }
-    .dish-card-title { font-size: 17px; font-weight: 700; margin: 0 0 4px; color: #111; }
-    .dish-card-merchant { font-size: 13px; color: #666; margin: 0 0 10px; font-weight: 500; }
-    .dish-card-footer { display: flex; justify-content: space-between; align-items: center; }
-    .dish-card-price { font-size: 16px; font-weight: 700; color: #ff7a59; }
-    .dish-card-desc { font-size: 13px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+    .user-welcome { background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; color: #555; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; }
+    .user-welcome strong { color: #ff7a59; }
 
-    .dark .hero { background: #221b18; }
-    .dark .hero h1 { color: #eee; }
-    .dark .hero p { color: #bbb; }
+    /* Dark mode */
+    .dark .home-wrap { background: #121212; }
+    .dark .merchant-item, .dark .dish-card, .dark .user-welcome { background: #1e1e1e; }
     .dark .section-title { color: #eee; }
-    .dark .merchant-card, .dark .dish-card { background: #1a1a1a; border-color: #333; }
-    .dark .merchant-logo-box { background: #222; border-color: #333; }
-    .dark .merchant-name, .dark .dish-card-title { color: #eee; }
-    .dark .merchant-address, .dark .dish-card-merchant { color: #bbb; }
-    .dark .merchant-hours, .dark .dish-card-desc { color: #999; }
+    .dark .merchant-name, .dark .dish-title { color: #eee; }
+    .dark .merchant-logo-box { border-bottom-color: #333; background: #252525; }
   `, []);
 
   useEffect(() => {
@@ -126,8 +150,8 @@ export default function Home() {
     }
   }, [styles]);
 
-  if (loading) return <div className="home-wrap" style={{textAlign: 'center', padding: '50px'}}>Đang tải dữ liệu... (Nếu lâu quá, hãy F5 lại)</div>;
-  if (error) return <div className="home-wrap" style={{textAlign: 'center', padding: '50px', color: 'red'}}>{error} <br/> <button onClick={loadData} style={{marginTop: 10, padding: '8px 16px'}}>Thử lại</button></div>;
+  if (loading) return <div style={{textAlign: 'center', padding: '50px', color: '#888'}}>Wait a moment...</div>;
+  if (error) return <div style={{textAlign: 'center', padding: '50px', color: '#e74c3c'}}>{error}</div>;
 
   const currentHour = new Date().getHours();
   const currentDayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()];
@@ -135,20 +159,21 @@ export default function Home() {
   return (
     <div className="home-wrap">
       {user && (
-        <div style={{ marginTop: '5px', padding: '10px', border: '1px solid #eee', borderRadius: '10px', background: '#f9f9f9', textAlign: 'center' }}>
-          <p>Chào mừng, <strong>{user.name || user.email}</strong>! Bạn đã đăng nhập thành công.</p>
+        <div className="user-welcome">
+          <span>👋 Chào <strong>{user.name || user.email}</strong>, hôm nay bạn muốn ăn gì?</span>
         </div>
       )}
+      
       <div className="hero">
-        <h1>Khám phá Quán ăn</h1>
-        <p>Đặt món ngon từ các nhà hàng yêu thích của bạn!</p>
+        <h1>FoodFast</h1>
+        <p>Giao đồ ăn thần tốc - Món ngon tận cửa</p>
       </div>
 
-      {/* --- LIST QUÁN ĂN --- */}
-      <h2 className="section-title">Nhà hàng nổi bật</h2>
-      <div className="merchant-list">
+      {/* --- LIST QUÁN ĂN (Carousel ngang) --- */}
+      <h2 className="section-title">Thương hiệu nổi bật</h2>
+      <div className="merchant-scroll-container">
         {merchants.length === 0 ? (
-          <p style={{ gridColumn: '1 / -1', textAlign: 'center' }}>Chưa có nhà hàng nào hoạt động.</p>
+          <p style={{color: '#999', fontSize: 14, padding: 10}}>Chưa có quán nào.</p>
         ) : (
           merchants.map(merchant => {
             const openHour = merchant.operatingHours?.[currentDayKey]?.open;
@@ -161,26 +186,23 @@ export default function Home() {
               <Link 
                 to={`/merchant/${merchant.id}/menu`}
                 key={merchant.id} 
-                className="merchant-card"
+                className="merchant-item"
               >
                 <div className="merchant-logo-box">
                     <img 
                         src={merchant.logo || '/assets/images/placeholder_restaurant.png'} 
-                        alt={`${merchant.storeName} logo`} 
+                        alt={merchant.storeName} 
                         className="merchant-logo" 
                         onError={(e) => { e.target.src = '/assets/images/placeholder_restaurant.png'; }} 
                         loading="lazy"
                     />
                 </div>
                 <div className="merchant-info">
-                  <h3 className="merchant-name">{merchant.storeName}</h3>
-                  <p className="merchant-address">{merchant.address}</p>
-                  {(openHour !== undefined && closeHour !== undefined) ? (
-                      <p className="merchant-hours" style={{ color: isOpen ? '#27ae60' : '#e74c3c', fontWeight: '600' }}>
-                        {isOpen ? `Đang mở cửa (Đóng lúc ${closeHour}h)` : 'Đang đóng cửa'}
-                      </p>
+                  <div className="merchant-name" title={merchant.storeName}>{merchant.storeName}</div>
+                  {isOpen ? (
+                      <span className="merchant-status status-open">Mở cửa</span>
                   ) : (
-                      <p className="merchant-hours" style={{ color: '#999' }}>Chưa có giờ hoạt động</p>
+                      <span className="merchant-status status-closed">Đóng cửa</span>
                   )}
                 </div>
               </Link>
@@ -189,40 +211,35 @@ export default function Home() {
         )}
       </div>
 
-      {/* --- LIST MÓN ĂN --- */}
-      <h2 className="section-title" style={{marginTop: '50px'}}>Món ngon gần bạn</h2>
+      {/* --- LIST MÓN ĂN (Grid 2 cột) --- */}
+      <h2 className="section-title">Gợi ý hôm nay</h2>
       <div className="dish-grid">
           {menuItems.length === 0 ? (
-            <p>Chưa có món ăn nào.</p>
+            <p style={{color: '#999', fontSize: 14, padding: 10}}>Chưa có món nào.</p>
           ) : (
             menuItems.map((item) => (
               <div key={item.id} className="dish-card">
                 <Link 
                   to={`/merchant/${item.merchantId}/menu`}
-                  className="dish-card-img-link"
+                  className="dish-img-link"
                 >
                   <img 
                     src={item.image || '/assets/images/menu/placeholder.png'} 
                     alt={item.name} 
-                    className="dish-card-img" 
+                    className="dish-img" 
                     loading="lazy"
                     onError={(e) => { e.target.src = '/assets/images/menu/placeholder.png'; }}
                   />
                 </Link>
 
-                <div className="dish-card-body">
-                  <h4 className="dish-card-title">{item.name}</h4>
-                  <p className="dish-card-merchant">
-                      {merchants.find(m => m.id === item.merchantId)?.storeName || item.merchantName}
-                  </p>  
-                  
-                  <div className="dish-card-footer">
-                    <span className="dish-card-price">
+                <div className="dish-body">
+                  <h4 className="dish-title">{item.name}</h4>
+                  <div className="dish-merchant">
+                      <span style={{fontSize: 10}}>🏠</span>
+                      <span>{merchants.find(m => m.id === item.merchantId)?.storeName || 'Quán ngon'}</span>
+                  </div>
+                  <div className="dish-price">
                         {item.price ? item.price.toLocaleString('vi-VN') : 0}đ
-                    </span>
-                    <span className="dish-card-desc" title={item.desc}>
-                      {item.desc || ''}
-                    </span>
                   </div>
                 </div>
               </div>
