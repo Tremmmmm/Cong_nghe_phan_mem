@@ -38,7 +38,7 @@ export default function Home() {
   }, [loadData]);
 
   const styles = useMemo(() => `
-    .home-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; background: #f5f5f5; min-height: 100vh; }
+    .home-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; background: #ffffff; min-height: 100vh; }
     
     .hero { 
         background: linear-gradient(135deg, #ff7a59 0%, #ffb199 100%); 
@@ -87,7 +87,7 @@ export default function Home() {
     }
     
     .status-tag { 
-        font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; 
+        font-size: 13px; font-weight: 700; padding: 2px 6px; border-radius: 4px; 
         display: inline-block; text-transform: uppercase; width: fit-content; margin-top: auto;
     }
     .status-open { color: #00b14f; background: #e6f9ee; }
@@ -101,10 +101,10 @@ export default function Home() {
     .dish-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
     .dish-body { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
     .dish-title { font-size: 13px; font-weight: 600; color: #333; margin: 0 0 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .dish-merchant { font-size: 10px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dish-merchant { font-size: 13px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .dish-price { font-size: 14px; font-weight: 700; color: #ff7a59; }
 
-    .user-welcome { background: #fff; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #555; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 8px; }
+    .user-welcome { background: #fff; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 16px; color: #555; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 8px; }
     .user-welcome strong { color: #ff7a59; }
 
     /* --- DESKTOP STYLE (Min-width 768px) --- */
@@ -121,10 +121,10 @@ export default function Home() {
         .merchant-info { padding: 12px 15px; }
         .merchant-name { font-size: 16px; }
         .merchant-addr { font-size: 13px; margin-bottom: 10px; }
-        .status-tag { font-size: 11px; padding: 4px 8px; }
+        .status-tag { font-size: 12px; padding: 4px 8px; }
 
         .dish-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
-        .dish-title { font-size: 16px; }
+        .dish-title { font-size: 18px; }
         .dish-price { font-size: 16px; }
     }
 

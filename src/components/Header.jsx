@@ -87,7 +87,7 @@ export default function Header() {
     .icon-box .ico{font-size:18px;line-height:1}
     .icon-box .badge{
       position:absolute;right:-4px;top:-6px;min-width:18px;height:18px;padding:0 5px;display:grid;place-items:center;border-radius:12px;
-      font-size:11px;font-weight:700;background:#ffe8e0;color:#d24c1f;border:1px solid #ffb199;box-shadow:0 2px 6px rgba(0,0,0,.15)
+      font-size:13px;font-weight:700;background:#ffe8e0;color:#d24c1f;border:1px solid #ffb199;box-shadow:0 2px 6px rgba(0,0,0,.15)
     }
     .mobile-home-icon { display: none; } 
 
@@ -147,7 +147,7 @@ export default function Header() {
         .mobile-home-icon { display: inline-grid; } 
         .icon-box { width: 34px; height: 34px; }
         .user-btn { padding: 4px 8px; gap: 4px; max-width: 90px; }
-        .uname { display: block; font-size: 12px; max-width: 45px; }
+        .uname { display: block; font-size: 13px; max-width: 45px; }
         .user-btn span[aria-hidden] { display: none; }
 
         /* DÒNG 2 */
@@ -266,7 +266,7 @@ export default function Header() {
 
           {/* User (Avatar + Tên ngắn) */}
           {!user ? (
-            <NavLink to="/signin" className={({isActive})=>isActive?"active":""} style={{fontWeight:600, textDecoration:'none', color:'#333', whiteSpace:'nowrap', fontSize: 13}}>
+            <NavLink to="/signin" className={({isActive})=>isActive?"active":""} style={{fontWeight:600, textDecoration:'none', color:'#333', whiteSpace:'nowrap', fontSize: 16}}>
                 Đăng nhập
             </NavLink>
           ) : (
