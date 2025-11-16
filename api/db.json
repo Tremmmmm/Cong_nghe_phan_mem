@@ -5598,6 +5598,20 @@
           "merchantId": "m001",
           "merchantName": "Burger King Fast Food",
           "qty": 1
+        },
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "price": 35000,
+          "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
+          "image": "http://localhost:5182/beefburger.jpg",
+          "category": "single",
+          "status": "approved",
+          "description": "",
+          "isAvailable": true,
+          "merchantId": "m001",
+          "merchantName": "Burger King Fast Food",
+          "qty": 1
         }
       ],
       "id": "ff_cart_v2:ue:c001@gmail.com"

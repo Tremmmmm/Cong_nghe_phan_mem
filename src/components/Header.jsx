@@ -34,15 +34,25 @@ export default function Header() {
 
   const styles = useMemo(() => `
     .ff-header{position:sticky;top:0;z-index:50;background:#fff;border-bottom:1px solid #eee}
-    /* Thêm flex-wrap để cho phép xuống dòng trên mobile */
-    .ff-h-wrap{max-width:1140px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:20px; flex-wrap: nowrap;} 
+    
+    /* --- DESKTOP LAYOUT CHUẨN --- */
+    .ff-h-wrap {
+        max-width: 1140px;
+        margin: 0 auto;        /* Căn giữa khung header vào giữa màn hình */
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* 💡 QUAN TRỌNG: Đẩy Logo sang trái, Right sang phải */
+        gap: 20px;
+        flex-wrap: nowrap;     /* Mặc định không xuống dòng trên Desktop */
+    }
     
     .brand{display:flex;align-items:center;gap:10px;text-decoration:none; flex-shrink: 0;}
     .brand img{height:32px;width:auto;display:block}
 
     /* DELIVERY INFO */
     .delivery-info {
-        display: none; /* Ẩn trên Desktop mặc định */
+        display: none; /* Ẩn trên Desktop */
         flex-direction: column;
         justify-content: center;
         line-height: 1.2;
@@ -57,11 +67,13 @@ export default function Header() {
     }
     .delivery-icon { color: #ff7a59; font-size: 14px; }
 
-    .nav{display:flex;justify-content:center}
+    /* MENU GIỮA (NAV) */
+    .nav{display:flex;justify-content:center; flex-grow: 1;} /* flex-grow để chiếm khoảng trống giữa */
     .nav ul{display:flex;gap:22px;margin:0;padding:0;list-style:none}
     .nav a{text-decoration:none;color:#333;font-weight:600;white-space:nowrap}
     .nav a.active{color:#ff6b35}
 
+    /* KHỐI BÊN PHẢI */
     .right{display:flex;align-items:center;gap:12px;justify-content:flex-end; flex-shrink: 0;}
     
     /* Search */
@@ -77,7 +89,7 @@ export default function Header() {
       position:absolute;right:-4px;top:-6px;min-width:18px;height:18px;padding:0 5px;display:grid;place-items:center;border-radius:12px;
       font-size:11px;font-weight:700;background:#ffe8e0;color:#d24c1f;border:1px solid #ffb199;box-shadow:0 2px 6px rgba(0,0,0,.15)
     }
-    .mobile-home-icon { display: none; } /* Ẩn icon Home trên desktop */
+    .mobile-home-icon { display: none; } 
 
     /* User */
     .user{position:relative}
@@ -106,54 +118,48 @@ export default function Header() {
     }
     
     @media (max-width: 600px) {
-        /* Cấu trúc Flex dạng dòng (wrap) */
         .ff-h-wrap { 
-            gap: 10px 8px; /* Gap dòng 10px, gap cột 8px */
+            gap: 10px 8px; 
             padding: 10px 12px; 
             flex-wrap: wrap; 
+            /* Trên mobile bỏ space-between để dùng flex-grow lấp đầy */
+            justify-content: flex-start; 
         }
         
-        .brand { display: none; } /* Ẩn Logo text */
+        .brand { display: none; }
 
-        /* DÒNG 1: CÁC CÔNG CỤ (RIGHT) */
+        /* DÒNG 1 */
         .right { 
             flex-grow: 1; 
             width: 100%; 
-            justify-content: space-between; /* Dàn đều các icon */
+            justify-content: space-between; 
             gap: 8px;
-            order: 1; /* Đưa lên đầu */
+            order: 1; 
         }
 
-        /* Thanh tìm kiếm giãn ra */
         .search { 
-            flex-grow: 1; /* Chiếm hết khoảng trống còn lại */
+            flex-grow: 1; 
             width: auto; 
             max-width: none;
             background: #f9f9f9;
         }
         .search input { display: block; width: 100%; min-width: 50px; background: transparent; } 
-
-        /* Icon trang chủ trên mobile */
         .mobile-home-icon { display: inline-grid; } 
-
-        /* Icon nhỏ hơn chút để vừa hàng */
         .icon-box { width: 34px; height: 34px; }
-
-        /* User Name: Hiện nhưng ngắn */
         .user-btn { padding: 4px 8px; gap: 4px; max-width: 90px; }
-        .uname { display: block; font-size: 12px; max-width: 45px; } /* Cắt chữ nếu dài */
-        .user-btn span[aria-hidden] { display: none; } /* Ẩn mũi tên */
+        .uname { display: block; font-size: 12px; max-width: 45px; }
+        .user-btn span[aria-hidden] { display: none; }
 
-        /* DÒNG 2: DELIVERY INFO */
+        /* DÒNG 2 */
         .delivery-info { 
             display: flex; 
-            order: 2; /* Đưa xuống dưới */
-            width: 100%; /* Chiếm trọn dòng */
+            order: 2; 
+            width: 100%; 
             max-width: none;
             margin: 0;
             padding-top: 8px;
-            border-top: 1px dashed #eee; /* Đường kẻ ngăn cách nhẹ */
-            flex-direction: row; /* Xếp ngang label và address */
+            border-top: 1px dashed #eee;
+            flex-direction: row; 
             align-items: center;
             gap: 8px;
         }
