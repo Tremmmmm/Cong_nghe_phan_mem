@@ -29,13 +29,11 @@ export default function Footer() {
     .ff-footnote{ text-align:center; padding:20px 16px; color:#888; font-size: 14px; border-top:1px solid #e9e9ef; background: #efeff1; }
 
     /* --- RESPONSIVE MOBILE --- */
+    /* Khi màn hình nhỏ hơn 768px (tablet dọc & điện thoại), ẩn hoàn toàn footer */
     @media (max-width: 768px) {
-      .ff-footer .wrap{ 
-          grid-template-columns: 1fr; /* 1 cột duy nhất trên mobile */
-          gap: 30px; 
-          text-align: center; /* Căn giữa cho đẹp */
+      .ff-footer {
+         display: none; 
       }
-      .ff-brand { align-items: center; } /* Căn giữa logo */
     }
 
     /* dark mode */
@@ -75,7 +73,6 @@ export default function Footer() {
           <ul className="ff-list">
             <li><Link className="ff-link" to="/">Trang chủ</Link></li>
             <li><Link className="ff-link" to="/">Về chúng tôi</Link></li>
-            {/* <li><Link className="ff-link" to="/menu">Thực đơn</Link></li> */}
           </ul>
         </div>
 

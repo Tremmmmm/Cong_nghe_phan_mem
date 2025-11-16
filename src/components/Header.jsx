@@ -78,19 +78,46 @@ export default function Header() {
 
     /* --- RESPONSIVE MOBILE --- */
     @media (max-width: 940px) { 
-        .nav { display: none; } /* Ẩn menu text khi màn hình nhỏ */
+        .nav { display: none; } /* Ẩn menu text khi màn hình tablet/nhỏ */
     }
+    
     @media (max-width: 600px) {
-        .ff-h-wrap { gap: 8px; padding: 10px 12px; grid-template-columns: auto 1fr auto; }
-        .search input { width: 100px; padding: 0 8px; font-size: 13px; } /* Thu nhỏ ô tìm kiếm */
-        .user-btn { padding: 4px; border-radius: 50%; } /* Thu gọn nút user thành hình tròn */
-        .uname, .user-btn span[aria-hidden] { display: none; } /* Ẩn tên và mũi tên */
-        .right { gap: 8px; }
-        .icon-box { width: 32px; height: 32px; } /* Thu nhỏ icon */
+        /* 1. Đổi sang Flexbox để dễ chia không gian khi ẩn logo */
+        .ff-h-wrap { display: flex; gap: 8px; padding: 10px 12px; }
+        
+        /* 2. Ẩn Logo hoàn toàn để nhường chỗ */
+        .brand { display: none; }
+
+        /* 3. Phần Right (chứa Search + Icons + User) chiếm hết chiều rộng */
+        .right { flex-grow: 1; justify-content: space-between; width: 100%; gap: 6px; }
+
+        /* 4. Search bar giãn nở tối đa (chiếm phần lớn không gian còn lại) */
+        .search { flex-grow: 1; width: auto; max-width: none; }
+        .search input { width: 100%; min-width: 0; font-size: 13px; } 
+
+        /* 5. Icon thu nhỏ một chút */
+        .icon-box { width: 34px; height: 34px; }
+
+        /* 6. Hiển thị tên user ngắn gọn */
+        .user-btn { 
+            padding: 4px 8px; 
+            border-radius: 20px; /* Hình viên thuốc thay vì tròn */
+            max-width: 90px; /* Giới hạn chiều rộng nút user */
+            gap: 6px;
+        }
+        .uname { 
+            display: block; /* Hiện lại tên */
+            font-size: 12px; 
+            max-width: 50px; /* Chỉ hiện khoảng 4-5 ký tự rồi ... */
+        }
+        .user-btn span[aria-hidden] { display: none; } /* Ẩn mũi tên nhỏ cho gọn */
         
         /* Dropdown full chiều ngang trên mobile để dễ bấm */
-        .dropdown { position: fixed; top: 60px; left: 10px; right: 10px; width: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border: 1px solid #ddd; }
-        .dropdown a, .dropdown button { height: 50px; font-size: 16px; }
+        .dropdown { 
+            position: fixed; top: 60px; left: 10px; right: 10px; width: auto; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2); border: 1px solid #ddd; 
+        }
+        .dropdown a, .dropdown button { height: 48px; font-size: 16px; }
     }
 
     .dark .ff-header{background:#111;border-color:#333}
@@ -126,17 +153,15 @@ export default function Header() {
   return (
     <header className="ff-header">
       <div className="ff-h-wrap">
-        {/* Logo */}
+        {/* Logo - Sẽ bị ẩn trên mobile bởi CSS */}
         <Link to="/" className="brand" aria-label="FoodFast">
           <img src={logo} alt="FoodFast Logo" />
         </Link>
 
-        {/* Nav center */}
+        {/* Nav center - Sẽ bị ẩn trên tablet/mobile */}
         <nav className="nav">
           <ul>
             <li><NavLink to="/" end className={({isActive})=>isActive?"active":""}>Trang chủ</NavLink></li>
-            
-            {/* Chỉ hiện Yêu thích khi đã đăng nhập */}
             {user && (
               <li><NavLink to="/favorites" className={({isActive})=>isActive?"active":""}>Yêu thích</NavLink></li>
             )}
@@ -150,7 +175,6 @@ export default function Header() {
             <button type="submit" title="Tìm kiếm">🔍</button>
           </form>
 
-          {/* Icon Yêu thích */}
           {user && (
             <NavLink to="/favorites" className="icon-box" title="Yêu thích">
               <span className="ico" role="img" aria-label="heart">❤️</span>
@@ -158,14 +182,13 @@ export default function Header() {
             </NavLink>
           )}
 
-          {/* Giỏ hàng */}
           <NavLink to="/cart" className="icon-box" title="Giỏ hàng">
             <span className="ico" role="img" aria-label="cart">🛒</span>
             {cartCount > 0 && <span className="badge">{cartCount}</span>}
           </NavLink>
 
           {!user ? (
-            <NavLink to="/signin" className={({isActive})=>isActive?"active":""} style={{fontWeight:600, textDecoration:'none', color:'#333'}}>
+            <NavLink to="/signin" className={({isActive})=>isActive?"active":""} style={{fontWeight:600, textDecoration:'none', color:'#333', whiteSpace:'nowrap'}}>
                 Đăng nhập
             </NavLink>
           ) : (
@@ -187,7 +210,6 @@ export default function Header() {
                   <NavLink to="/history" onClick={()=>setOpen(false)}>Lịch sử đơn</NavLink>
                   <NavLink to="/profile" onClick={()=>setOpen(false)}>Cài đặt</NavLink>
                   
-                  {/* Link trang quản trị */}
                   {(user.isAdmin || user.isSuperAdmin || user.isMerchant) && (
                     <NavLink to={user.isSuperAdmin ? "/admin" : "/merchant"} onClick={()=>setOpen(false)} style={{color:'#ff6b35'}}>
                        Trang quản trị
