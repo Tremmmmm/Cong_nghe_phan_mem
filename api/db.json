@@ -5584,8 +5584,22 @@
       "items": []
     },
     {
-      "merchantId": null,
-      "items": [],
+      "merchantId": "m001",
+      "items": [
+        {
+          "id": "sg-2",
+          "name": "Cheese Burger",
+          "price": 52000,
+          "desc": "Burger bò phô mai béo ngậy.",
+          "image": "/assets/images/menu/cheeseburger.webp",
+          "category": "single",
+          "status": "approved",
+          "isAvailable": true,
+          "merchantId": "m001",
+          "merchantName": "Burger King Fast Food",
+          "qty": 1
+        }
+      ],
       "id": "ff_cart_v2:ue:c001@gmail.com"
     },
     {

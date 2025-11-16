@@ -133,7 +133,7 @@ export default function Menu() {
         .grid { grid-template-columns: 1fr; gap: 12px; }
         .card { flex-direction: row; height: 110px; }
         .thumb { width: 110px; height: 100%; aspect-ratio: 1/1; flex-shrink: 0; }
-        .desc { display: none; }
+        .desc {font-size: 13px; color: #666; margin-bottom: 10px; flex-grow: 1; }
         .body { padding: 10px; justify-content: space-between; }
         .menu-head { margin-top: 10px; }
     }
@@ -167,24 +167,61 @@ export default function Menu() {
 
     const Card = (item) => {
         const isFav = fav.has(item.id);
+
+        // Hàm xử lý thêm vào giỏ riêng biệt
+        const handleAddToCart = (e) => {
+            e.preventDefault(); // Chặn hành vi mặc định của trình duyệt (reload)
+            e.stopPropagation(); // Chặn sự kiện nổi bọt lên thẻ cha (để không bị click vào thẻ Card)
+            
+            if (!isCurrentlyOpen) return; // Chặn nếu đang đóng cửa
+
+            cart.add(item, merchantId); 
+        };
+
+        // Hàm xử lý yêu thích
+        const handleToggleFav = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fav.toggle(item.id);
+        };
+
         return (
             <div key={item.id} className="card">
                 {!isCurrentlyOpen && <div className="closed-overlay"><span className="closed-tag">Đang đóng cửa</span></div>}
+                
                 <img 
                     className="thumb" 
                     src={item.image || ph} 
                     alt={item.name} 
                     loading="lazy" 
-                    onError={(e)=>{e.target.src=ph}} // Tự động thay thế nếu ảnh lỗi
+                    onError={(e)=>{e.target.src=ph}} 
                 />
+                
                 <div className="body">
                     <div className="name">{item.name}</div>
                     <div className="desc">{item.desc}</div>
                     <div className="row">
                         <div className="price">{formatVND(item.price || 0)}</div>
                         <div style={{display:'flex', gap:8}}>
-                            <button type="button" className={`heart ${isFav ? "active" : ""}`} onClick={(e) => { e.preventDefault(); e.stopPropagation(); fav.toggle(item.id); }}>{isFav ? "♥" : "♡"}</button>
-                            <button type="button" className="btn" disabled={!isCurrentlyOpen} onClick={(e) => { e.preventDefault(); e.stopPropagation(); cart.add(item, merchantId); toast.show(`Đã thêm ${item.name}`, 'success'); }}>+ Thêm</button>
+                            
+                            {/* Nút Tim */}
+                            <button 
+                                type="button" 
+                                className={`heart ${isFav ? "active" : ""}`} 
+                                onClick={handleToggleFav}
+                            >
+                                {isFav ? "♥" : "♡"}
+                            </button>
+
+                            {/* Nút Thêm - Đã sửa */}
+                            <button 
+                                type="button" 
+                                className="btn" 
+                                disabled={!isCurrentlyOpen} 
+                                onClick={handleAddToCart}
+                            >
+                                + Thêm
+                            </button>
                         </div>
                     </div>
                 </div>
