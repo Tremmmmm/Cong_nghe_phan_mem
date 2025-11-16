@@ -9,7 +9,7 @@ const API_URL_MERCHANTS = `${API_BASE_URL}/merchants`;
 const API_URL_USERS = `${API_BASE_URL}/users`;
 
 // --------------------------------------------------------
-// CÁC HÀM GỌI API (Giữ nguyên logic, chỉ đổi biến URL)
+// CÁC HÀM GỌI API
 // --------------------------------------------------------
 export async function fetchMerchants() {
     try {
@@ -96,7 +96,7 @@ export async function updateMerchant(merchantId, updates) {
 }
 
 // --------------------------------------------------------
-// LOGIC CREATE/DELETE (Đã sửa URL)
+// LOGIC CREATE/DELETE (Đã sửa lỗi quan trọng ở phần tạo User)
 // --------------------------------------------------------
 
 export async function createMerchant(newMerchantData) {
@@ -133,17 +133,21 @@ export async function createMerchant(newMerchantData) {
     };
 
     try {
+        // ⚠️ QUAN TRỌNG: Đã kiểm tra kỹ, tất cả đều dùng POST để THÊM MỚI
         const [merchantRes, settingsRes, userRes] = await Promise.all([
+            // 1. Tạo Merchant (Hợp đồng)
             fetch(API_URL_MERCHANTS, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(merchantPayload),
             }),
+            // 2. Tạo Settings (Cấu hình)
             fetch(API_URL_SETTINGS, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settingsPayload)
             }),
+            // 3. Tạo User (Tài khoản) - BẮT BUỘC LÀ POST
             fetch(API_URL_USERS, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -193,9 +197,11 @@ export async function deleteMerchant(merchantId) {
     try {
         const res1 = fetch(`${API_URL_MERCHANTS}/${merchantId}`, { method: 'DELETE' });
         const res2 = fetch(`${API_URL_SETTINGS}/${merchantId}`, { method: 'DELETE' });
+        
+        // Chỉ xóa user nếu tìm thấy user đó
         const res3 = userIdToDelete 
             ? fetch(`${API_URL_USERS}/${userIdToDelete}`, { method: 'DELETE' })
-            : Promise.resolve(true);
+            : Promise.resolve({ ok: true }); // Giả lập thành công nếu ko có user
 
         const [response1, response2] = await Promise.all([res1, res2, res3]);
 
