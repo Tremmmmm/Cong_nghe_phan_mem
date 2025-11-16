@@ -5049,9 +5049,16 @@
       "id": "u003",
       "username": "customer",
       "password": "123",
-      "name": "customer ",
+      "name": "An",
       "role": "customer",
-      "merchantId": "m001"
+      "merchantId": "m001",
+      "email": "C001@gmail.com",
+      "phone": "0989898989",
+      "address": {
+        "street": "Số 1 Nguyễn Cư Trinh",
+        "ward": "Sài Gòn",
+        "city": "TP. Hồ Chí Minh"
+      }
     },
     {
       "id": "u002",
@@ -5518,6 +5525,31 @@
       "id": "ff_cart_v2:uid:u003",
       "merchantId": null,
       "items": []
+    },
+    {
+      "merchantId": "m001",
+      "items": [
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "price": 35000,
+          "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
+          "image": "http://localhost:5182/beefburger.jpg",
+          "category": "single",
+          "status": "approved",
+          "description": "",
+          "isAvailable": true,
+          "merchantId": "m001",
+          "merchantName": "Burger King Fast Food",
+          "qty": 1
+        }
+      ],
+      "id": "ff_cart_v2:ue:c001@gmail.com"
+    },
+    {
+      "id": "ff_cart_v2:ue:c001@gmail.com",
+      "merchantId": null,
+      "items": []
     }
   ],
   "favorites": [
@@ -5564,6 +5596,14 @@
     },
     {
       "id": "ff_fav_v1:uid:u003",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:ue:c001@gmail.com",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:ue:c001@gmail.com",
       "ids": []
     }
   ]

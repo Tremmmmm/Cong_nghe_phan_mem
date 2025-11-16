@@ -17,20 +17,91 @@ export default function SignIn() {
 
   const styles = useMemo(
     () => `
-    .auth-hero{ min-height: calc(100vh - 140px); display:grid; place-items:center; background:#f4f4f6; }
-    .auth-card{ width:min(680px,92vw); padding:48px 28px; margin:28px 0; background:#fff; border:1px solid #eee; border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,.06) }
-    .auth-title{ text-align:center; font-size:40px; font-weight:800; color:#19243a; margin:4px 0 8px }
-    .zigzag{ width:120px; height:12px; margin:0 auto 26px; background:
-      linear-gradient(135deg,#ffb54d 25%,transparent 25%) -6px 0/12px 12px,
-      linear-gradient(225deg,#ffb54d 25%,transparent 25%) -6px 0/12px 12px,
-      linear-gradient(315deg,#ffb54d 25%,transparent 25%) 0px 0/12px 12px,
-      linear-gradient(45deg, #ffb54d 25%,transparent 25%) 0px 0/12px 12px; }
-    .form{ width:min(520px,90%); margin:0 auto; display:grid; gap:14px }
-    .input{ height:44px; border-radius:12px; border:1px solid #e6e6ea; padding:0 14px; background:#fff; outline:none; font-size:14px; box-shadow: inset 0 3px 6px rgba(0,0,0,.06) }
-    .btn{ margin:6px auto 0; height:44px; min-width:140px; padding:0 18px; border-radius:26px; border:none; cursor:pointer; color:#fff; font-weight:700; background:linear-gradient(135deg,#ffa62b,#ff7a59); box-shadow:0 6px 14px rgba(255,122,89,.35) }
-    .btn[disabled]{ opacity:.6; cursor:not-allowed }
-    .links{ text-align:center; margin-top:18px; color:#444 }
-    .links a{ color:#ff7a59; font-weight:700; text-decoration:none }
+    /* Layout căn giữa toàn màn hình */
+    .auth-hero { 
+      min-height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      background: #fff; /* Nền trắng sạch sẽ */
+      padding: 20px;
+    }
+
+    /* Thẻ Card bo tròn */
+    .auth-card { 
+      width: 100%; 
+      max-width: 420px; /* Form gọn gàng */
+      padding: 40px 30px; 
+      background: #fff; 
+      
+      /* Tạo hiệu ứng khung nổi */
+      border: 1px solid #eee; 
+      border-radius: 24px; /* Bo tròn nhiều như hình */
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08); /* Đổ bóng mềm mại */
+    }
+
+    /* Mobile Optimization */
+    @media (max-width: 600px) {
+      .auth-hero {
+         align-items: flex-start; /* Đẩy lên trên một chút */
+         padding-top: 60px;
+      }
+      /* Trên mobile vẫn giữ khung bo tròn nhưng margin nhỏ lại */
+      .auth-card {
+         box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+      }
+    }
+
+    .auth-title { text-align: center; font-size: 32px; font-weight: 800; color: #19243a; margin-bottom: 10px; }
+    
+    .zigzag { 
+      width: 80px; height: 10px; margin: 0 auto 30px; 
+      background: linear-gradient(135deg,#ffb54d 25%,transparent 25%) -5px 0/10px 10px, 
+                  linear-gradient(225deg,#ffb54d 25%,transparent 25%) -5px 0/10px 10px, 
+                  linear-gradient(315deg,#ffb54d 25%,transparent 25%) 0px 0/10px 10px, 
+                  linear-gradient(45deg, #ffb54d 25%,transparent 25%) 0px 0/10px 10px; 
+      opacity: 0.8;
+    }
+
+    .form { display: grid; gap: 16px; }
+    
+    .input { 
+      height: 48px; 
+      border-radius: 12px; 
+      border: 1px solid #e1e1e1; 
+      padding: 0 16px; 
+      background: #fff; 
+      outline: none; 
+      font-size: 15px; 
+      transition: 0.2s;
+    }
+    .input:focus {
+      border-color: #ff7a59;
+      box-shadow: 0 0 0 4px rgba(255,122,89,0.1);
+    }
+
+    .btn { 
+      margin-top: 12px; 
+      height: 48px; 
+      border-radius: 24px; 
+      border: none; 
+      cursor: pointer; 
+      color: #fff; 
+      font-weight: 700; 
+      font-size: 16px;
+      background: linear-gradient(135deg,#ff8e61,#ff7a59); 
+      box-shadow: 0 8px 20px rgba(255,122,89,0.3);
+      transition: transform 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+    .links { text-align: center; margin-top: 24px; font-size: 14px; color: #666; }
+    .links a { color: #ff7a59; font-weight: 700; text-decoration: none; }
+    
+    .dark .auth-hero, .dark .auth-card { background: #111; border-color: #333; }
+    .dark .auth-title { color: #eee; }
+    .dark .input { background: #222; border-color: #444; color: #fff; }
     `,
     []
   );
@@ -53,14 +124,11 @@ export default function SignIn() {
     }
     try {
       setLoading(true);
-
-      // Gọi hàm login từ AuthContext
       const result = await auth.login({ email: username, password });
       const user = result.user;
 
       toast.show(`Chào mừng, ${user.name || user.username || "bạn"}!`, "success");
 
-      // Điều hướng dựa trên vai trò (Role-based navigation)
       if (user.role === "SuperAdmin") {
         navigate("/admin", { replace: true });
       } else if (user.role === "Merchant") {
@@ -70,7 +138,6 @@ export default function SignIn() {
       }
     } catch (err) {
       toast.show(err.message || "Đăng nhập thất bại. Sai thông tin.", "error");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -82,23 +149,8 @@ export default function SignIn() {
         <h1 className="auth-title">Đăng Nhập</h1>
         <div className="zigzag" />
         <form className="form" onSubmit={submit}>
-          <input
-            className="input"
-            placeholder="Username hoặc Email"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            name="username"
-            autoComplete="username"
-          />
-          <input
-            className="input"
-            type="password"
-            placeholder="Mật khẩu"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            name="password"
-            autoComplete="current-password"
-          />
+          <input className="input" placeholder="Username hoặc Email" value={username} onChange={(e) => setUsername(e.target.value)} name="username" />
+          <input className="input" type="password" placeholder="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} name="password" />
           <button className="btn" type="submit" disabled={loading}>
             {loading ? "Đang xử lý..." : "Đăng nhập"}
           </button>
@@ -107,7 +159,7 @@ export default function SignIn() {
         <div className="links">
           Chưa có tài khoản? <Link to="/signup">Đăng ký ngay</Link>
         </div>
-
+        
         <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#999" }}>
           (Demo: <b>svadmin</b>/123, <b>resadmin</b>/123)
         </div>

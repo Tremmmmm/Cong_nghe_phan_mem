@@ -22,8 +22,8 @@ export default function Home() {
           fetchMenuItems()
       ]);
 
-      setMerchants(merchantsData.filter(m =>m.status === 'Active'));
-      setMenuItems(menuItemsData.slice(0, 8)); // Lấy 8 món gợi ý
+      setMerchants(merchantsData.filter(m => m.status === 'Active'));
+      setMenuItems(menuItemsData.slice(0, 8));
 
     } catch (err) {
       setError('Không thể tải dữ liệu trang chủ.');
@@ -38,106 +38,101 @@ export default function Home() {
   }, [loadData]);
 
   const styles = useMemo(() => `
-    .home-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; background: #ffffffff; min-height: 100vh; }
+    .home-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; background: #f5f5f5; min-height: 100vh; }
     
-    /* --- Hero Banner --- */
     .hero { 
-        background: linear-gradient(135deg, #eb9a2f 0%, #f7c37e 100%); 
-        padding: 30px 20px; 
-        border-radius: 16px; 
-        margin-bottom: 24px; 
-        text-align: center; 
-        color: #fff;
-        box-shadow: 0 4px 15px rgba(255, 122, 89, 0.3);
+        background: linear-gradient(135deg, #ff7a59 0%, #ffb199 100%); 
+        padding: 24px 20px; border-radius: 12px; margin-bottom: 20px; 
+        text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(255, 122, 89, 0.3);
     }
-    .hero h1 { font-size: 28px; font-weight: 800; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 1px; }
-    .hero p { font-size: 15px; opacity: 0.9; margin: 0; }
+    .hero h1 { font-size: 24px; font-weight: 800; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .hero p { font-size: 14px; opacity: 0.9; margin: 0; }
 
     .section-title { font-size: 18px; font-weight: 700; color: #333; margin: 24px 0 12px; display: flex; align-items: center; gap: 8px; }
     .section-title::before { content: ''; display: block; width: 4px; height: 18px; background: #ff7a59; border-radius: 2px; }
 
-    /* --- Merchant List (Scroll ngang) --- */
+    /* --- MERCHANT LIST (CAROUSEL) --- */
     .merchant-scroll-container {
-        display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        padding-bottom: 12px; /* Chừa chỗ cho scrollbar */
-        scrollbar-width: none; /* Ẩn scrollbar Firefox */
+        display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none;
     }
-    .merchant-scroll-container::-webkit-scrollbar { display: none; } /* Ẩn scrollbar Chrome */
+    .merchant-scroll-container::-webkit-scrollbar { display: none; }
 
+    /* 💡 THẺ NHÀ HÀNG (MOBILE FIRST - UI/UX TỐI ƯU) */
     .merchant-item {
-        min-width: 140px;
-        width: 140px;
-        background: #fff;
-        border-radius: 8px;
-        overflow: hidden;
-        text-decoration: none;
-        color: inherit;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-        transition: transform 0.2s;
+        min-width: 150px; width: 150px; /* Kích thước nhỏ gọn cho mobile */
+        background: #fff; border-radius: 8px; overflow: hidden;
+        text-decoration: none; color: inherit;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.2s;
+        border: 1px solid #eee;
+        display: flex; flex-direction: column;
     }
     .merchant-item:active { transform: scale(0.98); }
-    
+
     .merchant-logo-box {
-        width: 100%;
-        height: 100px;
-        background: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-bottom: 1px solid #f0f0f0;
+        width: 100%; height: 100px; /* Chiều cao logo vừa phải */
+        background: #f9f9f9; display: flex; align-items: center; justify-content: center;
+        border-bottom: 1px solid #f0f0f0; overflow: hidden; position: relative;
     }
-    .merchant-logo {
-        width: 80%;
-        height: 80%;
-        object-fit: contain;
+    .merchant-logo { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+
+    .merchant-info { padding: 8px 10px; flex-grow: 1; display: flex; flex-direction: column; }
+    
+    .merchant-name { 
+        font-size: 13px; font-weight: 700; color: #222; margin-bottom: 4px; 
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
     }
-    .merchant-info { padding: 8px; text-align: center; }
-    .merchant-name { font-size: 13px; font-weight: 700; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-    .merchant-status { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; display: inline-block; }
-    .status-open { color: #27ae60; background: #eafaf1; }
+    .merchant-addr { 
+        font-size: 11px; color: #777; margin-bottom: 6px; 
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+    }
+    
+    .status-tag { 
+        font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; 
+        display: inline-block; text-transform: uppercase; width: fit-content; margin-top: auto;
+    }
+    .status-open { color: #00b14f; background: #e6f9ee; }
     .status-closed { color: #e74c3c; background: #fdedec; }
 
-    /* --- Dish Grid (2 cột mobile, 4 cột PC) --- */
-    .dish-grid { 
-        display: grid; 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 12px; 
-    }
-    @media (min-width: 768px) {
-        .dish-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
-        .merchant-item { min-width: 180px; width: 180px; }
-        .merchant-logo-box { height: 120px; }
-    }
-
-    .dish-card { 
-        background: #fff; 
-        border-radius: 8px; 
-        overflow: hidden; 
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05); 
-        display: flex; 
-        flex-direction: column;
-    }
-    .dish-img-link { display: block; position: relative; padding-top: 100%; /* Vuông */ }
-    .dish-img { 
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-        object-fit: cover; 
-    }
+    /* --- DISH GRID --- */
+    .dish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    
+    .dish-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; border: 1px solid #eee; }
+    .dish-img-link { display: block; position: relative; padding-top: 100%; }
+    .dish-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
     .dish-body { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .dish-title { font-size: 14px; font-weight: 600; color: #333; margin: 0 0 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .dish-merchant { font-size: 11px; color: #888; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
-    .dish-price { font-size: 15px; font-weight: 700; color: #ff7a59; }
+    .dish-title { font-size: 13px; font-weight: 600; color: #333; margin: 0 0 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .dish-merchant { font-size: 10px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dish-price { font-size: 14px; font-weight: 700; color: #ff7a59; }
 
-    .user-welcome { background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; color: #555; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 10px; }
+    .user-welcome { background: #fff; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #555; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 8px; }
     .user-welcome strong { color: #ff7a59; }
 
-    /* Dark mode */
+    /* --- DESKTOP STYLE (Min-width 768px) --- */
+    @media (min-width: 768px) {
+        .hero { padding: 40px; margin-bottom: 30px; }
+        .hero h1 { font-size: 36px; margin-bottom: 10px; }
+        .section-title { font-size: 24px; margin: 40px 0 20px; }
+        
+        /* Desktop Merchant Card to hơn */
+        .merchant-item { min-width: 220px; width: 220px; border-radius: 12px; }
+        .merchant-item:hover { transform: translateY(-5px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .merchant-logo-box { height: 140px; }
+        .merchant-item:hover .merchant-logo { transform: scale(1.05); }
+        .merchant-info { padding: 12px 15px; }
+        .merchant-name { font-size: 16px; }
+        .merchant-addr { font-size: 13px; margin-bottom: 10px; }
+        .status-tag { font-size: 11px; padding: 4px 8px; }
+
+        .dish-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        .dish-title { font-size: 16px; }
+        .dish-price { font-size: 16px; }
+    }
+
     .dark .home-wrap { background: #121212; }
-    .dark .merchant-item, .dark .dish-card, .dark .user-welcome { background: #1e1e1e; }
+    .dark .merchant-item, .dark .dish-card, .dark .user-welcome { background: #1e1e1e; border-color: #333; }
     .dark .section-title { color: #eee; }
     .dark .merchant-name, .dark .dish-title { color: #eee; }
-    .dark .merchant-logo-box { border-bottom-color: #333; background: #252525; }
+    .dark .merchant-addr { color: #aaa; }
   `, []);
 
   useEffect(() => {
@@ -169,7 +164,7 @@ export default function Home() {
         <p>Giao đồ ăn thần tốc - Món ngon tận cửa</p>
       </div>
 
-      {/* --- LIST QUÁN ĂN (Carousel ngang) --- */}
+      {/* --- LIST QUÁN ĂN --- */}
       <h2 className="section-title">Thương hiệu nổi bật</h2>
       <div className="merchant-scroll-container">
         {merchants.length === 0 ? (
@@ -199,10 +194,14 @@ export default function Home() {
                 </div>
                 <div className="merchant-info">
                   <div className="merchant-name" title={merchant.storeName}>{merchant.storeName}</div>
+                  <div className="merchant-addr" title={merchant.address}>
+                      📍 {merchant.address || "Chưa cập nhật địa chỉ"}
+                  </div>
+                  
                   {isOpen ? (
-                      <span className="merchant-status status-open">Mở cửa</span>
+                      <span className="status-tag status-open">● Đang mở</span>
                   ) : (
-                      <span className="merchant-status status-closed">Đóng cửa</span>
+                      <span className="status-tag status-closed">● Đóng cửa</span>
                   )}
                 </div>
               </Link>
@@ -211,8 +210,8 @@ export default function Home() {
         )}
       </div>
 
-      {/* --- LIST MÓN ĂN (Grid 2 cột) --- */}
-      <h2 className="section-title">Gợi ý hôm nay</h2>
+      {/* --- LIST MÓN ĂN --- */}
+      <h2 className="section-title">Món ngon gần bạn</h2>
       <div className="dish-grid">
           {menuItems.length === 0 ? (
             <p style={{color: '#999', fontSize: 14, padding: 10}}>Chưa có món nào.</p>

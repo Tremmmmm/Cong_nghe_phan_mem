@@ -17,38 +17,51 @@ export default function SignUp() {
 
   const styles = useMemo(
     () => `
-    .auth-hero{min-height: calc(100vh - 140px); display:grid; place-items:center; background:#f4f4f6;
-      background-image: url("data:image/svg+xml;utf8,${encodeURIComponent(`
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600' opacity='0.2'>
-          <defs><pattern id='p' width='160' height='120' patternUnits='userSpaceOnUse'>
-            <g fill='none' stroke='#cfcfd6' stroke-width='1.5'>
-              <circle cx='20' cy='20' r='10'/>
-              <circle cx='120' cy='60' r='8'/>
-              <rect x='60' y='20' width='20' height='20' rx='4' />
-              <path d='M20 80c18 0 18 20 36 20s18-20 36-20 18 20 36 20'/>
-            </g>
-          </pattern></defs>
-          <rect width='100%' height='100%' fill='url(%23p)'/>
-        </svg>
-      `)}"); }
-    .auth-card{ width:min(760px, 94vw); padding:48px 28px; margin:28px 0; background:rgba(255,255,255,.65); border:1px solid #eee; border-radius:18px; backdrop-filter:blur(2px); box-shadow:0 10px 30px rgba(0,0,0,.06);}
-    .auth-title{ text-align:center; font-size:40px; font-weight:800; color:#19243a; margin:4px 0 8px;}
-    .zigzag{ width:120px; height:12px; margin:0 auto 26px; background:
-      linear-gradient(135deg, #ffb54d 25%, transparent 25%) -6px 0/12px 12px,
-      linear-gradient(225deg, #ffb54d 25%, transparent 25%) -6px 0/12px 12px,
-      linear-gradient(315deg, #ffb54d 25%, transparent 25%) 0px 0/12px 12px,
-      linear-gradient(45deg,  #ffb54d 25%, transparent 25%) 0px 0/12px 12px;}
-    .form{ width:min(560px, 92%); margin:0 auto; display:grid; gap:14px;}
-    .input{ height:44px; border-radius:12px; border:1px solid #e6e6ea; padding:0 14px; background:#fff; outline:none; font-size:14px; box-shadow: inset 0 3px 6px rgba(0,0,0,.06);}
-    .err{ color:#c24a26; font-size:12px; margin:-6px 2px 6px }
-    .btn{ margin: 6px auto 0; height:44px; min-width:160px; padding:0 22px; border-radius:26px; border:none; cursor:pointer; color:#fff; font-weight:700;
-      background: linear-gradient(135deg, #ffa62b, #ff7a59); box-shadow: 0 6px 14px rgba(255,122,89,.35);}
-    .btn[disabled]{ opacity:.6; cursor:not-allowed }
-    .links{ text-align:center; margin-top:18px; color:#444; }
-    .links a{ color:#ff7a59; font-weight:700; text-decoration:none }
-    .dark .auth-card{ background: rgba(24,24,28,.7); border-color:#333; }
-    .dark .auth-title{ color:#f3f3f7 }
-    .dark .input{ background:#111; color:#eee; border-color:#444 }
+    .auth-hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      padding: 20px;
+    }
+
+    .auth-card { 
+      width: 100%; 
+      max-width: 480px; 
+      padding: 40px 30px; 
+      background: #fff; 
+      
+      /* Khung bo tròn nổi bật */
+      border: 1px solid #eee; 
+      border-radius: 24px; 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+
+    @media (max-width: 600px) {
+      .auth-hero {
+         align-items: flex-start;
+         padding-top: 40px;
+      }
+      .auth-card {
+         padding: 30px 20px;
+      }
+    }
+
+    .auth-title { text-align: center; font-size: 32px; font-weight: 800; color: #19243a; margin-bottom: 10px; }
+    .zigzag { width: 80px; height: 10px; margin: 0 auto 30px; background: linear-gradient(135deg,#ffb54d 25%,transparent 25%) -5px 0/10px 10px, linear-gradient(225deg,#ffb54d 25%,transparent 25%) -5px 0/10px 10px, linear-gradient(315deg,#ffb54d 25%,transparent 25%) 0px 0/10px 10px, linear-gradient(45deg, #ffb54d 25%,transparent 25%) 0px 0/10px 10px; opacity: 0.8; }
+    .form { display: grid; gap: 14px; }
+    .input { height: 46px; border-radius: 12px; border: 1px solid #e1e1e1; padding: 0 16px; background: #fff; outline: none; font-size: 14px; transition: 0.2s; }
+    .input:focus { border-color: #ff7a59; box-shadow: 0 0 0 4px rgba(255,122,89,0.1); }
+    .err { color: #e74c3c; font-size: 12px; margin: -8px 0 4px 4px; font-weight: 500; }
+    .btn { margin-top: 16px; height: 48px; border-radius: 24px; border: none; cursor: pointer; color: #fff; font-weight: 700; font-size: 16px; background: linear-gradient(135deg, #ff8e61, #ff7a59); box-shadow: 0 8px 20px rgba(255,122,89,0.3); transition: transform 0.2s; }
+    .btn:active { transform: scale(0.98); }
+    .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+    .links { text-align: center; margin-top: 24px; font-size: 14px; color: #666; }
+    .links a { color: #ff7a59; font-weight: 700; text-decoration: none; }
+    .dark .auth-hero, .dark .auth-card { background: #111; border-color: #333; }
+    .dark .auth-title { color: #eee; }
+    .dark .input { background: #222; border-color: #444; color: #fff; }
     `,
     []
   );
@@ -73,7 +86,6 @@ export default function SignUp() {
     e.preventDefault();
     const { name, email, phone, address, pass1, pass2 } = form;
 
-    // validate tối thiểu
     const errs = {};
     if (!name) errs.name = 'Vui lòng nhập tên';
     if (!email) errs.email = 'Vui lòng nhập email';
@@ -87,19 +99,11 @@ export default function SignUp() {
 
     try {
       setLoading(true);
-      // map đúng API AuthContext: signUp({ name, email, phone, address, password })
       await auth.signUp({ name, email, phone, address, password: pass1 });
-      // lưu “last profile” để checkout auto-fill nếu chưa đăng nhập lại
-      try {
-        localStorage.setItem('lastName', name);
-        localStorage.setItem('lastPhone', phone || '');
-        localStorage.setItem('lastAddress', address || '');
-      } catch {}
       toast.show("Đăng ký thành công", "success");
       navigate("/", { replace: true });
     } catch (err) {
       toast.show("Đăng ký thất bại", "error");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -113,33 +117,18 @@ export default function SignUp() {
         <form className="form" onSubmit={submit}>
           <input className="input" placeholder="Enter your Name" autoComplete="name" {...bind("name")} />
           {errors.name && <div className="err">{errors.name}</div>}
-
           <input className="input" placeholder="Enter your Address" autoComplete="street-address" {...bind("address")} />
-
           <input className="input" placeholder="Enter your Email ID" autoComplete="email" {...bind("email")} />
           {errors.email && <div className="err">{errors.email}</div>}
-
-          <input className="input" placeholder="Enter your Mobile number" inputMode="tel" autoComplete="tel"
-            {...bind("phone", {
-              onBlur: (e) =>
-                setErrors(er => ({ ...er, phone: (!e.target.value || isPhoneVN(e.target.value)) ? null : 'Số điện thoại không hợp lệ (VN)' }))
-            })} />
+          <input className="input" placeholder="Enter your Mobile number" inputMode="tel" autoComplete="tel" {...bind("phone")} />
           {errors.phone && <div className="err">{errors.phone}</div>}
-
           <input className="input" type="password" placeholder="Enter your Password" autoComplete="new-password" {...bind("pass1")} />
           {errors.pass1 && <div className="err">{errors.pass1}</div>}
-
           <input className="input" type="password" placeholder="Re-Enter your Password" autoComplete="new-password" {...bind("pass2")} />
           {errors.pass2 && <div className="err">{errors.pass2}</div>}
-
-          <button className="btn" type="submit" disabled={loading}>
-            {loading ? "Signing Up..." : "Đăng Ký"}
-          </button>
+          <button className="btn" type="submit" disabled={loading}>{loading ? "Signing Up..." : "Đăng Ký"}</button>
         </form>
-
-        <div className="links">
-          Already Registered <Link to="/signin">Click Here</Link>
-        </div>
+        <div className="links">Already Registered <Link to="/signin">Click Here</Link></div>
       </div>
     </section>
   );

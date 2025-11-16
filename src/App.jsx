@@ -1,10 +1,10 @@
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'; // 💡 Thêm useLocation
 
 // --- Layouts ---
-import Header from './components/Header.jsx'; // Layout Public
+import Header from './components/Header.jsx'; 
 import Footer from './components/Footer.jsx';
-import ResLayout from './admin/ResLayout.jsx'; // Layout cho Merchant
-import AdminLayout from './admin/AdminLayout.jsx'; // Layout cho Super Admin
+import ResLayout from './admin/ResLayout.jsx'; 
+import AdminLayout from './admin/AdminLayout.jsx'; 
 
 // --- Pages (Public) ---
 import Home from './pages/Home.jsx';
@@ -17,7 +17,7 @@ import DetailsHistory from './pages/DetailsHistory.jsx';
 import DroneTracker from './pages/DroneTracker.jsx';
 
 // --- Pages (Auth) ---
-import SignIn from './pages/SignIn.jsx'; // Dùng chung cho cả 3
+import SignIn from './pages/SignIn.jsx'; 
 import SignUp from './pages/SignUp.jsx';
 
 // --- Pages (Customer - Cần Đăng nhập) ---
@@ -26,34 +26,72 @@ import Checkout from './pages/Checkout.jsx';
 import Orders from './pages/Orders.jsx';
 import ConfirmCloseSession from './pages/ConfirmCloseSession.jsx';
 
-// --- Pages (Merchant Admin - 'resadmin') ---
-import AdminDashboard from './pages/AdminDashboard.jsx'; // Dashboard của Merchant
-import AdminOrders from './pages/AdminOrders.jsx'; // Order của Merchant
+// --- Pages (Merchant Admin) ---
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import AdminOrders from './pages/AdminOrders.jsx';
 import SettingRestaurant from './pages/RestaurantSettings.jsx'; 
 import RestaurantMenu from './pages/RestaurantMenuManager.jsx';
-import RestaurantOrders from './pages/RestaurantOrders.jsx'; // Kitchen view
-import DroneOrders from './pages/DroneOrders.jsx'; // Drone view
+import RestaurantOrders from './pages/RestaurantOrders.jsx';
+import DroneOrders from './pages/DroneOrders.jsx';
 
-// --- Pages (Super Admin - 'svadmin') ---
+// --- Pages (Super Admin) ---
 import AdminServerDashboard from './pages/AdminServerDashboard.jsx';
 import AdminServerRestaurant from './pages/AdminServerRestaurant.jsx';
 import AdminUsers from './admin/AdminUsers.jsx';
 import AdminMerchantDetail from './pages/AdminMerchantDetail.jsx';
 
-// --- Guards (Từ AuthContext.jsx MỚI) ---
+// --- Guards ---
 import { 
   RequireAuth, 
   MerchantRoute, 
   SuperAdminRoute 
-} from './context/AuthContext.jsx'; // Import các Guard xịn
+} from './context/AuthContext.jsx';
 
-// Layout Public (Header/Footer)
+// 💡 SỬA LAYOUT ĐỂ ẨN HEADER/FOOTER TRÊN MOBILE
 function AppLayout() {
+  const location = useLocation();
+  
+  // Danh sách các trang cần ẩn Header/Footer trên mobile
+  const isAuthPage = [
+    '/signin', 
+    '/signup', 
+    '/admin/login', 
+    '/restaurant/login'
+  ].includes(location.pathname);
+
+  // CSS chỉ áp dụng khi màn hình nhỏ hơn 768px (Mobile)
+  const mobileStyles = `
+    @media (max-width: 768px) {
+      .mobile-hidden-auth {
+        display: none !important;
+      }
+      /* Nếu Header bị ẩn, main có thể cần bỏ padding-top nếu có */
+      .auth-page-container {
+        padding-top: 0 !important;
+        width: 100%;
+        background: #fff; /* Đảm bảo nền trắng khớp với form */
+      }
+    }
+  `;
+
   return (
     <>
-      <Header />
-      <Outlet />
-      <Footer />
+      <style>{mobileStyles}</style>
+      
+      {/* Header: Bị ẩn trên mobile nếu là trang Auth */}
+      <div className={isAuthPage ? "mobile-hidden-auth" : ""}>
+        <Header />
+      </div>
+
+      {/* Main Content */}
+      <main className={isAuthPage ? "auth-page-container" : ""}>
+        <Outlet />
+      </main>
+
+      {/* Footer: Bị ẩn trên mobile nếu là trang Auth */}
+      <div className={isAuthPage ? "mobile-hidden-auth" : ""}>
+        <Footer />
+      </div>
     </>
   );
 }
@@ -70,30 +108,27 @@ export default function App() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/confirmation" element={<Confirmation />} />
         <Route path="/history" element={<DetailsHistory />} />
-        {/* Trang tracking có thể public hoặc protected, tuỳ bạn */}
         <Route path="/orders/:id/tracking" element={<DroneTracker />}  /> 
 
-        {/* --- Auth (Dùng chung cho mọi vai trò) --- */}
+        {/* --- Auth --- */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        {/* Gộp trang login admin vào chung 1 trang SignIn */}
         <Route path="/admin/login" element={<SignIn />} /> 
         <Route path="/restaurant/login" element={<SignIn />} />
 
-        {/* --- Customer Routes (Cần đăng nhập) --- */}
+        {/* --- Customer Routes --- */}
         <Route path="/checkout" element={ <RequireAuth> <Checkout /> </RequireAuth> } />
         <Route path="/orders" element={ <RequireAuth> <Orders /> </RequireAuth> } />
         <Route path="/profile" element={ <RequireAuth> <Profile /> </RequireAuth> } />
         <Route path="/checkout/confirm" element={ <RequireAuth> <ConfirmCloseSession /> </RequireAuth> } />
       </Route>
 
-      {/* ===== 2. MERCHANT ADMIN PANEL (/merchant) ===== */}
-      {/* Các route này CHỈ dành cho Merchant (vd: 'resadmin') */}
+      {/* ===== 2. MERCHANT ADMIN PANEL ===== */}
       <Route
         path="/merchant"
         element={
           <MerchantRoute>
-            <ResLayout /> {/* Sử dụng Layout Sidebar của Merchant */}
+            <ResLayout />
           </MerchantRoute>
         }
       > 
@@ -107,13 +142,12 @@ export default function App() {
         <Route path="drone/:id" element={<DroneTracker />} />
       </Route>
 
-      {/* ===== 3. SUPER ADMIN PANEL (/admin) ===== */}
-      {/* Các route này CHỈ dành cho Super Admin (vd: 'svadmin') */}
+      {/* ===== 3. SUPER ADMIN PANEL ===== */}
       <Route
         path="/admin"
         element={
           <SuperAdminRoute>
-            <AdminLayout /> {/* Sử dụng Layout Sidebar của Super Admin */}
+            <AdminLayout />
           </SuperAdminRoute>
         }
       >
@@ -124,14 +158,11 @@ export default function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="drone" element={<DroneOrders />} />
         <Route path="drone/:id" element={<DroneTracker />} />
-        {/* <Route path="restaurant" element={<RestaurantOrders />} /> */}
       </Route>
 
       {/* ===== 4. FALLBACKS ===== */}
-      {/* Nếu gõ /admin... mà không khớp, về dashboard (của vai trò tương ứng) */}
       <Route path="/admin/*" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/merchant/*" element={<Navigate to="/merchant/dashboard" replace />} />  
-      {/* Gõ linh tinh thì về trang chủ */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
