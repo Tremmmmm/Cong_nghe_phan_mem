@@ -1474,6 +1474,63 @@
       "updatedAt": "2025-11-14T02:08:43.587Z",
       "acceptedAt": "2025-11-14T02:08:32.198Z",
       "readyAt": "2025-11-14T02:08:43.587Z"
+    },
+    {
+      "id": "l275",
+      "sessionId": "908e",
+      "userId": "u003",
+      "userEmail": "C001@gmail.com",
+      "customerName": "An",
+      "phone": "0989898989",
+      "address": "Số 2 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        },
+        {
+          "id": "sg-4",
+          "name": "French Fries",
+          "qty": 1,
+          "price": 29000,
+          "image": "/assets/images/menu/frenchfries.jpg"
+        },
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 1,
+          "price": 35000,
+          "image": "http://localhost:5182/beefburger.jpg"
+        }
+      ],
+      "total": 116000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 136000,
+      "couponCode": "",
+      "createdAt": 1763297657587,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.776442204791168,
+        "lng": 106.69117753050774
+      },
+      "status": "new",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1763297682608"
     }
   ],
   "sessions": [
@@ -5055,8 +5112,8 @@
       "email": "C001@gmail.com",
       "phone": "0989898989",
       "address": {
-        "street": "Số 1 Nguyễn Cư Trinh",
-        "ward": "Sài Gòn",
+        "street": "Số 2 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
         "city": "TP. Hồ Chí Minh"
       }
     },
@@ -5527,49 +5584,8 @@
       "items": []
     },
     {
-      "merchantId": "m001",
-      "items": [
-        {
-          "id": "sg-1",
-          "name": "Beef Burger",
-          "price": 35000,
-          "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
-          "image": "http://localhost:5182/beefburger.jpg",
-          "category": "single",
-          "status": "approved",
-          "description": "",
-          "isAvailable": true,
-          "merchantId": "m001",
-          "merchantName": "Burger King Fast Food",
-          "qty": 1
-        },
-        {
-          "id": "sg-3",
-          "name": "Fried Chicken",
-          "price": 52000,
-          "desc": "Gà rán giòn rụm, vị cay nhẹ.",
-          "image": "/assets/images/menu/friedchicken.webp",
-          "category": "single",
-          "status": "approved",
-          "isAvailable": true,
-          "merchantId": "m001",
-          "merchantName": "Burger King Fast Food",
-          "qty": 1
-        },
-        {
-          "id": "sg-4",
-          "name": "French Fries",
-          "price": 29000,
-          "desc": "Khoai tây chiên giòn, muối nhẹ.",
-          "image": "/assets/images/menu/frenchfries.jpg",
-          "category": "single",
-          "status": "approved",
-          "isAvailable": true,
-          "merchantId": "m001",
-          "merchantName": "Burger King Fast Food",
-          "qty": 1
-        }
-      ],
+      "merchantId": null,
+      "items": [],
       "id": "ff_cart_v2:ue:c001@gmail.com"
     },
     {
@@ -5626,7 +5642,10 @@
     },
     {
       "id": "ff_fav_v1:ue:c001@gmail.com",
-      "ids": []
+      "ids": [
+        "2434",
+        "sg-4"
+      ]
     },
     {
       "id": "ff_fav_v1:ue:c001@gmail.com",

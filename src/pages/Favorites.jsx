@@ -1,8 +1,6 @@
-// src/pages/Favorites.jsx
-import { useEffect, useMemo, useState } from "react"; // 💡 Thêm useState
+import { useEffect, useMemo, useState } from "react"; 
 import { Link } from "react-router-dom";
-// 💡 Bỏ MENU_ALL, import API
-import { fetchMenuItems } from "../utils/menuAPI.js"; // 💡 Giả sử bạn có file này
+import { fetchMenuItems } from "../utils/menuAPI.js"; 
 import { useFav } from "../context/FavContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
@@ -12,52 +10,84 @@ export default function Favorites() {
   const { add } = useCart();
   const toast = useToast();
   
-  // 💡 1. Fetch menuItems để lấy thông tin (name, price, merchantId)
   const [menuMap, setMenuMap] = useState(new Map());
   useEffect(() => {
-    // 💡 Dùng menuAPI.js (file bạn đã có)
     fetchMenuItems() 
       .then(items => {
         setMenuMap(new Map(items.map(item => [item.id, item])));
       });
   }, []);
 
-  // 💡 2. Lấy chi tiết món ăn từ map
   const items = useMemo(() => 
     ids.map(id => menuMap.get(id)).filter(Boolean),
     [ids, menuMap]
   );
+
   const styles = useMemo(
     () => `
-      .fav-wrap{max-width:1140px;margin:24px auto;padding:0 16px}
-      .title{font-size:24px;margin:0 0 10px}
-      .sub{color:#666;margin-bottom:12px}
-      .actions{display:flex;gap:12px;margin-bottom:18px}
-      .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-      .card{border:1px solid #eee;border-radius:14px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
-      .thumb{aspect-ratio:16/10;background:#f6f6f6;display:block;width:100%;object-fit:cover}
-      .body{padding:12px 14px;display:flex;flex-direction:column;gap:6px}
-      .name{font-weight:700}
-      .price{font-weight:700}
-      .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-      .btn{border:none;border-radius:10px;cursor:pointer;padding:10px 12px}
-      .btn.primary{background:#ff7a59;color:#fff}
-      .btn.ghost{background:#fff;border:1px solid #ddd;color:#111}
-      .btn.danger{background:#ff6b6b;color:#fff}
-      .heart{border:1px solid #ffb3b3;background:#ffe5e5;color:#b00000;padding:10px 12px;border-radius:10px;display:inline-flex;gap:6px;align-items:center}
-      .empty{padding:18px;border:1px dashed #ddd;border-radius:12px;background:#fff}
-      @media (max-width:1024px){.grid{grid-template-columns:repeat(2,1fr)}}
-      @media (max-width:620px){.grid{grid-template-columns:1fr}}
-      .dark .card{background:#151515;border-color:#333}
-      .dark .sub{color:#aaa}
-      .dark .btn.ghost{background:#111;border-color:#555;color:#eee}
-      .dark .empty{background:#111;border-color:#333}
+      .fav-wrap{max-width:1140px;margin:0 auto;padding:16px; min-height: 80vh; background: #f5f5f5;}
+      
+      /* Header gọn gàng */
+      .fav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+      .title{font-size:20px; font-weight: 800; margin:0; color: #333;}
+      .sub{ font-size: 13px; color: #666; }
+
+      /* Hành động nhanh (Sticky bottom hoặc top) */
+      .actions{ display:flex; gap:8px; overflow-x: auto; padding-bottom: 4px; }
+      .btn-action { 
+          font-size: 12px; padding: 6px 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer; white-space: nowrap;
+      }
+      .btn-primary{background:#ff7a59;color:#fff; box-shadow: 0 2px 6px rgba(255,122,89,0.3);}
+      .btn-danger{background:#fff; color:#e74c3c; border: 1px solid #e74c3c;}
+
+      /* --- GRID 2 CỘT CHO MOBILE --- */
+      .grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      
+      @media (min-width: 768px) {
+          .grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+          .fav-wrap { padding: 24px; }
+      }
+
+      /* Card Style */
+      .card{ 
+          background:#fff; border-radius: 12px; overflow:hidden; 
+          box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #eee;
+          display: flex; flex-direction: column;
+      }
+      
+      .thumb-link { display: block; position: relative; padding-top: 100%; }
+      .thumb{ position: absolute; top: 0; left: 0; width:100%; height:100%; object-fit:cover; }
+      
+      .body{ padding: 10px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+      .name{ font-size: 14px; font-weight: 600; color: #333; margin-bottom: 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .price{ font-size: 15px; font-weight: 700; color: #ff7a59; margin-bottom: 8px; }
+      
+      .row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top: auto; }
+      
+      /* Nút thêm vào giỏ nhỏ gọn */
+      .btn-add { 
+          flex: 1; background: #ff7a59; color: #fff; border: none; border-radius: 6px; 
+          padding: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+      }
+      /* Nút tim */
+      .btn-heart {
+          background: #fff5f5; color: #e74c3c; border: 1px solid #ffdada; border-radius: 6px;
+          padding: 5px 8px; cursor: pointer; font-size: 14px;
+      }
+
+      .empty{ text-align: center; padding: 40px 20px; color: #999; }
+      .empty a { color: #ff7a59; text-decoration: none; }
+
+      .dark .fav-wrap { background: #121212; }
+      .dark .card{background:#1e1e1e; border-color:#333;}
+      .dark .name { color: #eee; }
+      .dark .title { color: #eee; }
     `,
     []
   );
 
   useEffect(() => {
-    const id = "favorites-inline-style-v2-actions";
+    const id = "favorites-mobile-style";
     if (!document.getElementById(id)) {
       const tag = document.createElement("style");
       tag.id = id;
@@ -66,97 +96,87 @@ export default function Favorites() {
     }
   }, [styles]);
 
-  const ph =
-    "data:image/svg+xml;utf8," +
-    encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'>
-        <rect width='100%' height='100%' fill='#f1f1f1'/>
-        <text x='50%' y='50%' text-anchor='middle' fill='#bbb' font-size='20' font-family='Arial'>Hình món</text>
-      </svg>`
-    );
+  const ph = "/assets/images/menu/placeholder.png";
 
   const handleAddAllToCart = () => {
     if (items.length === 0) return;
-    // 💡 3. Sửa hàm addAll (chỉ thêm nếu cùng 1 nhà hàng)
     const firstMerchantId = items[0].merchantId;
+    let count = 0;
     for (const it of items) {
-      add(it, it.merchantId); // Hàm add sẽ tự kiểm tra
+        if (it.merchantId === firstMerchantId) {
+            add(it, it.merchantId);
+            count++;
+        }
     }
-    toast.show(`Đã thêm ${items.length} món vào giỏ`, "success");
+    toast.show(`Đã thêm ${count} món vào giỏ`, "success");
   };
 
   const handleClearAllFav = () => {
     if (ids.length === 0) return;
-    const snapshot = [...ids]; // tránh thay đổi mảng khi đang lặp
+    const snapshot = [...ids];
     snapshot.forEach(id => has(id) && toggle(id));
     toast.show("Đã xoá hết danh sách yêu thích", "info");
   };
 
   return (
     <div className="fav-wrap">
-      <h2 className="title">Món yêu thích ({count})</h2>
+      <div className="fav-header">
+          <div>
+            <h2 className="title">Yêu thích</h2>
+            <span className="sub">{count} món đã lưu</span>
+          </div>
+          {items.length > 0 && (
+            <div className="actions">
+                <button className="btn-action btn-primary" onClick={handleAddAllToCart}>+ Tất cả vào giỏ</button>
+                <button className="btn-action btn-danger" onClick={handleClearAllFav}>Xoá hết</button>
+            </div>
+          )}
+      </div>
 
       {items.length === 0 ? (
         <div className="empty">
-          Chưa có món yêu thích. Vào trang <Link to="/menu" style={{fontWeight:700}}>Thực đơn</Link> bấm ❤️ để thêm nhé.
+          <div style={{fontSize: 40, marginBottom: 10}}>💔</div>
+          Chưa có món yêu thích.<br/>
+          Vào <Link to="/">Trang chủ</Link> thả tim nhé!
         </div>
       ) : (
-        <>
-          <div className="sub">Bạn có {items.length} món đã lưu.</div>
-
-          {/* Hành động nhanh */}
-          <div className="actions">
-            <button className="btn primary" onClick={handleAddAllToCart}>
-              Thêm tất cả vào giỏ
-            </button>
-            <button className="btn danger" onClick={handleClearAllFav}>
-              Xoá hết yêu thích
-            </button>
-          </div>
-
-          <div className="grid">
-            {items.map(it => {
-              const isFav = has(it.id);
-              return (
-                <div className="card" key={it.id}>
-                  <img className="thumb" src={it.image || ph} alt={it.name} />
-                  <div className="body">
+        <div className="grid">
+          {items.map(it => {
+            const isFav = has(it.id);
+            return (
+              <div className="card" key={it.id}>
+                <div className="thumb-link">
+                    <img className="thumb" src={it.image || ph} alt={it.name} onError={e=>e.target.src=ph} />
+                </div>
+                <div className="body">
+                  <div>
                     <div className="name">{it.name}</div>
-                    <div style={{opacity:.7}}>{it.price.toLocaleString()}₫</div>
+                    <div className="price">{it.price.toLocaleString()}₫</div>
+                  </div>
 
-                    <div className="row">
+                  <div className="row">
                     <button
-                      className="btn primary"
-                      onClick={() => {
-                        // 💡 4. SỬA HÀM ADD (truyền 2 tham số)
-                        add(it, it.merchantId);
-                      }}
+                      className="btn-add"
+                      onClick={() => add(it, it.merchantId)}
                     >
-                      Thêm vào giỏ
+                      + Thêm
                     </button>
 
-                      <button
-                        className="heart"
-                        onClick={() => {
-                          toggle(it.id);
-                          toast.show(
-                            isFav
-                              ? `Đã bỏ khỏi yêu thích ${it.name}`
-                              : `Đã thêm vào yêu thích ${it.name}`,
-                            "info"
-                          );
-                        }}
-                        title={isFav ? "Bỏ lưu" : "Lưu"}
-                      >
-                        <span role="img" aria-label="trái tim">❤️</span> {isFav ? "Bỏ lưu" : "Lưu"}
-                      </button>
-                    </div>
+                    <button
+                      className="btn-heart"
+                      onClick={() => {
+                        toggle(it.id);
+                        if(!has(it.id)) toast.show("Đã bỏ thích", "info");
+                      }}
+                    >
+                      ❤️
+                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
