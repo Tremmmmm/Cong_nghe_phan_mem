@@ -1,41 +1,6 @@
 {
   "orders": [
     {
-      "id": "d259",
-      "customerName": "Chi Vo",
-      "phone": "0936455952",
-      "address": "Ho Chi Minh city",
-      "items": [
-        {
-          "id": "1",
-          "qty": 1,
-          "name": "Menu Combo 1",
-          "price": 69000
-        },
-        {
-          "id": "2",
-          "qty": 1,
-          "name": "Menu Combo 2",
-          "price": 119000
-        },
-        {
-          "id": "3",
-          "qty": 1,
-          "name": "Menu Combo 3",
-          "price": 99000
-        },
-        {
-          "id": "4",
-          "qty": 1,
-          "name": "Menu Combo 4",
-          "price": 149000
-        }
-      ],
-      "total": 436000,
-      "createdAt": 1758034669555,
-      "status": "delivered"
-    },
-    {
       "id": "865b",
       "customerName": "Chi Vo",
       "phone": "0936455952",
@@ -62,24 +27,12 @@
       ],
       "total": 1059000,
       "createdAt": 1758035452628,
-      "status": "new"
-    },
-    {
-      "id": "e165",
-      "customerName": "Chi Vo",
-      "phone": "0936455952",
-      "address": "Ho Chi Minh city",
-      "items": [
-        {
-          "id": "3",
-          "qty": 2,
-          "name": "Menu Combo 3",
-          "price": 99000
-        }
-      ],
-      "total": 198000,
-      "createdAt": 1758036847213,
-      "status": "confirmed"
+      "status": "cancelled",
+      "cancelReason": "out_of_stock",
+      "cancelBy": "merchant",
+      "cancelNote": null,
+      "cancelledAt": "2025-11-16T15:07:41.348Z",
+      "updatedAt": "2025-11-16T15:07:41.348Z"
     },
     {
       "id": "e7c6",
@@ -108,7 +61,12 @@
       ],
       "total": 287000,
       "createdAt": 1758037295299,
-      "status": "new"
+      "status": "cancelled",
+      "cancelReason": "out_of_stock",
+      "cancelBy": "merchant",
+      "cancelNote": null,
+      "cancelledAt": "2025-11-16T15:06:53.279Z",
+      "updatedAt": "2025-11-16T15:06:53.279Z"
     },
     {
       "id": "8389",
@@ -131,7 +89,12 @@
       ],
       "total": 218000,
       "createdAt": 1758038147022,
-      "status": "new"
+      "status": "cancelled",
+      "cancelReason": "out_of_stock",
+      "cancelBy": "merchant",
+      "cancelNote": null,
+      "cancelledAt": "2025-11-16T15:06:48.122Z",
+      "updatedAt": "2025-11-16T15:06:48.122Z"
     },
     {
       "id": "6710",
@@ -309,9 +272,13 @@
       "couponCode": "SAVE50K",
       "payment": "ONLINE",
       "createdAt": 1758988095621,
-      "status": "new",
+      "status": "cancelled",
       "payment_status": "unpaid",
-      "updatedAt": "2025-09-28T05:47:48.842Z"
+      "updatedAt": "2025-11-16T15:06:44.251Z",
+      "cancelReason": "out_of_stock",
+      "cancelBy": "merchant",
+      "cancelNote": null,
+      "cancelledAt": "2025-11-16T15:06:44.251Z"
     },
     {
       "id": "3g04",
@@ -789,49 +756,6 @@
       "deliveredAt": "2025-11-11T07:21:37.506Z"
     },
     {
-      "id": "e8yv",
-      "sessionId": "908e",
-      "merchantId": "m001",
-      "userId": 0,
-      "userEmail": "resadmin",
-      "customerName": "Restaurant Admin",
-      "phone": "0924545454",
-      "address": "số 51 nguyễn trãi",
-      "deliveryMode": "DRONE",
-      "items": [
-        {
-          "id": "sg-1",
-          "name": "Beef Burger",
-          "qty": 1,
-          "price": 45000,
-          "image": "/assets/images/menu/beefburger.jpg"
-        }
-      ],
-      "total": 45000,
-      "discount": 0,
-      "shippingFee": 20000,
-      "shippingDiscount": 0,
-      "finalTotal": 65000,
-      "couponCode": "",
-      "payment": "COD",
-      "createdAt": 1761549208709,
-      "restaurantLocation": {
-        "lat": 10.776889,
-        "lng": 106.700806
-      },
-      "customerLocation": {
-        "lat": 10.777850856532352,
-        "lng": 106.68729768525567
-      },
-      "status": "cancelled",
-      "payment_status": "unpaid",
-      "cancelReason": "closed",
-      "cancelBy": "merchant",
-      "cancelNote": null,
-      "cancelledAt": "2025-10-29T07:40:15.747Z",
-      "updatedAt": "2025-10-29T07:40:15.747Z"
-    },
-    {
       "id": "7ehy",
       "sessionId": "ed0e",
       "merchantId": "m001",
@@ -963,62 +887,6 @@
       "deliveredAt": "2025-11-11T07:21:36.104Z"
     },
     {
-      "id": "ztgd",
-      "sessionId": "908e",
-      "merchantId": "m001",
-      "userId": 0,
-      "userEmail": "resadmin",
-      "customerName": "Restaurant Admin",
-      "phone": "0924545454",
-      "address": "số 51 nguyễn trãi",
-      "deliveryMode": "DRONE",
-      "items": [
-        {
-          "id": "cb-2",
-          "name": "Combo2 Chicken + Fries",
-          "qty": 2,
-          "price": 69000,
-          "image": "/assets/images/menu/combo2.webp"
-        },
-        {
-          "id": "sg-2",
-          "name": "Cheese Burger",
-          "qty": 1,
-          "price": 52000,
-          "image": "/assets/images/menu/cheeseburger.webp"
-        },
-        {
-          "id": "sg-4",
-          "name": "French Fries",
-          "qty": 1,
-          "price": 29000,
-          "image": "/assets/images/menu/frenchfries.jpg"
-        }
-      ],
-      "total": 219000,
-      "discount": 0,
-      "shippingFee": 20000,
-      "shippingDiscount": 0,
-      "finalTotal": 239000,
-      "couponCode": "",
-      "createdAt": 1761726179389,
-      "restaurantLocation": {
-        "lat": 10.776889,
-        "lng": 106.700806
-      },
-      "customerLocation": {
-        "lat": 10.779462460559436,
-        "lng": 106.68716883627258
-      },
-      "status": "ready",
-      "payment": "VNPAY",
-      "payment_status": "paid",
-      "payment_txn_id": "MOCK4RQZ4N",
-      "updatedAt": "2025-11-14T02:08:41.881Z",
-      "acceptedAt": "2025-11-06T08:37:58.856Z",
-      "readyAt": "2025-11-14T02:08:41.881Z"
-    },
-    {
       "id": "8xm3",
       "sessionId": "ed0e",
       "merchantId": "m001",
@@ -1124,10 +992,15 @@
         "lat": 10.784,
         "lng": 106.684
       },
-      "status": "new",
+      "status": "cancelled",
       "payment": "VNPAY",
       "payment_status": "paid",
-      "payment_txn_id": "MOCK-1762418084859"
+      "payment_txn_id": "MOCK-1762418084859",
+      "cancelReason": "out_of_stock",
+      "cancelBy": "merchant",
+      "cancelNote": null,
+      "cancelledAt": "2025-11-16T15:06:39.112Z",
+      "updatedAt": "2025-11-16T15:06:39.112Z"
     },
     {
       "id": "1xae",
@@ -1509,7 +1382,7 @@
           "name": "Beef Burger",
           "qty": 1,
           "price": 35000,
-          "image": "http://localhost:5182/beefburger.jpg"
+          "image": "/assets/images/menu/beefburger.jpg"
         }
       ],
       "total": 116000,
@@ -5126,7 +4999,7 @@
       "merchantId": "m001"
     },
     {
-      "id": "u003",
+      "id": "u004",
       "username": "pho_admin",
       "password": "123",
       "name": "Admin Phở Lý",
@@ -5235,7 +5108,7 @@
   "restaurantSettings": [
     {
       "storeName": "Burger King Fast Food",
-      "address": "123 Đường A, Quận 1",
+      "address": "123 Đường Hùng Vương, Phường An Lạc, TP. Hồ Chí Minh",
       "phone": "0909090909",
       "logo": "https://th.bing.com/th/id/R.f5c899066985159954f5499ac8e1067e?rik=fagP5bor7ZpNDg&pid=ImgRaw&r=0",
       "isManuallyClosed": false,
@@ -5354,7 +5227,7 @@
       "name": "Beef Burger",
       "price": 35000,
       "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
-      "image": "http://localhost:5182/beefburger.jpg",
+      "image": "/assets/images/menu/beefburger.jpg",
       "category": "single",
       "status": "approved",
       "description": "",
@@ -5518,10 +5391,10 @@
       "name": "Xe may",
       "desc": ".....",
       "price": 1000000,
-      "image": "http://localhost:5182/beefburger.jpg",
+      "image": "/assets/images/menu/beefburger.jpg",
       "category": "single",
       "merchantId": "m001",
-      "status": "pending"
+      "status": "rejected"
     }
   ],
   "carts": [
@@ -5604,7 +5477,7 @@
           "name": "Beef Burger",
           "price": 35000,
           "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
-          "image": "http://localhost:5182/beefburger.jpg",
+          "image": "/assets/images/menu/beefburger.jpg",
           "category": "single",
           "status": "approved",
           "description": "",
