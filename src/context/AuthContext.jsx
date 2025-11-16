@@ -3,24 +3,31 @@ import { Navigate, useLocation } from 'react-router-dom';
 
 const AuthCtx = createContext(null);
 const LS_KEY = 'ff_user_v3'; 
+const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 giờ (tính bằng mili-giây)
 
-// --- SỬA LỖI QUAN TRỌNG CHO NETLIFY ---
-// 1. Lấy đường dẫn gốc từ biến môi trường (nếu đã deploy) hoặc dùng localhost (nếu đang code)
+// Lấy URL API từ biến môi trường
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5181';
-
-// 2. Tạo endpoint chuẩn cho users
 const API_URL = `${API_BASE_URL}/users`;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. Khôi phục phiên đăng nhập
+  // 1. Khôi phục phiên đăng nhập (CÓ KIỂM TRA THỜI GIAN)
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem(LS_KEY);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      const storedData = localStorage.getItem(LS_KEY);
+      if (storedData) {
+        const { user: storedUser, expiry } = JSON.parse(storedData);
+        
+        // Kiểm tra nếu phiên còn hạn
+        if (expiry && new Date().getTime() < expiry) {
+            setUser(storedUser);
+        } else {
+            // Hết hạn -> Xóa và đăng xuất ngầm
+            console.log("Phiên đăng nhập đã hết hạn.");
+            localStorage.removeItem(LS_KEY);
+        }
       }
     } catch (e) {
       localStorage.removeItem(LS_KEY);
@@ -28,10 +35,9 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // 2. Hàm Đăng nhập
+  // 2. Hàm Đăng nhập (Lưu kèm thời gian hết hạn)
   const signIn = async ({ email, password }) => {
     try {
-      // Tìm user khớp username hoặc email
       let response = await fetch(`${API_URL}?username=${email}&password=${password}`);
       let users = await response.json();
 
@@ -50,7 +56,14 @@ export function AuthProvider({ children }) {
         };
 
         setUser(finalUser);
-        localStorage.setItem(LS_KEY, JSON.stringify(finalUser));
+        
+        // 💡 LƯU SESSION KÈM THỜI GIAN HẾT HẠN
+        const sessionData = {
+            user: finalUser,
+            expiry: new Date().getTime() + SESSION_DURATION
+        };
+        localStorage.setItem(LS_KEY, JSON.stringify(sessionData));
+        
         return { user: finalUser };
       } else {
         throw new Error('Sai tên đăng nhập hoặc mật khẩu');
@@ -61,22 +74,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // 3. Hàm Đăng ký
+  // 3. Hàm Đăng ký (Cũng lưu session)
   const signUp = async (userData) => {
       try {
-          // Kiểm tra trùng
           const checkRes = await fetch(`${API_URL}?username=${userData.email}`);
           const existing = await checkRes.json();
-          if (existing.length > 0) {
-              throw new Error('Tên đăng nhập/Email đã tồn tại');
-          }
+          if (existing.length > 0) throw new Error('Tên đăng nhập/Email đã tồn tại');
 
-          const newUser = {
-              ...userData,
-              username: userData.email, 
-              role: 'Customer'
-          };
-
+          const newUser = { ...userData, username: userData.email, role: 'Customer' };
           const response = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -87,8 +92,12 @@ export function AuthProvider({ children }) {
           
           const createdUser = await response.json();
           const finalUser = { ...createdUser, isAdmin: false, isSuperAdmin: false, isMerchant: false };
+          
           setUser(finalUser);
-          localStorage.setItem(LS_KEY, JSON.stringify(finalUser));
+          
+          // Lưu session
+          const sessionData = { user: finalUser, expiry: new Date().getTime() + SESSION_DURATION };
+          localStorage.setItem(LS_KEY, JSON.stringify(sessionData));
           
           return { ok: true, user: finalUser };
       } catch (error) {
@@ -103,7 +112,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(LS_KEY);
   };
   
-  // 5. Hàm cập nhật
+  // 5. Hàm cập nhật (Giữ nguyên logic nhưng lưu lại session mới)
   const updateUser = async (patch) => {
       if (!user?.id) return;
       try {
@@ -121,7 +130,13 @@ export function AuthProvider({ children }) {
                   isMerchant: updatedUser.role === 'Merchant'
               };
               setUser(finalUser);
-              localStorage.setItem(LS_KEY, JSON.stringify(finalUser));
+              // Cập nhật lại localStorage nhưng giữ nguyên thời gian hết hạn cũ (hoặc gia hạn mới tùy bạn)
+              const oldSession = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+              const sessionData = { 
+                  user: finalUser, 
+                  expiry: oldSession.expiry || (new Date().getTime() + SESSION_DURATION) 
+              };
+              localStorage.setItem(LS_KEY, JSON.stringify(sessionData));
           }
       } catch (error) {
           console.error("Update user error:", error);
@@ -155,16 +170,12 @@ export function useAuth() {
   return ctx;
 }
 
-// ================= ROUTE GUARDS =================
-// (Giữ nguyên logic cũ, không thay đổi gì ở dưới này)
-
+// ================= ROUTE GUARDS (GIỮ NGUYÊN) =================
 export function RequireAuth({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
   if (loading) return null; 
-  if (!user) {
-    return <Navigate to="/signin" replace state={{ from: location }} />;
-  }
+  if (!user) return <Navigate to="/signin" replace state={{ from: location }} />;
   return children;
 }
 
@@ -172,13 +183,8 @@ export function RequireServerAdmin({ children }) {
   const { user, isSuperAdmin, loading } = useAuth();
   const location = useLocation();
   if (loading) return null;
-
-  if (!user) {
-    return <Navigate to="/admin/login" replace state={{ from: location }} />;
-  }
-  if (!isSuperAdmin) { 
-    return <Navigate to="/" replace />;
-  }
+  if (!user) return <Navigate to="/admin/login" replace state={{ from: location }} />;
+  if (!isSuperAdmin) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -186,18 +192,9 @@ export function RequireRestaurantAdmin({ children }) {
   const { user, isMerchant, loading } = useAuth();
   const location = useLocation();
   if (loading) return null;
-
-  if (!user) {
-    return <Navigate to="/restaurant/login" replace state={{ from: location }} />;
-  }
-  if (!isMerchant) {
-    return <Navigate to="/" replace />;
-  }
-  if (!user.merchantId) {
-      console.error("Lỗi: Tài khoản Merchant này thiếu merchantId!");
-      return <Navigate to="/" replace />;
-  }
-
+  if (!user) return <Navigate to="/restaurant/login" replace state={{ from: location }} />;
+  if (!isMerchant) return <Navigate to="/" replace />;
+  if (!user.merchantId) { console.error("Lỗi: Thiếu merchantId!"); return <Navigate to="/" replace />; }
   return children;
 }
 
