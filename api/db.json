@@ -5334,7 +5334,7 @@
       "name": "Beef Burger",
       "price": 35000,
       "desc": "Bánh burger bò nướng, rau tươi, sốt đặc biệt.",
-      "image": "http://localhost:5182/cheeseburger.webp",
+      "image": "http://localhost:5182/beefburger.jpg",
       "category": "single",
       "status": "approved",
       "description": "",
@@ -5526,9 +5526,17 @@
       "items": []
     },
     {
-      "id": "ff_cart_v2:uid:u002",
-      "merchantId": null,
-      "items": []
+      "merchantId": "m002",
+      "items": [
+        {
+          "id": "pho-01",
+          "name": "Phở Tái Chín",
+          "price": 55000,
+          "image": "https://placehold.co/400x250/f0e0d0/333?text=Pho+Tai+Chin",
+          "qty": 1
+        }
+      ],
+      "id": "ff_cart_v2:uid:u002"
     },
     {
       "id": "ff_cart_v2:uid:u002",

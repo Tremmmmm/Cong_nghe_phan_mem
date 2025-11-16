@@ -2,8 +2,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext.jsx';
-import menuData from '../data/menuData.js';
+// 💡 BỎ menuData.js
+import { fetchMenuItems } from '../utils/menuAPI.js'; // Import fetchMenuItems (sẽ cần sửa menuAPI một chút để hỗ trợ search text nếu chưa có)
 import { formatVND } from '../utils/format';
+
+// Nếu fetchMenuItems chưa hỗ trợ search text, ta có thể fetch all rồi filter ở FE (đơn giản cho PoC)
+// Hoặc dùng json-server like operator: /menuItems?name_like=...
 
 function useQuery() {
   const { search } = useLocation();
@@ -16,6 +20,7 @@ export default function SearchResults() {
 
   const { items = [], add } = useCart();
   const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [qtyMap, setQtyMap] = useState({});
 
   const setQty = (id, v) =>
@@ -24,14 +29,30 @@ export default function SearchResults() {
   const inCart = (id) => items.some(c => String(c.id) === String(id));
 
   useEffect(() => {
-    const res = (menuData || []).filter(x => {
-      const name = (x.name || '').toLowerCase();
-      const cat  = (x.category || '').toLowerCase();
-      return q ? (name.includes(q) || cat.includes(q)) : true;
-    });
-    setList(res);
+    async function searchApi() {
+        setLoading(true);
+        try {
+            // 💡 Lấy toàn bộ menu items (đã duyệt) rồi lọc ở FE
+            // Hoặc gọi API: fetchMenuItems(null, 'approved')
+            // Trong menuAPI.js:
+            const allItems = await fetchMenuItems(null, 'approved');
+            
+            const res = allItems.filter(x => {
+                const name = (x.name || '').toLowerCase();
+                const cat  = (x.category || '').toLowerCase();
+                return q ? (name.includes(q) || cat.includes(q)) : true;
+            });
+            setList(res);
+        } catch (e) {
+            console.error(e);
+            setList([]);
+        } finally {
+            setLoading(false);
+        }
+    }
+    searchApi();
   }, [q]);
-
+  
   const css = useMemo(() => `
     .sr-wrap{max-width:1100px;margin:24px auto;padding:0 16px}
     .sr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
@@ -66,55 +87,37 @@ export default function SearchResults() {
       <style>{css}</style>
       <h2>Kết quả cho: “{q || 'tất cả'}”</h2>
 
-      {!list.length ? (
-        <p>Không tìm thấy món phù hợp. <Link to="/menu">Xem toàn bộ menu</Link></p>
+      {loading ? <p>Đang tìm kiếm...</p> : !list.length ? (
+        <p>Không tìm thấy món phù hợp. <Link to="/">Về trang chủ</Link></p>
       ) : (
         <div className="sr-grid">
           {list.map(it => {
             const has = inCart(it.id);
             const qty = qtyMap[it.id] || 1;
             return (
-              <article className="card" key={it.id}>
-                <img
-                  className="thumb"
-                  src={it.image}
-                  alt={it.name}
-                  loading="lazy"
-                  decoding="async"
-                  sizes="(max-width: 640px) 100vw, 360px"
-                  onError={e=>{e.currentTarget.src='/assets/images/Delivery.png'}}
-                />
-                <div className="card-body">
-                  <div className="name">{it.name}</div>
-                  <div className="price">{formatVND(it.price || 0)}</div>
-
-                  {has ? (
-                    <div className="act">
-                      <button className="to-cart" onClick={()=>nav('/cart')}>
-                        Tới giỏ hàng
-                      </button>
+                <article className="card" key={it.id}>
+                  <img className="thumb" src={it.image} onError={e=>e.target.src='/assets/images/Delivery.png'} />
+                  <div className="card-body">
+                      <div className="name">{it.name}</div>
+                      <div className="price">{formatVND(it.price)}</div>
+                      
+                      {/* Form thêm vào giỏ - Lưu ý cần merchantId */}
+                      {has ? (
+                          <div className="act"><button className="to-cart" onClick={()=>nav('/cart')}>Tới giỏ hàng</button></div>
+                      ) : (
+                          <form className="act" onSubmit={(e)=>{
+                              e.preventDefault();
+                              // 💡 QUAN TRỌNG: Cần merchantId để add vào giỏ
+                              if (!it.merchantId) { alert('Món ăn lỗi: Thiếu merchantId'); return; }
+                              add({ id: it.id, name: it.name, price: it.price, image: it.image }, it.merchantId, qty);
+                          }}>
+                              <input type="number" min="1" className="qty" value={qty} onChange={e=>setQty(it.id, e.target.value)} />
+                              <button type="submit" className="btn primary">+ Thêm</button>
+                          </form>
+                      )}
                     </div>
-                  ) : (
-                    <form
-                      className="act"
-                      onSubmit={(e)=>{
-                        e.preventDefault();
-                        add({ id: it.id, name: it.name, price: it.price, image: it.image, qty });
-                      }}
-                    >
-                      <input
-                        type="number"
-                        min="1"
-                        className="qty"
-                        value={qty}
-                        onChange={e=>setQty(it.id, e.target.value)}
-                      />
-                      <button type="submit" className="btn primary">Add to cart</button>
-                    </form>
-                  )}
-                </div>
-              </article>
-            );
+                </article>
+            )
           })}
         </div>
       )}

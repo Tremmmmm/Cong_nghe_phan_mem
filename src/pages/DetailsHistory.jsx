@@ -1,10 +1,11 @@
 // src/pages/DetailsHistory.jsx
 import { useEffect, useMemo, useState } from 'react'
-import { myOrders, getMenu } from '../utils/orderAPI.js'
+import { myOrders } from '../utils/orderAPI.js'
+// 💡 IMPORT TỪ MENU API, BỎ menuData.js
+import { fetchMenuItems } from '../utils/menuAPI.js' 
 import { useAuth } from '../context/AuthContext.jsx'
 import { useCart } from '../context/CartContext.jsx'
 import { useNavigate } from 'react-router-dom'
-import MENU_ALL from '../data/menuData.js'
 
 const FALLBACK = '/assets/images/Delivery.png'
 const VND = (n) => (n || 0).toLocaleString('vi-VN') + '₫'
@@ -41,37 +42,46 @@ function StatusBadge({ s }) {
 }
 
 export default function DetailsHistory(){
-  const { user } = useAuth()
-  const cartCtx = useCart?.() || {}
-  const navigate = useNavigate()
+  const { user } = useAuth();
+  const cartCtx = useCart?.() || {};
+  const navigate = useNavigate();
 
-  const [orders, setOrders] = useState([])
-  const [menu, setMenu] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [open, setOpen] = useState({})
+  const [orders, setOrders] = useState([]);
+  const [menuMap, setMenuMap] = useState({}); // 💡 Dùng map thay vì array
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [open, setOpen] = useState({});
 
   const load = async () => {
+    if (!user) { setLoading(false); return; }
     try {
-      setLoading(true)
-      setError('')
-      const [{ rows }, mn] = await Promise.all([
-        myOrders({ page: 1, limit: 250, status: 'all', sort: 'createdAt', order: 'desc' }),
-        getMenu().catch(()=> MENU_ALL)
-      ])
-      setOrders(Array.isArray(rows) ? rows : [])
-      setMenu((Array.isArray(mn) ? mn : MENU_ALL) || [])
+      setLoading(true); setError('');
+      
+      // 💡 Lấy đơn hàng VÀ lấy tất cả món ăn từ API (để hiển thị hình ảnh, tên món...)
+      const [{ rows }, menuData] = await Promise.all([
+        myOrders({ page: 1, limit: 250, status: 'all', sort: 'createdAt', order: 'desc', userId: user.id }),
+        // 💡 Gọi fetchMenuItems từ API thay vì import file tĩnh
+        fetchMenuItems().catch(() => []) 
+      ]);
+
+      setOrders(Array.isArray(rows) ? rows : []);
+      
+      // Tạo map id -> item để tra cứu nhanh
+      const m = {};
+      if (Array.isArray(menuData)) {
+          menuData.forEach(it => { m[it.id] = it; });
+      }
+      setMenuMap(m);
+
     } catch (e) {
-      console.error(e)
-      setOrders([])
-      setMenu(MENU_ALL || [])
-      setError('Không tải được dữ liệu. Vui lòng thử lại.')
+      console.error(e);
+      setError('Không tải được dữ liệu.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  useEffect(()=>{ load() }, [])
+  useEffect(()=>{ load() }, [user]);
 
   // revalidate khi quay lại tab/cửa sổ
   useEffect(() => {
@@ -84,18 +94,21 @@ export default function DetailsHistory(){
       document.removeEventListener('visibilitychange', onVis)
     }
   }, [])
-
-  const menuMap = useMemo(() => {
-    const m = {}
-    ;(menu || []).forEach(it => { m[it.id] = it })
-    ;(MENU_ALL || []).forEach(it => { m[it.id] = it })
-    return m
-  }, [menu])
-
   const my = useMemo(() => {
-    let arr = (!user?.email) ? orders : orders.filter(o => o.userEmail === user.email)
-    return [...arr].sort((a,b) => (b.createdAt||0)-(a.createdAt||0))
-  }, [orders, user?.email])
+     return [...orders].sort((a,b) => (b.createdAt||0)-(a.createdAt||0))
+  }, [orders]);
+
+  // const menuMap = useMemo(() => {
+  //   const m = {}
+  //   ;(menu || []).forEach(it => { m[it.id] = it })
+  //   ;(MENU_ALL || []).forEach(it => { m[it.id] = it })
+  //   return m
+  // }, [menu])
+
+  // const my = useMemo(() => {
+  //   let arr = (!user?.email) ? orders : orders.filter(o => o.userEmail === user.email)
+  //   return [...arr].sort((a,b) => (b.createdAt||0)-(a.createdAt||0))
+  // }, [orders, user?.email])
 
   const css = `
     .dh-wrap{max-width:1000px;margin:24px auto;padding:0 16px}
@@ -166,31 +179,29 @@ export default function DetailsHistory(){
     .meta b{display:block}
   `
 
-  const getItemImage = (it) => it.image || menuMap[it.id]?.image || FALLBACK
-  const toggle = (id) => setOpen(v => ({ ...v, [id]: !v[id] }))
-
+  const getItemImage = (it) => it.image || menuMap[it.id]?.image || FALLBACK;
+  const toggle = (id) => setOpen(v => ({ ...v, [id]: !v[id] }));
   // Đặt lại giỏ hàng từ order
   const reorder = (order) => {
-    const { add, addItem, addToCart } = cartCtx
-    const tryAdd = (p, q) => {
-      if (typeof add === 'function')      return add(p, q)
-      if (typeof addItem === 'function')  return addItem(p, q)
-      if (typeof addToCart === 'function')return addToCart(p, q)
-      return false
+      const { add, addItem, addToCart } = cartCtx;
+      const tryAdd = (p, q) => {
+          if (typeof add === 'function') return add(p, q);
+          return false;
+      };
+      for (const it of (order.items || [])) {
+          // Lấy thông tin mới nhất từ menuMap nếu có
+          const menuItem = menuMap[it.id] || it;
+          const payload = { 
+              id: it.id, 
+              name: menuItem.name || it.name, 
+              price: menuItem.price || it.price, 
+              image: menuItem.image || getItemImage(it), 
+              merchantId: menuItem.merchantId || it.merchantId // Quan trọng để add đúng giỏ
+          };
+          tryAdd(payload, it.qty || 1);
+      }
+      navigate('/cart');
     }
-
-    let usedContext = false
-    for (const it of (order.items || [])) {
-      const payload = { id: it.id, name: it.name, price: it.price, image: getItemImage(it), qty: it.qty }
-      const r = tryAdd(payload, it.qty || 1)
-      if (r !== false) usedContext = true
-    }
-
-    if (!usedContext) {
-      try { sessionStorage.setItem('ff_reorder_buffer', JSON.stringify(order.items || [])) } catch {}
-    }
-    navigate('/cart')
-  }
 
   return (
     <section className="dh-wrap">
@@ -219,7 +230,7 @@ export default function DetailsHistory(){
         <div className="card">Chưa có đơn hàng nào.</div>
       ) : (
         <div className="list">
-          {my.map((o) => {
+            {my.map((o) => {
             const created = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—'
             const items = Array.isArray(o.items) ? o.items : []
             const subtotal = items.reduce((s,it)=>s+(it.price||0)*(it.qty||0),0)

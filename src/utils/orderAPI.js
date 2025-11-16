@@ -14,7 +14,7 @@ export const api = axios.create({
 })
 
 export const getMenu = (params = {}) =>
-  api.get('/menu', { params }).then((r) => r.data)
+  api.get('/menuItems', { params }).then(r => r.data)
 
 export const createSession = async () => {
   const payload = { status: 'open', startedAt: new Date().toISOString() }
