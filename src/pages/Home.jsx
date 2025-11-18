@@ -43,7 +43,7 @@ export default function Home() {
     .hero { 
         background: linear-gradient(135deg, #ff7a59 0%, #ffb199 100%); 
         padding: 24px 20px; border-radius: 12px; margin-bottom: 20px; 
-        text-align: center; color: #fff; box-shadow: 0 4px 15px rgba(255, 122, 89, 0.3);
+        text-align: center; color: #000000ff; box-shadow: 0 4px 15px rgba(255, 122, 89, 0.3);
     }
     .hero h1 { font-size: 24px; font-weight: 800; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1px; }
     .hero p { font-size: 14px; opacity: 0.9; margin: 0; }
