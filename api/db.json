@@ -1341,12 +1341,14 @@
         "lat": 10.776889,
         "lng": 106.700806
       },
-      "status": "ready",
+      "status": "completed",
       "payment": "SIMULATED",
       "payment_status": "paid",
-      "updatedAt": "2025-11-14T02:08:43.587Z",
+      "updatedAt": "2025-11-19T08:33:11.708Z",
       "acceptedAt": "2025-11-14T02:08:32.198Z",
-      "readyAt": "2025-11-14T02:08:43.587Z"
+      "readyAt": "2025-11-14T02:08:43.587Z",
+      "droneMissionId": "5093",
+      "pickedAt": "2025-11-19T08:31:53.076Z"
     },
     {
       "id": "l275",
@@ -1454,6 +1456,68 @@
       "payment": "MOMO",
       "payment_status": "paid",
       "payment_txn_id": "MOCK-1763454532021"
+    },
+    {
+      "id": "m0vb",
+      "sessionId": "908e",
+      "userId": "u003",
+      "userEmail": "C001@gmail.com",
+      "customerName": "An",
+      "phone": "0989898989",
+      "address": "Số 3 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 3 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "2434",
+          "name": "Sprite",
+          "qty": 1,
+          "price": 15000,
+          "image": "https://www.cocoichibanya.vn/wp-content/uploads/2020/07/Sprite_CoCo-Ichibanya.jpg"
+        },
+        {
+          "id": "sg-3",
+          "name": "Fried Chicken",
+          "qty": 1,
+          "price": 52000,
+          "image": "/assets/images/menu/friedchicken.webp"
+        },
+        {
+          "id": "sg-1",
+          "name": "Beef Burger",
+          "qty": 2,
+          "price": 35000,
+          "image": "/assets/images/menu/beefburger.jpg"
+        }
+      ],
+      "total": 137000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 157000,
+      "couponCode": "",
+      "createdAt": 1763545635302,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.779226667603755,
+        "lng": 106.69490915066102
+      },
+      "status": "delivering",
+      "payment": "VNPAY",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1763545660327",
+      "updatedAt": "2025-11-19T09:48:09.481Z",
+      "acceptedAt": "2025-11-19T09:48:06.071Z",
+      "readyAt": "2025-11-19T09:48:07.792Z",
+      "droneMissionId": "113f",
+      "pickedAt": "2025-11-19T09:48:09.481Z"
     }
   ],
   "sessions": [
@@ -1994,6 +2058,49 @@
         [
           10.776889,
           106.700806
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "5093",
+      "orderId": "cfbb",
+      "merchantId": "m001",
+      "customerId": "7efa",
+      "startTime": "2025-11-19T08:31:53.078Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 0,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.776889,
+          106.700806
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "113f",
+      "orderId": "m0vb",
+      "customerId": "u003",
+      "startTime": "2025-11-19T09:48:09.481Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 2,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.779226667603755,
+          106.69490915066102
         ]
       ],
       "currentIndex": 0
@@ -5014,6 +5121,24 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1763086156861
+    },
+    {
+      "id": "79bb",
+      "missionId": "5093",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763541113185
+    },
+    {
+      "id": "af92",
+      "missionId": "113f",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763545689513
     }
   ],
   "users": [
@@ -5035,7 +5160,7 @@
       "email": "C001@gmail.com",
       "phone": "0989898989",
       "address": {
-        "street": "Số 2 Nguyễn Trãi",
+        "street": "Số 3 Nguyễn Trãi",
         "ward": "Phường Chợ Quán",
         "city": "TP. Hồ Chí Minh"
       }
@@ -5207,7 +5332,7 @@
         },
         "tue": {
           "open": 6,
-          "close": 14
+          "close": 23
         },
         "wed": {
           "open": 6,
@@ -5515,6 +5640,11 @@
       "id": "ff_cart_v2:ue:c001@gmail.com",
       "merchantId": null,
       "items": []
+    },
+    {
+      "id": "ff_cart_v2:uid:u004",
+      "merchantId": null,
+      "items": []
     }
   ],
   "favorites": [
@@ -5566,12 +5696,15 @@
     {
       "id": "ff_fav_v1:ue:c001@gmail.com",
       "ids": [
-        "2434",
-        "sg-4"
+        "sg-1"
       ]
     },
     {
       "id": "ff_fav_v1:ue:c001@gmail.com",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:uid:u004",
       "ids": []
     }
   ]

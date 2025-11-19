@@ -67,16 +67,28 @@ export function FavProvider({ children }) {
       toast.show('Lỗi đồng bộ yêu thích!', 'error');
     }
   };
-  
-  const toggle = useCallback(async (id) => {
-    const nextIds = ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id];
-    setIds(nextIds);
-    await writeThrough(nextIds);
-  }, [ids, favId]);
+  const clearAll = useCallback(async () => {
+    setIds([]); // Đặt IDs về mảng rỗng ngay lập tức
+    await writeThrough([]); // Đồng bộ hóa mảng rỗng lên server
+}, [favId]); // Không cần ids trong dependency vì setIds không dùng nó
 
+// Sửa lại hàm toggle để dùng functional update
+const toggle = useCallback(async (id) => {
+    setIds(prevIds => {
+      const isCurrentlyFav = prevIds.includes(id);
+      const updatedIds = isCurrentlyFav 
+          ? prevIds.filter(x => x !== id) 
+          : [...prevIds, id];
+      
+      // Đồng bộ hóa ngay lập tức
+      writeThrough(updatedIds); 
+      
+      return updatedIds;
+    });
+}, [favId]);
   const has = useCallback((id) => ids.includes(id), [ids]);
   const count = useMemo(() => ids.length, [ids]);
-  const value = { ids, count, toggle, has, loading };
+  const value = { ids, count, toggle, has, loading,clearAll };
 
   return (
     <FavCtx.Provider value={value}>

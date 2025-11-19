@@ -1,7 +1,7 @@
 // src/pages/CustomerDrone.jsx
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { myOrders } from "../utils/api";
+import { myOrders } from "../utils/orderAPI";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5181";
 

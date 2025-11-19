@@ -183,30 +183,40 @@ const backHref = isSuperAdmin ? "/admin/drone"
       order?.restaurant?.merchantId,
       order?.store?.merchantId,
       order?.merchant?.id,
-    ].map(v => v != null ? String(v) : "");
+    ]
+    // 💡 SỬA: Lọc bỏ các giá trị rỗng/null, sau đó map sang string
+    .filter(v => v != null && v !== "")
+    .map(String); 
+    
+    // Kiểm tra xem ID của người dùng có tồn tại trong các ID hợp lệ của đơn hàng hay không
     return uMid && cand.includes(uMid);
   })();
+  
   const canStart = merchantOwnsThisOrder && !isCompleted(order?.status);
   /* ----- fetch order + mission ----- */
-  useEffect(() => {
+useEffect(() => {
     let alive = true;
     (async () => {
-      try {
-        setLoading(true);
-        const o = await getOrderSafe(orderId);
-        if (!alive) return;
-        setOrder(o);
-        const m = o?.droneMissionId ? await getMissionByIdSafe(o.droneMissionId) : null;
-        if (!alive) return;
-        setMission(m || null);
-      } catch (e) {
-        setErr(e.message || "Lỗi tải dữ liệu");
-      } finally {
-        setLoading(false);
-      }
+        try {
+            setLoading(true);
+            const o = await getOrderSafe(orderId);
+            if (!alive) return;
+            setOrder(o);
+            const m = o?.droneMissionId ? await getMissionByIdSafe(o.droneMissionId) : null;
+            if (!alive) return;
+            setMission(m || null);
+            
+            // 💡 SỬA: Thêm dòng này để reset trạng thái đã đến đích
+            arrivedRef.current = false; 
+            
+        } catch (e) {
+            // ...
+        } finally {
+            setLoading(false);
+        }
     })();
     return () => { alive = false; };
-  }, [orderId]);
+}, [orderId]);
 
   /* ----- initial position based on route ----- */
   useEffect(() => {
@@ -253,7 +263,13 @@ const backHref = isSuperAdmin ? "/admin/drone"
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     setDemoOn(false);
   }, []);
-
+useEffect(() => {
+    // Nếu trạng thái đơn hàng KHÔNG phải là Delivering và demoOn đang bật (demoOn = true),
+    // hãy dừng mô phỏng và reset demoOn về false.
+    if (!isActive(order?.status) && demoOn) {
+        stopDemoFlight();
+    }
+}, [order?.status, demoOn, stopDemoFlight]);
   /* ----- derived ----- */
   const path = useMemo(() => positions.map((p) => [p.lat, p.lng]).filter(isLL), [positions]);
   const lastPos = path[path.length - 1];
@@ -581,15 +597,17 @@ const backHref = isSuperAdmin ? "/admin/drone"
                 {isFull ? "Exit full" : "Full screen"}
               </button>
 
-              <button
-                className="btn ghost"
-                onClick={() => (demoOn ? stopDemoFlight() : startDemoFlight())}
-                disabled={!canStart}
-                title={!canStart ? "Chỉ chủ cửa hàng của đơn này mới có quyền bắt đầu giao hàng" : ""}
-              >
-                  {demoOn ? "Dừng giao hàng" : "Bắt đầu giao hàng"}
+                {canStart && (
+                <button
+                    className="btn ghost"
+                    onClick={() => (demoOn ? stopDemoFlight() : startDemoFlight())}
+                    title={!canStart ? "Chỉ chủ cửa hàng của đơn này mới có quyền bắt đầu giao hàng" : ""}
+                >
+                    {/* Nếu demoOn là true -> Nút Dừng, ngược lại -> Nút Bắt đầu */}
+                    {demoOn ? "Dừng giao hàng" : "Bắt đầu giao hàng"}
                 </button>
-            </div>
+            )}
+  </div>
             <div id="drone-map" style={{ height: "100%", width: "100%" }} />
           </div>
 

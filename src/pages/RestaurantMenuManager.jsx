@@ -444,7 +444,7 @@ export default function RestaurantMenuManager() {
                                         <span style={{ fontSize: 12, color: '#666' }}>Loại: {item.category}</span>
                                     </div>
                                 </div>
-                                <div style={styles.itemActions}> 
+                                <div style={styles.itemActions}>
                                     {item.status === 'pending' && (
                                         <>
                                             <button onClick={() => handleApprove(item.id)} style={{...buttonStyle, background:'#2ecc71', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Duyệt</button>
@@ -514,16 +514,87 @@ export default function RestaurantMenuManager() {
 
 // --- Styles (Nội tuyến) ---
 const styles = {
-    wrap: { maxWidth: 900, margin: '24px auto', padding: 20 },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-    list: { display: 'grid', gap: 15 },
-    itemCard: { display: 'flex', gap: 15, padding: 15, background: '#fff', border: '1px solid #eee', borderRadius: 8 },
-    itemImage: { width: 80, height: 80, objectFit: 'cover', borderRadius: 6, background: '#f0f0f0' },
-    itemInfo: { flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
-    itemRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
-    itemDesc: { fontSize: 13, color: '#555', margin: '5px 0', flexGrow: 1 },
-    itemActions: { display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', justifyContent: 'center' },
-    itemStatus: { fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 999 },
+    // 💡 SỬA 1: Container chính (full width, padding gọn gàng hơn)
+    wrap: { width: '100%', maxWidth: 900, margin: '0 auto'   },
+    
+    // 💡 SỬA 2: Header (Cho phép nút bấm wrap/gọn gàng)
+    header: { 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: 15,
+        flexWrap: 'wrap', // Cho phép các nút xuống dòng
+    },
+    // 💡 Nút hành động (Thêm món / Thêm danh mục) sẽ dùng hết chiều rộng nếu cần
+    'header > div:last-child': { 
+        display: 'flex', 
+        gap: '8px', 
+        marginTop: '10px', 
+        flex: '1 1 100%', 
+        justifyContent: 'flex-start', // Đặt nút ở bên trái trên mobile
+    },
+
+    // 💡 SỬA 3: Filter (Sắp xếp lại các nút lọc)
+    filterContainer: { 
+        display: 'flex', 
+        gap: '8px', 
+        marginBottom: '15px', 
+        borderBottom: '1px solid #eee', 
+        paddingBottom: '15px',
+        overflowX: 'auto', // Cho phép cuộn ngang nếu màn hình quá nhỏ
+    },
+    filterButton: { 
+        flexShrink: 0, // Nút không bị co lại quá mức
+        padding: '8px 12px',
+        background: '#f0f0f0', 
+        color: '#555', 
+        border: '1px solid #ddd',
+        borderRadius: 8,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        fontSize: 13,
+    },
+    filterActive: { 
+        background: '#ff7a59', // Màu cam
+        color: '#fff', 
+        borderColor: '#ff5722', 
+        fontWeight: 'bold' 
+    },
+    
+    // 💡 SỬA 4: Item Card (Tối ưu cho mobile: ảnh nhỏ, nội dung lớn)
+    list: { display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 50 },
+    itemCard: { 
+        display: 'flex', 
+        gap: 10, 
+        padding: 10, 
+        background: '#fff', 
+        border: '1px solid #eee', 
+        borderRadius: 8,
+        boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+    },
+    itemImage: { 
+        width: 70, // Giảm kích thước ảnh
+        height: 70, 
+        objectFit: 'cover', 
+        borderRadius: 6, 
+        background: '#f0f0f0' 
+    },
+    itemInfo: { flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: '60%' },
+    itemRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 },
+    itemDesc: { fontSize: 12, color: '#666', margin: '3px 0', flexGrow: 1 },
+    itemActions: {  
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+        
+    },
+    itemStatus: { fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 999 },
+    paginationContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '30px', padding: '20px 0', borderTop: '1px solid #eee' },
+    paginationText: { fontWeight: '600', fontSize: '14px', color: '#555' },
+    pageButton: { background: '#f9f9f9', color: '#444', border: '1px solid #ddd' },
+    
     // 💡 --- STYLES MỚI ---
     addButton: { background: '#3498db' },
     filterContainer: { display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '20px' },

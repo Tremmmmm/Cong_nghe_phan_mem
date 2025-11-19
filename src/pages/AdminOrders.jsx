@@ -1,4 +1,5 @@
 // src/pages/AdminOrders.jsx
+// Lịch sử đơn hàng của Restaurant
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { myOrders } from '../utils/orderAPI.js';
@@ -52,7 +53,8 @@ export default function AdminOrders({ variant }) {
   const [loading, setLoading] = useState(true);
 
   // filter/search/sort/pagination
-  const [filter, setFilter] = useState('all');
+  // filter/search/sort/pagination
+  const [filter, setFilter] = useState('all'); // 💡 SỬ DỤNG filter NÀY CHO CÁC BUTTON
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(() => {
@@ -62,12 +64,10 @@ export default function AdminOrders({ variant }) {
   const [pageCount, setPageCount] = useState(1);
 
   const fetchData = async () => {
+    if (isRestaurant && !merchantId) return setLoading(false);
     try {
       setLoading(true);
 
-     //TRUYỀN MERCHANT ID VÀO API
-      // Lưu ý: pagination ở đây đang làm ở FE (limit 10000), 
-      // nếu muốn làm ở BE thì cần sửa lại logic này.
       const res = await myOrders({
         page: 1, 
         limit: 10000, 
@@ -75,13 +75,12 @@ export default function AdminOrders({ variant }) {
         q: '',
         sort: 'createdAt', 
         order: 'desc',
-        merchantId: merchantId // <-- Truyền ID vào đây
+        merchantId: merchantId 
       });
 
       const arr = Array.isArray(res) ? res : (res?.rows || res?.data || []);
       let list = (arr || []).map(o => ({ ...o, _uiStatus: normalizeStatus(o.status) }));
 
-      // lọc theo Drone mode (nếu đang ở /admin/drone)
       if (mode === 'drone') {
         list = list.filter(o =>
           (o.deliveryMode || '').toLowerCase() === 'drone' ||
@@ -90,7 +89,6 @@ export default function AdminOrders({ variant }) {
         );
       }
 
-      // search
       const t = (q || '').trim().toLowerCase();
       if (t) {
         list = list.filter(o =>
@@ -102,14 +100,13 @@ export default function AdminOrders({ variant }) {
         );
       }
 
-      // filter theo UI status
+      // 💡 ÁP DỤNG FILTER THEO BUTTON ĐƯỢC CHỌN
       if (filter !== 'all') {
         list = list.filter(o => o._uiStatus === filter);
       } else if (isRestaurant) {
         list = list.filter(o => o._uiStatus !== 'cancelled');
       }
 
-      // sort createdAt desc (kể cả string)
       const toTs = (v) => {
         if (!v) return 0;
         if (typeof v === 'number') return v;
@@ -120,7 +117,6 @@ export default function AdminOrders({ variant }) {
 
       setFiltered(list);
 
-      // pagination
       const pc = Math.max(1, Math.ceil(list.length / limit));
       const safePage = Math.min(page, pc);
       const start = (safePage - 1) * limit;
@@ -151,11 +147,10 @@ export default function AdminOrders({ variant }) {
   const onExportPage = () => exportCsv(`orders_page_${page}_${ts()}.csv`, rows);
   const onExportAll  = () => exportCsv(`orders_all_filtered_${ts()}.csv`, filtered);
 
-  // Tổng hợp: "tất cả đã lọc" + số phụ cho trang hiện tại
   const summary = useMemo(() => {
     const today = new Date(); today.setHours(0,0,0,0);
     let revenue = 0, todayCount = 0;
-    const byStatus = Object.fromEntries(UI_SUMMARY.map(s=>[s,0]));
+    const byStatus = Object.fromEntries(UI_STATUSES.map(s=>[s,0]));
     for (const o of filtered) {
       if (o._uiStatus !== 'cancelled') revenue += (o.finalTotal ?? o.total ?? 0);
       if (byStatus[o._uiStatus] != null) byStatus[o._uiStatus]++;
@@ -176,27 +171,87 @@ export default function AdminOrders({ variant }) {
   }, [filtered, rows]);
 
   const styles = `
-    .adm-wrap{padding:24px 0}
-    .topbar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .order-card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
-    .orders{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
-    .order-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-    .order-item-row{display:flex;gap:8px;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e9e9e9}
-    .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#f7f7f7;border:1px solid #e8e8e8;text-transform:capitalize;font-weight:700}
+    .adm-wrap{padding:20px 16px; max-width: 1200px; margin: 0 auto;}
+    
+    .topbar{display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center; margin-bottom:20px}
+    .topbar h2 { font-size: 22px; margin: 0; width: 100%; }
+    @media (min-width: 768px) { .topbar h2 { width: auto; } }
+
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; width: 100%; }
+    .filters input { flex-grow: 1; min-width: 150px; }
+    
+    .orders{display:grid; grid-template-columns: 1fr; gap:16px;}
+    @media (min-width: 768px) { .orders { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); } }
+
+    .order-card{background:#fff; border:1px solid #eee; border-radius:12px; padding:16px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);}
+    
+    .order-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px; padding-bottom: 12px; border-bottom: 1px dashed #eee;}
+    .order-id { font-size: 16px; font-weight: 700; color: #333; }
+    
+    .order-item-row{display:flex;gap:8px;justify-content:space-between;padding:6px 0; font-size: 14px;}
+    
+    .badge{display:inline-block;padding:3px 8px;border-radius:6px;background:#f7f7f7;border:1px solid #e8e8e8;text-transform:capitalize;font-weight:400;font-size:12px}
     .badge.order{background:#fff0e9;border-color:#ffd8c6;color:#c24a26}
     .badge.processing{background:#fff7cd;border-color:#ffeaa1;color:#7a5a00}
     .badge.delivery{background:#e8f5ff;border-color:#cfe8ff;color:#0b68b3}
     .badge.done{background:#eaf7ea;border-color:#cce9cc;color:#2a7e2a}
     .badge.cancelled{background:#fde8e8;border-color:#f9c7c7;color:#b80d0d}
-    .sum{font-weight:800}
-    .ff-btn{height:36px;border:none;border-radius:18px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer}
-    select,input[type=text]{height:32px;border-radius:8px;border:1px solid #ddd;padding:0 8px}
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:14px}
-    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px}
-    .row{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
-    .muted{color:#777}
-    .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
-    .pager button{height:32px;border:none;border-radius:8px;padding:0 10px;background:#f0f0f0;cursor:pointer}
+    
+    .ff-btn{height:36px;border:none;border-radius:8px;background:#ff7a59;color:#fff;padding:0 14px;cursor:pointer; font-weight: 600; font-size: 13px;}
+    select,input[type=text]{height:36px;border-radius:8px;border:1px solid #ddd;padding:0 10px; font-size: 14px;}
+    
+    /* Summary cards nhỏ gọn */
+    .cards{display:grid;grid-template-columns:repeat(2, 1fr); gap:10px; margin-bottom:20px}
+    @media (min-width: 600px) { .cards { grid-template-columns: repeat(4, 1fr); } }
+    .card{background:#fff;border:1px solid #eee;border-radius:12px;padding:12px; text-align: center;}
+    .card b { display: block; font-size: 15px; color: #888; text-transform: uppercase; margin-bottom: 4px;}
+    .sum{font-weight:800; font-size: 16px; color: #333;}
+    
+    /* 💡 NEW STYLES for clickable status buttons */
+    .status-filters { 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 10px; 
+        margin-bottom: 20px; 
+    }
+    .status-button {
+        flex: 1 1 20%; /* Chia thành 5 cột trên màn hình rộng */
+        min-width: 140px; /* Chiều rộng tối thiểu cho mobile */
+        cursor: pointer;
+        background: #fff;
+        border: 1px solid #e6e6ea;
+        border-radius: 12px;
+        padding: 10px 15px;
+        transition: all 0.2s;
+        display: flex;
+        justify-content: space-between; /* Căn giữa nội dung */
+        align-items: center;
+        gap: 10px;
+    }
+    .status-button:hover, .status-button.active {
+        border-color: #ff7a59;
+        background: #fff0e9;
+    }
+    .status-button .status-label {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    .status-button .status-count {
+        font-weight: 600;
+        font-size: 16px;
+        color: #333;
+    }
+    @media (max-width: 600px) {
+        .status-button {
+             flex: 1 1 45%; /* Chia thành 2 cột trên mobile */
+        }
+    }
+
+
+    .pager{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:20px}
+    .pager button{height:32px;border:none;border-radius:8px;padding:0 12px;background:#f0f0f0;cursor:pointer}
+    .pager button:disabled { opacity: 0.5; }
   `;
 
   return (
@@ -220,14 +275,7 @@ export default function AdminOrders({ variant }) {
             style={{minWidth:220}}
           />
 
-          <label style={{display:'flex', alignItems:'center', gap:6}}>
-            <span>Lọc:</span>
-            <select value={filter} onChange={e=>{ setFilter(e.target.value); setPage(1); }}>
-              <option value="all">Tất cả{isRestaurant ? ' (ẩn cancelled)' : ''}</option>
-              {UI_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </label>
-
+          {/* 💡 SỬA: CHỈ GIỮ LẠI BỘ LỌC HIỂN THỊ */}
           <label style={{display:'flex', alignItems:'center', gap:6}}>
             <span>Hiển thị:</span>
             <select
@@ -273,16 +321,29 @@ export default function AdminOrders({ variant }) {
         </div>
       </div>
 
-      {/* Thống kê theo trạng thái */}
-      <div className="cards">
-        {['order','processing','delivery','done'].map(s => (
-          <div key={s} className="card">
-            <div className="row">
+      {/* 💡 THỐNG KÊ THEO TRẠNG THÁI (CLICKABLE & INLINE) */}
+      <div className="status-filters">
+        {/* Nút "Tất cả" (hiện tại) */}
+        <button
+          className={`card status-button ${filter === 'all' ? 'active' : ''}`}
+          onClick={() => { setFilter('all'); setQ(''); setPage(1); }}
+        >
+          <div className="status-label">Tất cả ({summary.total})</div>
+        </button>
+
+        {UI_STATUSES.map(s => (
+          <button
+            key={s}
+            // 💡 SỬ DỤNG filter STATE ĐỂ LỌC VÀ LÀM NỔI BẬT
+            className={`status-button ${filter === s ? 'active' : ''}`}
+            onClick={() => { setFilter(s); setQ(''); setPage(1); }}
+          >
+            <div className="status-label">
               <span className={`badge ${s}`}>{s}</span>
-              <b>{summary.byStatus[s] || 0}</b>
             </div>
-            <div className="muted">Số đơn theo trạng thái</div>
-          </div>
+            {/* 💡 SỐ LƯỢNG KẾ BÊN */}
+            <b className="status-count">{summary.byStatus[s] || 0}</b>
+          </button>
         ))}
       </div>
 
@@ -350,4 +411,4 @@ export default function AdminOrders({ variant }) {
       ))}
     </section>
   );
-}
+} 

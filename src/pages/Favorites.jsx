@@ -6,7 +6,7 @@ import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 
 export default function Favorites() {
-  const { ids, toggle, has, count } = useFav();
+  const { ids, toggle, has, count,clearAll } = useFav();
   const { add } = useCart();
   const toast = useToast();
   
@@ -25,7 +25,7 @@ export default function Favorites() {
 
   const styles = useMemo(
     () => `
-      .fav-wrap{max-width:1140px;margin:0 auto;padding:16px; min-height: 80vh; background: #f5f5f5;}
+      .fav-wrap{max-width:1140px;margin:0 auto;padding:16px; min-height: 80vh; background: #ffffffff;}
       
       /* Header gọn gàng */
       .fav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -51,7 +51,7 @@ export default function Favorites() {
       /* Card Style */
       .card{ 
           background:#fff; border-radius: 12px; overflow:hidden; 
-          box-shadow: 0 2px 6px rgba(0,0,0,0.05); border: 1px solid #eee;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2); border: 1px solid #eee;
           display: flex; flex-direction: column;
       }
       
@@ -113,10 +113,12 @@ export default function Favorites() {
 
   const handleClearAllFav = () => {
     if (ids.length === 0) return;
-    const snapshot = [...ids];
-    snapshot.forEach(id => has(id) && toggle(id));
+    
+    // GỌI HÀM CLEAR TỪ CONTEXT (chỉ 1 lần API call)
+    clearAll(); 
+    
     toast.show("Đã xoá hết danh sách yêu thích", "info");
-  };
+};
 
   return (
     <div className="fav-wrap">
@@ -166,7 +168,7 @@ export default function Favorites() {
                       className="btn-heart"
                       onClick={() => {
                         toggle(it.id);
-                        if(!has(it.id)) toast.show("Đã bỏ thích", "info");
+                        toast.show("Đã bỏ thích", "info");
                       }}
                     >
                       ❤️
