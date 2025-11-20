@@ -29,18 +29,31 @@ export const closeSession = async (sessionId) => {
 }
 
 export const createOrder = async (payload) => {
-  const sanitized = {
-    ...payload,
-    status: 'new',
-    payment_status: payload?.payment_status ?? 'unpaid',
-    createdAt: payload?.createdAt ?? Date.now(),
-    deliveryMode: payload?.deliveryMode || 'DRONE',
-  }
-  const { data } = await api.post('/orders', sanitized)
-  return data
-}
+  // Lấy merchantId từ payload (nếu có) hoặc từ payload.merchant.id
+  const merchantId =
+    payload?.merchantId ??
+    payload?.merchant?.id ??
+    null;
 
-export const placeOrder = createOrder
+  const sanitized = {
+    ...payload,
+
+    // luôn lưu merchantId cùng với đơn
+    merchantId,
+
+    // các field mặc định khác
+    status: payload?.status ?? 'new',
+    payment_status: payload?.payment_status ?? 'unpaid',
+    createdAt: payload?.createdAt ?? Date.now(),
+    deliveryMode: payload?.deliveryMode || 'DRONE',
+  };
+
+  const { data } = await api.post('/orders', sanitized);
+  return data;
+};
+
+export const placeOrder = createOrder;
+
 
 export const myOrders = async ({
   page = 1,

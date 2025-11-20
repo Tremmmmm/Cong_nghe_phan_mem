@@ -67,7 +67,8 @@ const defaultAddress = { street: '', ward: '', city: 'TP. Hồ Chí Minh' };
 
 export default function Checkout(){
   const { user, updateUser } = useAuth()
-  const { items, clear } = useCart()
+  const { items, clear, merchantId: cartMerchantId } = useCart()
+
   const { show } = useToast()
   const nav = useNavigate()
   const { ensureSession, markOrderAsCurrent } = useOrderCtx()
@@ -210,16 +211,26 @@ const [name, setName] = useState(user?.name ?? localStorage.getItem('lastName') 
       const addressString = `${cleanAddress.street}, ${cleanAddress.ward}, ${cleanAddress.city}`;
 
       const localId = Math.random().toString(36).slice(2,6)
+      const merchantId =
+        cartMerchantId ??
+        items[0]?.merchantId ??
+        items[0]?.merchant?.id ??
+        null;
+
       const baseOrder = {
         id: localId,
+
+        // 👉 merchant xử lý đơn này
+        merchantId,
+
         sessionId: session?.id || null,
         userId: user?.id ?? null,
         userEmail: user?.email ?? null,
         customerName: name.trim(),
         phone: String(phone).trim(),
         
-        address: addressString, // 💡 Gửi chuỗi đầy đủ cho DB
-        addressObj: cleanAddress, // 💡 Gửi object (nếu API hỗ trợ)
+        address: addressString,
+        addressObj: cleanAddress,
 
         deliveryMode: DELIVERY_MODE,
         items: items.map(i => ({
@@ -238,7 +249,7 @@ const [name, setName] = useState(user?.name ?? localStorage.getItem('lastName') 
         couponCode: appliedCode,
         createdAt: Date.now(),
         restaurantLocation: DEFAULT_RESTAURANT_LL,
-        customerLocation: guessLatLngFromAddress(cleanAddress), // 💡 Dùng object
+        customerLocation: guessLatLngFromAddress(cleanAddress),
         status: 'new',
       }
 
