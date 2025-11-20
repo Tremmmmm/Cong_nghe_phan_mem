@@ -40,9 +40,14 @@
         }); 
 
         const data = res?.rows || [];
-        // Sắp xếp đơn hàng mới nhất lên trên
-        const sorted = [...data].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+        // 💡 LỌC BỔ SUNG FRONTEND: Chỉ giữ lại đơn hàng khớp userEmail HOẶC customerName (nếu query là email)
+        const strictFiltered = queryParam ? data.filter(order => 
+                (order.userEmail && order.userEmail.toLowerCase().includes(queryParam.toLowerCase())) ||
+                (order.customerName && order.customerName.toLowerCase().includes(queryParam.toLowerCase()))
+        ) : data;
         
+        // Sắp xếp đơn hàng mới nhất lên trên
+        const sorted = [...strictFiltered].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
         setOrders(sorted);
         } catch (e) {
         console.error("Fetch Admin Orders Error:", e);

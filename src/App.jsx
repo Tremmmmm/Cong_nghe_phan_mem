@@ -159,7 +159,7 @@ export default function App() {
         <Route path="merchants" element={<AdminServerRestaurant />} /> 
         <Route path="merchants/:merchantId" element={<AdminMerchantDetail />} />
         <Route path="users" element={<AdminUsers />} />
-        <Route path="order" element={<AdminServerOrders />} />  
+        <Route path="orders" element={<AdminServerOrders />} />  
         <Route path="dronemanager" element={<ServerManagerDrone />} />
         <Route path="drone/:id" element={<DroneTracker />} />
       </Route>

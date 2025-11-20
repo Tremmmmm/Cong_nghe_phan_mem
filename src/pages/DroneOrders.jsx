@@ -260,14 +260,25 @@ export default function DroneOrders() {
   const summary = useMemo(() => {
     const counts = { active: 0, waiting: 0, done: 0, error: 0, noMission: 0 };
     for (const o of orders) {
-      const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)];
-      if (!m) { counts.noMission++; continue; }
-      const g = missionGroup(m.status);
-      if (g === "waiting" && !isOrderDone(o)) counts.waiting++;
-      else if (g === "active") counts.active++;
-      else if (g === "done") counts.done++;
-      else if (g === "error") counts.error++;
+    const m = missionById[o.droneMissionId] || missionByOrderId[String(o.id)];
+    // Lấy trạng thái ĐƠN HÀNG đã được chuẩn hóa (processing, delivery, done)
+    const orderCls = normalizeStatus(o.status); 
+
+    if (orderCls === "processing") { 
+        // 💡 TRẠNG THÁI ORDER (processing/ready) -> CHỜ LẤY
+        counts.waiting++;
+    } else if (orderCls === "delivery") { 
+        // 💡 TRẠNG THÁI ORDER (delivering) -> ĐANG BAY
+        counts.active++;
+    } else if (orderCls === "done") { 
+        // 💡 TRẠNG THÁI ORDER (delivered/completed) -> ĐÃ GIAO
+        counts.done++;
     }
+      // Dùng trạng thái mission để bắt lỗi (nếu order chưa done nhưng mission báo lỗi)
+      else if (m && missionGroup(m.status) === "error" && !isOrderDone(o)) {
+        counts.error++;
+    }
+}
     return { total: orders.length, ...counts };
   }, [orders, missionById, missionByOrderId]);
 
@@ -384,7 +395,7 @@ export default function DroneOrders() {
                     <div>
                       <div className="m-label">Khách hàng</div>
                       <div className="m-val">{o.customerName}</div>
-                      <div className="mini">{o.phone}</div>
+                      <div className="mini">{o.phone || "—"}</div>
                     </div>
                     <div style={{textAlign:'right'}}>
                       <div className="m-label">Tổng tiền</div>
@@ -393,33 +404,33 @@ export default function DroneOrders() {
                   </div>
 
                   <div className="m-mission">
-                     <div style={{display:'flex', justifyContent:'space-between', marginBottom: 6}}>
-                        <span className="m-label">Trạng thái bay</span>
-                        {hasMission ? <MissionCell3 order={o} mission={m} telemetry={t} /> : <span className="mini">Chưa có</span>}
-                     </div>
-                     <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:4, textAlign:'center'}}>
-                        <div>
-                            <div className="m-label">Tốc độ</div>
-                            <div style={{fontWeight:600}}>{Number.isFinite(t?.speed) ? `${t.speed.toFixed(0)} km/h` : '-'}</div>
-                        </div>
-                        <div>
-                            <div className="m-label">ETA</div>
-                            <div style={{fontWeight:600}}>{Number.isFinite(m?.eta) ? `${m.eta}p` : '-'}</div>
-                        </div>
-                        <div>
-                           <div className="m-label">Vị trí</div>
-                           <CoordText lat={lat} lng={lng} />
-                        </div>
-                     </div>
-                  </div>
+                      <div style={{display:'flex', justifyContent:'space-between', marginBottom: 6}}>
+                          <span className="m-label">Trạng thái bay</span>
+                          {hasMission ? <MissionCell3 order={o} mission={m} telemetry={t} /> : <span className="mini">Chưa có</span>}
+                      </div>
+                      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:4, textAlign:'center'}}>
+                          <div>
+                              <div className="m-label">Tốc độ</div>
+                              <div style={{fontWeight:600}}>{Number.isFinite(t?.speed) ? `${t.speed.toFixed(0)} km/h` : '-'}</div>
+                          </div>
+                          <div>
+                              <div className="m-label">ETA</div>
+                              <div style={{fontWeight:600}}>{Number.isFinite(m?.eta) ? `${m.eta}p` : '-'}</div>
+                          </div>
+                          <div>
+                            <div className="m-label">Vị trí</div>
+                            <CoordText lat={lat} lng={lng} />
+                          </div>
+                      </div>
+                    </div>
 
-                  <div className="m-actions">
-                      <Link to={href} className="m-btn" style={{ opacity: trackable ? 1 : 0.5, pointerEvents: trackable ? 'auto' : 'none' }}>
-                         Xem Bản Đồ Hành Trình
-                      </Link>
+                    <div className="m-actions">
+                        <Link to={href} className="m-btn" style={{ opacity: trackable ? 1 : 0.5, pointerEvents: trackable ? 'auto' : 'none' }}>
+                          Xem Bản Đồ Hành Trình
+                        </Link>
+                    </div>
                   </div>
-                </div>
-               )
+                )
             })}
           </div>
         </>
