@@ -25,7 +25,7 @@ function normalizeStatus(db) {
 function StatusBadge({ s }) {
   const ui = normalizeStatus(s)
   const map = {
-    order:      { bg:'#fff0e9', bd:'#ffd8c6', c:'#c24a26', label:'order' },
+    order:      { bg:'#fff0e9', bd:'#ffe896ff', c:'#f78811ff', label:'order' },
     processing: { bg:'#fff7cd', bd:'#ffeaa1', c:'#7a5a00', label:'processing' },
     delivery:   { bg:'#e8f5ff', bd:'#cfe8ff', c:'#0b68b3', label:'delivery' },
     done:       { bg:'#eaf7ea', bd:'#cce9cc', c:'#2a7e2a', label:'done' },
@@ -109,80 +109,141 @@ export default function DetailsHistory(){
   //   let arr = (!user?.email) ? orders : orders.filter(o => o.userEmail === user.email)
   //   return [...arr].sort((a,b) => (b.createdAt||0)-(a.createdAt||0))
   // }, [orders, user?.email])
-
-  const css = `
-    .dh-wrap{max-width:1000px;margin:0 auto;padding:20px 16px; background: #f5f5f5; min-height: 100vh;}
+const css = `
+    /* --- GLOBAL LAYOUT --- */
+    .dh-wrap{max-width:1000px;margin:0 auto;padding:20px 16px; background: #ffffffff; min-height: 100vh;}
     .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .title{font-size:20px;font-weight:800;margin:0; color: #333;}
+    .title{font-size:24px;font-weight:800;margin:0; color: #333;}
     
-    .ff-btn{height:32px;border:none;border-radius:16px;background:#fff; border: 1px solid #ddd; color:#333;padding:0 14px;cursor:pointer; font-size: 13px; font-weight: 600;}
+    .ff-btn{height:36px;border:none;border-radius:8px;background:#fff; border: 1px solid #ddd; color:#333;padding:0 14px;cursor:pointer; font-size: 14px; font-weight: 600;}
+    .ff-btn:active{background:#f0f0f0}
     
     .list{display:grid;gap:16px}
     
-    /* --- ORDER CARD MOBILE --- */
+    /* --- USER CARD (THÔNG TIN KHÁCH HÀNG) --- */
+    .user-card{
+        background:#fff; border-radius:12px; padding:16px; margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .user-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
+        gap: 12px 20px; 
+        font-size: 14px;
+    }
+    .user-grid div { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .user-grid b { 
+        display: block; 
+        font-weight: 700; 
+        color: #ff7a59; /* Màu thương hiệu */
+        margin-bottom: 2px;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    /* --- ORDER CARD MOBILE & WEB --- */
     .card{
         background:#fff; border-radius:12px; padding:16px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.08); /* Bóng đổ mạnh hơn cho nổi bật */
+        border: none; /* Bỏ border khi có shadow */
     }
     
     /* Header của Card: Mã đơn + Trạng thái */
-    .head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed #eee; }
-    .order-id { font-size: 16px; font-weight: 700; color: #333; }
-    .order-date { font-size: 12px; color: #888; margin-top: 2px; }
+    .head{ 
+        display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 12px; 
+        padding-bottom: 12px; border-bottom: 1px dashed #eee; 
+    }
+    .order-id { font-size: 18px; font-weight: 800; color: #333; }
+    .order-date { font-size: 13px; color: #888; margin-top: 2px; }
     
     /* Tổng tiền nổi bật */
-    .sum-row { display: flex; justify-content: flex-end; align-items: baseline; gap: 8px; margin-bottom: 12px; }
-    .sum-label { font-size: 13px; color: #666; }
-    .sum-val { font-size: 18px; font-weight: 800; color: #ff7a59; }
+    .sum-row { display: flex; justify-content: flex-end; align-items: baseline; gap: 8px; margin-bottom: 16px; }
+    .sum-label { font-size: 14px; color: #666; font-weight: 500;}
+    .sum-val { 
+        font-size: 22px; 
+        font-weight: 900; 
+        color: #ff7a59; 
+        letter-spacing: -0.5px;
+    }
 
     /* Nút hành động */
     .actions{ display:flex; gap:10px; }
     .btn { 
-        flex: 1; height: 36px; border-radius: 8px; border: 1px solid #ddd; background: #fff; 
-        font-size: 13px; font-weight: 600; color: #333; cursor: pointer;
+        flex: 1; height: 44px; border-radius: 8px; 
+        font-size: 14px; font-weight: 700; color: #333; cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
     }
+    .btn.secondary { background: #f0f0f0; border: none; color: #333; }
+    .btn.secondary:hover { background: #e0e0e0; }
     .btn.primary { background: #ff7a59; color: #fff; border: none; }
+    .btn.primary:hover { background: #e06a4b; }
+
 
     /* Chi tiết mở rộng */
-    .details-expanded { margin-top: 16px; background: #f9f9f9; padding: 12px; border-radius: 8px; }
-    .detail-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
-    .detail-label { color: #666; }
-    .detail-val { font-weight: 600; color: #333; text-align: right; max-width: 60%; }
+    .items { 
+        margin-top: 16px; border-top: 1px solid #eee; padding-top: 16px; 
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 15px;
+    }
+    .it { 
+        display: flex; 
+        gap: 12px; 
+        background: #fcfcfc; /* Nền nhẹ cho item */
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #f0f0f0;
+    }
+    .thumb { 
+        width: 60px; height: 60px; 
+        border-radius: 8px; 
+        object-fit: cover; 
+        background: #eee; 
+        flex-shrink: 0;
+    }
+    .meta { flex: 1; font-size: 14px; }
+    .meta b { display: block; margin-bottom: 2px; color: #333; font-weight: 600; font-size: 15px;}
+    .meta .muted { color: #888; font-size: 13px; }
+    .meta .sum { font-weight: 700; color: #ff7a59; }
 
-    /* List món ăn nhỏ */
-    .items { margin-top: 12px; border-top: 1px solid #eee; padding-top: 12px; }
-    .it { display: flex; gap: 10px; margin-bottom: 10px; }
-    .thumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background: #eee; }
-    .meta { flex: 1; font-size: 13px; }
-    .meta b { display: block; margin-bottom: 2px; color: #333; }
-    .meta .muted { color: #888; font-size: 12px; }
+    /* --- RESPONSIVE MOBILE --- */
+    @media (max-width: 600px) {
+        .dh-wrap { padding: 10px; }
+        .title { font-size: 20px; }
+        .ff-btn { height: 32px; padding: 0 10px; font-size: 12px; }
+        .user-grid { grid-template-columns: 1fr; gap: 8px 0; } /* 1 cột trên mobile */
+        .card { padding: 12px; }
+        .order-id { font-size: 16px; }
+        .sum-val { font-size: 20px; }
+        .btn { height: 40px; font-size: 13px; }
+        .items { grid-template-columns: 1fr; gap: 10px; }
+    }
 
     .dark .dh-wrap { background: #121212; }
-    .dark .card { background: #1e1e1e; border-color: #333; }
-    .dark .order-id, .dark .detail-val { color: #eee; }
-    .dark .details-expanded { background: #252525; }
-    `;
+    .dark .card, .dark .user-card { background: #1e1e1e; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+    .dark .title, .dark .order-id, .dark .meta b { color: #eee; }
+    .dark .ff-btn { background: #222; border-color: #444; color: #eee; }
+    .dark .btn.secondary { background: #333; color: #eee; }
+    .dark .btn.secondary:hover { background: #444; }
+    .dark .items { background: #1f1f1f; }
+    .dark .it { background: #2a2a2a; border-color: #444; }
+  `;
 
   const getItemImage = (it) => it.image || menuMap[it.id]?.image || FALLBACK;
   const toggle = (id) => setOpen(v => ({ ...v, [id]: !v[id] }));
-  // Đặt lại giỏ hàng từ order
+  
   const reorder = (order) => {
-      const { add, addItem, addToCart } = cartCtx;
-      const tryAdd = (p, q) => {
-          if (typeof add === 'function') return add(p, q);
-          return false;
-      };
+      const { add } = cartCtx;
       for (const it of (order.items || [])) {
-          // Lấy thông tin mới nhất từ menuMap nếu có
           const menuItem = menuMap[it.id] || it;
           const payload = { 
               id: it.id, 
               name: menuItem.name || it.name, 
               price: menuItem.price || it.price, 
               image: menuItem.image || getItemImage(it), 
-              merchantId: menuItem.merchantId || it.merchantId // Quan trọng để add đúng giỏ
+              merchantId: menuItem.merchantId || it.merchantId
           };
-          tryAdd(payload, it.qty || 1);
+          if (typeof add === 'function') add(payload, it.qty || 1);
       }
       navigate('/cart');
     }
@@ -192,11 +253,11 @@ export default function DetailsHistory(){
       <style>{css}</style>
 
       <div className="top">
+        <h2 className="title">Lịch sử đơn hàng</h2>
         <button className="ff-btn" onClick={load}>Refresh</button>
       </div>
 
-      <h2 className="title">Lịch sử đơn hàng</h2>
-      {error && <div className="err">{error}</div>}
+      {error && <div className="card" style={{color: '#b80d0d', borderColor: '#f9c7c7'}}>{error}</div>}
 
       {/* user block */}
       <div className="user-card">
@@ -215,35 +276,37 @@ export default function DetailsHistory(){
       ) : (
         <div className="list">
             {my.map((o) => {
-            const created = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '—'
+            const created = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN', { 
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            }) : '—'
             const items = Array.isArray(o.items) ? o.items : []
             const subtotal = items.reduce((s,it)=>s+(it.price||0)*(it.qty||0),0)
             const total = o.finalTotal ?? o.total ?? subtotal
             return (
               <article className="card" key={o.id}>
                 <div className="head">
-                <div>
-                    <div className="order-id">#{o.id}</div>
-                    <div className="order-date">{created}</div>
+                    <div>
+                        <div className="order-id">#{o.id}</div>
+                        <div className="order-date">{created}</div>
+                    </div>
+                    <StatusBadge s={o.status} />
                 </div>
-                <StatusBadge s={o.status} />
-            </div>
             
-            <div className="sum-row">
-                <span className="sum-label">Tổng cộng:</span>
-                <span className="sum-val">{VND(total)}</span>
-            </div>
+                <div className="sum-row">
+                    <span className="sum-label">Tổng cộng:</span>
+                    <span className="sum-val">{VND(total)}</span>
+                </div>
 
                 {/* Hàng nút: luôn bám lề trái */}
                 <div className="actions">
-                  <button className="btn" onClick={()=>toggle(o.id)}>
-                    {open[o.id] ? 'Ẩn món' : `Xem món (${items.length})`}
-                  </button>
-                  {items.length > 0 && (
-                    <button className="btn primary" onClick={()=>reorder(o)}>
-                      Đặt lại
+                    <button className="btn secondary" onClick={()=>toggle(o.id)}>
+                        {open[o.id] ? 'Ẩn món' : `Xem món (${items.length})`}
                     </button>
-                  )}
+                    {items.length > 0 && (
+                        <button className="btn primary" onClick={()=>reorder(o)}>
+                        Đặt lại
+                        </button>
+                    )}
                 </div>
 
                 {open[o.id] && (

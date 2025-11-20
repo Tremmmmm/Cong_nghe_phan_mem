@@ -35,11 +35,16 @@ const REASON_LABEL = {
   other: 'Lý do khác',
 };
 
-export default function AdminOrders({ variant }) {
-  const isRestaurant = variant === 'restaurant';
-  const { user, isMerchant } = useAuth();
-  // Nếu là trang restaurant (variant='restaurant') HOẶC user đang login là merchant, thì lấy ID
-  const merchantId = (isRestaurant || isMerchant) ? user?.merchantId : null;
+export default function AdminOrders({ variant }) { 
+  // Dùng currentUser giống RestaurantMenuManager
+  const { currentUser, isMerchant } = useAuth();
+
+  // Nếu đang login bằng tài khoản merchant thì luôn giới hạn theo merchantId của họ
+  const merchantId = isMerchant ? currentUser?.merchantId : null;
+
+  // isRestaurant giờ chủ yếu để chỉnh UI (title, text…)
+  const isRestaurant = variant === 'restaurant' || Boolean(merchantId);
+
   // nhận biết mode drone: /admin/drone hoặc ?mode=drone
   const { pathname, search } = useLocation();
   const mode = useMemo(() => {
@@ -87,6 +92,11 @@ export default function AdminOrders({ variant }) {
           (o.courier || '').toLowerCase() === 'drone' ||
           !!o.droneMissionId
         );
+      }
+
+            // Nếu là merchant => double-check: chỉ giữ đơn thuộc merchantId hiện tại
+      if (merchantId) {
+        list = list.filter(o => String(o.merchantId) === String(merchantId));
       }
 
       const t = (q || '').trim().toLowerCase();

@@ -23,7 +23,7 @@ import SignUp from './pages/SignUp.jsx';
 // --- Pages (Customer - Cần Đăng nhập) ---
 import Profile from './pages/Profile.jsx';
 import Checkout from './pages/Checkout.jsx';
-import Orders from './pages/Orders.jsx';
+import Orders from './pages/CustomerOrders.jsx';
 import ConfirmCloseSession from './pages/ConfirmCloseSession.jsx';
 
 // --- Pages (Merchant Admin) ---

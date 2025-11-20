@@ -3,16 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { formatVND } from "../utils/format";
 
+const STYLE_ID = "cart-inline-style-orange";
+
 export default function Cart() {
   const { items, add, dec, remove, clear, total, merchantId } = useCart();
   const navigate = useNavigate();
 
+  // --- Styles (ĐÃ SỬA: Thêm tiền tố cart-) ---
   const styles = useMemo(() => `
     .cart-wrap{max-width:800px;margin:20px auto;padding:0 16px; min-height: 80vh; display: flex; flex-direction: column;}
     .cart-title{font-size:24px; margin:0 0 20px; font-weight: 800; color: #333;}
 
-    /* --- ITEM CARD (Mobile Optimized) --- */
-    .item {
+    /* --- ITEM CART (Mobile Optimized) --- */
+    .cart-item {
         display: grid;
         grid-template-columns: 80px 1fr; /* Ảnh trái - Nội dung phải */
         grid-template-rows: auto auto;
@@ -27,7 +30,7 @@ export default function Cart() {
     }
 
     /* Ảnh */
-    .thumb {
+    .cart-thumb {
         width: 80px; height: 80px;
         border-radius: 8px;
         object-fit: cover;
@@ -36,27 +39,27 @@ export default function Cart() {
     }
 
     /* Tên và Giá */
-    .info {
+    .cart-info {
         display: flex;
         flex-direction: column;
         justify-content: center;
         padding-right: 30px; /* Chừa chỗ cho nút xóa */
     }
-    .name { font-weight: 700; font-size: 15px; color: #333; line-height: 1.3; margin-bottom: 4px; }
-    .unit-price { font-size: 13px; color: #888; }
+    .cart-name { font-weight: 700; font-size: 15px; color: #333; line-height: 1.3; margin-bottom: 4px; }
+    .cart-unit-price { font-size: 13px; color: #888; }
 
     /* Bộ đếm và Tổng tiền item */
-    .actions {
+    .cart-actions {
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
     
-    .counter {
+    .cart-counter {
         display: flex; align-items: center; gap: 0; /* Gap 0, dùng border để chia */
         border: 1px solid #ddd; border-radius: 8px; overflow: hidden;
     }
-    .pill {
+    .cart-pill {
         width: 32px; height: 32px;
         background: #fff; color: #333;
         border: none;
@@ -64,17 +67,17 @@ export default function Cart() {
         cursor: pointer;
         display: flex; align-items: center; justify-content: center;
     }
-    .pill:active { background: #f0f0f0; }
-    .qty-val {
+    .cart-pill:active { background: #f0f0f0; }
+    .cart-qty-val {
         width: 30px; text-align: center; font-size: 14px; font-weight: 600;
         border-left: 1px solid #eee; border-right: 1px solid #eee;
         height: 32px; line-height: 32px;
     }
 
-    .item-total { font-weight: 700; color: #ff7a59; font-size: 15px; }
+    .cart-item-total { font-weight: 700; color: #ff7a59; font-size: 15px; }
 
     /* Nút xóa (Icon thùng rác) */
-    .btn-remove {
+    .cart-btn-remove {
         position: absolute;
         top: 10px; right: 10px;
         background: transparent; border: none;
@@ -82,7 +85,7 @@ export default function Cart() {
         padding: 5px;
         cursor: pointer;
     }
-    .btn-remove:hover { color: #e74c3c; }
+    .cart-btn-remove:hover { color: #e74c3c; }
 
     /* --- FOOTER --- */
     .cart-footer {
@@ -90,31 +93,39 @@ export default function Cart() {
         padding-top: 20px;
         border-top: 1px dashed #ddd;
     }
-    .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 18px; }
-    .total-label { font-weight: 600; color: #555; }
-    .total-val { font-weight: 800; color: #ff7a59; font-size: 22px; }
+    .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 18px; }
+    .cart-total-label { font-weight: 600; color: #555; }
+    .cart-total-val { font-weight: 800; color: #ff7a59; font-size: 22px; }
 
-    .row-end { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+    .cart-row-end { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
     
-    .btn { height: 44px; border: none; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; }
-    .btn-checkout { background: #ff7a59; color: #fff; box-shadow: 0 4px 12px rgba(255, 122, 89, 0.3); }
-    .btn-clear { background: #fff; color: #e74c3c; border: 1px solid #ffdada; }
+    .cart-btn { height: 44px; border: none; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .cart-btn-checkout { background: #ff7a59; color: #fff; box-shadow: 0 4px 12px rgba(255, 122, 89, 0.3); }
+    .cart-btn-clear { background: #fff; color: #e74c3c; border: 1px solid #ffdada; }
     
-    .dark .item { background: #151515; border-color: #333; }
-    .dark .name { color: #eee; }
-    .dark .pill { background: #222; color: #eee; }
-    .dark .counter { border-color: #444; }
-    .dark .qty-val { border-color: #444; }
+    .dark .cart-item { background: #151515; border-color: #333; }
+    .dark .cart-name { color: #eee; }
+    .dark .cart-pill { background: #222; color: #eee; }
+    .dark .cart-counter { border-color: #444; }
+    .dark .cart-qty-val { border-color: #444; }
   `, []);
 
+  // SỬA: Thêm logic cleanup để gỡ style khi component unmount
   useEffect(() => {
-    const id = "cart-inline-style-orange";
-    if (!document.getElementById(id)) {
-      const s = document.createElement("style");
-      s.id = id;
+    let s = document.getElementById(STYLE_ID);
+    if (!s) {
+      s = document.createElement("style");
+      s.id = STYLE_ID;
       s.textContent = styles;
       document.head.appendChild(s);
     }
+
+    return () => {
+        const cleanupTag = document.getElementById(STYLE_ID);
+        if (cleanupTag) {
+            cleanupTag.remove();
+        }
+    };
   }, [styles]);
 
   return (
@@ -130,38 +141,38 @@ export default function Cart() {
         <>
           <div>
               {items.map((it) => (
-                <div className="item" key={it.id}>
+                <div className="cart-item" key={it.id}>
                   {/* Nút xóa góc trên phải */}
-                  <button className="btn-remove" onClick={() => remove(it.id)} title="Xóa">×</button>
+                  <button className="cart-btn-remove" onClick={() => remove(it.id)} title="Xóa">×</button>
 
-                  <img className="thumb" src={it.image || "/assets/images/placeholder.png"} alt={it.name} />
+                  <img className="cart-thumb" src={it.image || "/assets/images/placeholder.png"} alt={it.name} />
                   
-                  <div className="info">
-                    <div className="name">{it.name}</div>
-                    <div className="unit-price">{formatVND(it.price)}</div>
+                  <div className="cart-info">
+                    <div className="cart-name">{it.name}</div>
+                    <div className="cart-unit-price">{formatVND(it.price)}</div>
                   </div>
 
                   <div style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 5}}>
-                      <div className="counter">
-                        <button className="pill" onClick={() => dec(it.id)}>−</button>
-                        <div className="qty-val">{it.qty}</div>
-                        <button className="pill" onClick={() => add(it, merchantId)}>+</button>
+                      <div className="cart-counter">
+                        <button className="cart-pill" onClick={() => dec(it.id)}>−</button>
+                        <div className="cart-qty-val">{it.qty}</div>
+                        <button className="cart-pill" onClick={() => add(it, merchantId)}>+</button>
                       </div>
                       
-                      <div className="item-total">{formatVND((it.price || 0) * (it.qty || 0))}</div>
+                      <div className="cart-item-total">{formatVND((it.price || 0) * (it.qty || 0))}</div>
                   </div>
                 </div>
               ))}
           </div>
 
           <div className="cart-footer">
-              <div className="total-row">
-                  <span className="total-label">Tổng cộng:</span>
-                  <span className="total-val">{formatVND(total)}</span>
+              <div className="cart-total-row">
+                  <span className="cart-total-label">Tổng cộng:</span>
+                  <span className="cart-total-val">{formatVND(total)}</span>
               </div>
-              <div className="row-end">
-                <button className="btn btn-clear" onClick={clear}>Xoá hết</button>
-                <button className="btn btn-checkout" onClick={() => navigate("/checkout")} disabled={items.length === 0}>
+              <div className="cart-row-end">
+                <button className="cart-btn cart-btn-clear" onClick={clear}>Xoá hết</button>
+                <button className="cart-btn cart-btn-checkout" onClick={() => navigate("/checkout")} disabled={items.length === 0}>
                   Thanh toán
                 </button>
               </div>

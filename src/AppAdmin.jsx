@@ -21,7 +21,7 @@ import SignUp from './pages/SignUp.jsx'
 
 // Feature pages
 import Checkout from './pages/Checkout.jsx'
-import Orders from './pages/Orders.jsx'
+import Orders from './pages/CustomerOrders.jsx'
 
 // Admin pages (nội dung)
 import AdminOrders from './pages/AdminOrders.jsx'

@@ -26,10 +26,13 @@ export async function fetchMerchants() {
         const merchantsData = await merchantsResponse.json(); 
         const merchantsMap = new Map(merchantsData.map(m => [m.id, m]));
 
-        const mergedMerchants = settingsData.map(setting => ({
-            ...merchantsMap.get(setting.id), 
-            ...setting                      
-        }));
+        const mergedMerchants = settingsData.map(setting => {
+            const contract = merchantsMap.get(setting.id) || {}
+            return {
+                ...contract,   // status, owner, ...
+                ...setting,    // storeName, address, ...
+            }
+            })
 
         return mergedMerchants; 
     } catch (error) {
@@ -101,7 +104,7 @@ export async function updateMerchant(merchantId, updates) {
 
 export async function createMerchant(newMerchantData) {
     const newMerchantId = `m_${Date.now()}`;
-    const defaultName = newMerchantData.name || `Cửa hàng Mới #${newMerchantId.slice(-4)}`;
+    const defaultName = newMerchantData.name || `Cửa hàng Mới (từ Admin) #${newMerchantId.slice(-4)}`;
     const newUserId = `u_${Date.now()}`;
     const newUsername = newMerchantData.owner || `merchant_${newMerchantId.slice(-4)}`;
     
@@ -109,24 +112,25 @@ export async function createMerchant(newMerchantData) {
         ...newMerchantData,
         id: newMerchantId,
         owner: newUsername,
-        status: 'Pending',
+        name: defaultName, // 💡 Thêm name vào merchantPayload
+        status: 'Active', // 💡 SỬA: Active để hiện trên Home
         ordersToday: 0,
     };
     
     const settingsPayload = {
         id: newMerchantId,
-        storeName: defaultName,
+        storeName: defaultName, // 💡 Đã dùng defaultName
         address: 'Chưa cập nhật địa chỉ',
         phone: '',
         logo: '',
-        isManuallyClosed: true,
+        isManuallyClosed: false, // 💡 Mặc định MỞ
         operatingHours: {}
     };
 
     const userPayload = {
         id: newUserId,
         username: newUsername,
-        password: "123",
+        password: "123", // Mật khẩu mặc định
         name: `Admin (${defaultName})`,
         role: 'Merchant',
         merchantId: newMerchantId

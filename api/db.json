@@ -1510,15 +1510,64 @@
         "lat": 10.779226667603755,
         "lng": 106.69490915066102
       },
-      "status": "delivering",
+      "status": "completed",
       "payment": "VNPAY",
       "payment_status": "paid",
       "payment_txn_id": "MOCK-1763545660327",
-      "updatedAt": "2025-11-19T09:48:09.481Z",
+      "updatedAt": "2025-11-20T05:03:59.443Z",
       "acceptedAt": "2025-11-19T09:48:06.071Z",
       "readyAt": "2025-11-19T09:48:07.792Z",
       "droneMissionId": "113f",
       "pickedAt": "2025-11-19T09:48:09.481Z"
+    },
+    {
+      "id": "1rp4",
+      "merchantId": "m002",
+      "sessionId": "908e",
+      "userId": "u003",
+      "userEmail": "C001@gmail.com",
+      "customerName": "An",
+      "phone": "0989898989",
+      "address": "Số 3 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 3 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "pho-01",
+          "name": "Phở Tái Chín",
+          "qty": 1,
+          "price": 55000,
+          "image": "https://placehold.co/400x250/f0e0d0/333?text=Pho+Tai+Chin"
+        }
+      ],
+      "total": 55000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 75000,
+      "couponCode": "",
+      "createdAt": 1763614932448,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.782329133085359,
+        "lng": 106.68980825876879
+      },
+      "status": "completed",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1763614957478",
+      "updatedAt": "2025-11-20T05:06:35.423Z",
+      "acceptedAt": "2025-11-20T05:04:57.822Z",
+      "readyAt": "2025-11-20T05:04:59.592Z",
+      "droneMissionId": "9e46",
+      "pickedAt": "2025-11-20T05:05:22.310Z"
     }
   ],
   "sessions": [
@@ -2102,6 +2151,28 @@
         [
           10.779226667603755,
           106.69490915066102
+        ]
+      ],
+      "currentIndex": 0
+    },
+    {
+      "id": "9e46",
+      "orderId": "1rp4",
+      "merchantId": "m002",
+      "customerId": "u003",
+      "startTime": "2025-11-20T05:05:22.311Z",
+      "status": "in_progress",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 3,
+      "path": [
+        [
+          10.776889,
+          106.700806
+        ],
+        [
+          10.782329133085359,
+          106.68980825876879
         ]
       ],
       "currentIndex": 0
@@ -5140,6 +5211,15 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1763545689513
+    },
+    {
+      "id": "b41a",
+      "missionId": "9e46",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1763615122337
     }
   ],
   "users": [
@@ -5183,12 +5263,12 @@
       "merchantId": "m002"
     },
     {
-      "id": "u_1763085292769",
+      "id": "u_1763630429733",
       "username": "new.owner@example.com",
       "password": "123",
-      "name": "Admin (Cửa hàng Mới #2769)",
+      "name": "Admin (Cửa hàng Mới #9733)",
       "role": "Merchant",
-      "merchantId": "m_1763085292769"
+      "merchantId": "m_1763630429733"
     }
   ],
   "merchants": [
@@ -5275,7 +5355,7 @@
       "logo": "https://www.lotteria.vn/media/catalog/product/l/s/ls0070.png"
     },
     {
-      "id": "m_1763085292769",
+      "id": "m_1763630429733",
       "owner": "new.owner@example.com",
       "status": "Pending",
       "ordersToday": 0
@@ -5341,7 +5421,7 @@
         },
         "thu": {
           "open": 6,
-          "close": 14
+          "close": 23
         },
         "fri": {
           "open": 6,
@@ -5359,42 +5439,42 @@
       "id": "m002"
     },
     {
-      "storeName": "Bún bò",
-      "address": "Sô 6 Lê Đại Hành, Phường Diên Hồng, TP.HCM",
-      "phone": "0965656565",
-      "logo": "https://comnieusaigon.com/bun-bo-hue-dac-san-dan-da-lam-say-long-biet-bao-thuc-khach",
-      "isManuallyClosed": true,
+      "storeName": "Bún bò Huế",
+      "address": "22 Sư Vạn Hạnh, Phường Diên Hồng, Tp.Hồ Chí Minh",
+      "phone": "09",
+      "logo": "https://i.pinimg.com/736x/aa/b2/af/aab2af51392a18cece128cdf5584d1cf.jpg",
+      "isManuallyClosed": false,
       "operatingHours": {
         "mon": {
-          "open": 1,
-          "close": 22
+          "open": 7,
+          "close": 23
         },
         "tue": {
-          "open": 1,
-          "close": 22
+          "open": 7,
+          "close": 23
         },
         "wed": {
-          "open": 1,
-          "close": 22
+          "open": 7,
+          "close": 23
         },
         "thu": {
-          "open": 1,
-          "close": 22
+          "open": 7,
+          "close": 23
         },
         "fri": {
-          "open": 1,
-          "close": 22
+          "open": 7,
+          "close": 23
         },
         "sat": {
-          "open": 1,
-          "close": 22
+          "open": 7,
+          "close": 23
         },
         "sun": {
-          "open": 1,
-          "close": 22
+          "open": 7,
+          "close": 23
         }
       },
-      "id": "m_1763085292769"
+      "id": "m_1763630429733"
     }
   ],
   "menuItems": [
@@ -5563,14 +5643,24 @@
       "status": "approved"
     },
     {
-      "id": "5993",
-      "name": "Xe may",
-      "desc": ".....",
-      "price": 1000000,
-      "image": "/assets/images/menu/beefburger.jpg",
+      "id": "822c",
+      "name": "Bún bò Giò heo",
+      "desc": "Bún bò Huế chuẩn",
+      "price": 55000,
+      "image": "https://kinhdoamthuc.com/wp-content/uploads/2023/07/cach-nau-bun-bo-gio-heo-ngon-nhat.jpg",
       "category": "single",
-      "merchantId": "m001",
-      "status": "rejected"
+      "merchantId": "m_1763630429733",
+      "status": "approved"
+    },
+    {
+      "id": "3e21",
+      "name": "Phở Xí Quách",
+      "desc": "Tô phở thơm ngon đậm đà cùng với vị ngọt nước từ xương",
+      "price": 50000,
+      "image": "https://media.thesaigontimes.vn/wp-content/uploads/2025/09/BSSG_phoxiquach.jpg",
+      "category": "single",
+      "merchantId": "m002",
+      "status": "approved"
     }
   ],
   "carts": [
@@ -5633,8 +5723,21 @@
       "items": []
     },
     {
-      "merchantId": null,
-      "items": [],
+      "merchantId": "m002",
+      "items": [
+        {
+          "id": "pho-01",
+          "name": "Phở Tái Chín",
+          "desc": "Nước dùng truyền thống.",
+          "price": 55000,
+          "image": "https://placehold.co/400x250/f0e0d0/333?text=Pho+Tai+Chin",
+          "category": "single",
+          "status": "approved",
+          "merchantId": "m002",
+          "merchantName": "Phở Lý Quốc Sư",
+          "qty": 1
+        }
+      ],
       "id": "ff_cart_v2:ue:c001@gmail.com"
     },
     {
@@ -5644,6 +5747,11 @@
     },
     {
       "id": "ff_cart_v2:uid:u004",
+      "merchantId": null,
+      "items": []
+    },
+    {
+      "id": "ff_cart_v2:uid:u_1763630429733",
       "merchantId": null,
       "items": []
     }
@@ -5697,7 +5805,8 @@
     {
       "id": "ff_fav_v1:ue:c001@gmail.com",
       "ids": [
-        "sg-1"
+        "pho-01",
+        "3e21"
       ]
     },
     {
@@ -5706,6 +5815,10 @@
     },
     {
       "id": "ff_fav_v1:uid:u004",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:uid:u_1763630429733",
       "ids": []
     }
   ]

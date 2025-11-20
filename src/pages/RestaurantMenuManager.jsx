@@ -343,6 +343,8 @@ export default function RestaurantMenuManager() {
     const totalItems = filteredItems.length;
     const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
+    const finalStyles = useMemo(() => cssString, []);
+
     // 3. Lấy ra các món ăn cho trang hiện tại
     const paginatedItems = useMemo(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -372,6 +374,8 @@ export default function RestaurantMenuManager() {
     }
 
     return (
+        <div style={{ padding: 0 }}> 
+            <style>{finalStyles}</style>
         <div style={styles.wrap}>
             <div style={styles.header}>
                 <h1 style={{ margin: 0 }}>Quản lý Thực đơn</h1>
@@ -417,49 +421,49 @@ export default function RestaurantMenuManager() {
 
             {/* 💡 --- DANH SÁCH MÓN ĂN (Dùng paginatedItems) --- */}
             {paginatedItems.length === 0 ? (
-                <p style={{textAlign: 'center', padding: '20px'}}>
-                    {filterCategory === 'all' ? 'Chưa có món ăn nào.' : 'Không có món ăn nào trong danh mục này.'}
-                </p>
-            ) : (
-                <div style={styles.list}>
-                    {/* 💡 Map qua paginatedItems thay vì menuItems */}
-                    {paginatedItems.map(item => { 
-                        // const isCurrentlyAvailable = item.isAvailable ?? true; // Đã bỏ
-                        return (
-                            <div key={item.id} style={styles.itemCard}>
-                                {/* ... (Render Card giữ nguyên) ... */}
-                                <img src={item.image || '/assets/images/menu/placeholder.png'} alt={item.name} style={styles.itemImage} onError={(e)=>{e.target.src='/assets/images/menu/placeholder.png'}}/>
-                                <div style={styles.itemInfo}>
-                                    <div style={styles.itemRow}>
-                                        <strong style={{ fontSize: 16 }}>{item.name || '(Chưa có tên)'}</strong>
-                                        <div> 
-                                            <span style={{...styles.itemStatus, ...statusStyles[item.status || 'pending']}}>
-                                                {item.status === 'approved' ? 'Đã duyệt' : (item.status === 'rejected' ? 'Bị từ chối' : 'Chờ duyệt')}
-                                            </span>
+                    <p style={{textAlign: 'center', padding: '20px'}}>
+                        {filterCategory === 'all' ? 'Chưa có món ăn nào.' : 'Không có món ăn nào trong danh mục này.'}
+                    </p>
+                ) : (
+                    <div className="list">
+                        {/* 💡 Map qua paginatedItems thay vì menuItems */}
+                        {paginatedItems.map(item => { 
+                            const statusClass = `status-${item.status || 'pending'}`;
+                            const statusLabel = item.status === 'approved' ? 'Đã duyệt' : (item.status === 'rejected' ? 'Bị từ chối' : 'Chờ duyệt');
+
+                            return (
+                                <div key={item.id} className="itemCard">
+                                    <img src={item.image || '/assets/images/menu/placeholder.png'} alt={item.name} className="itemImage" onError={(e)=>{e.target.src='/assets/images/menu/placeholder.png'}}/>
+                                    <div className="itemInfo">
+                                        <div className="itemRow">
+                                            <strong style={{ fontSize: 16 }}>{item.name || '(Chưa có tên)'}</strong>
+                                            <div> 
+                                                <span className={`itemStatus ${statusClass}`}>
+                                                    {statusLabel}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p className="itemDesc">{item.desc || 'Chưa có mô tả'}</p> 
+                                        <div className="itemRow">
+                                            <span style={{ fontWeight: 600 }}>{formatVND(item.price || 0)}</span>
+                                            <span style={{ fontSize: 12, color: '#666' }}>Loại: {item.category}</span>
                                         </div>
                                     </div>
-                                    <p style={styles.itemDesc}>{item.desc || 'Chưa có mô tả'}</p> 
-                                    <div style={styles.itemRow}>
-                                        <span style={{ fontWeight: 600 }}>{formatVND(item.price || 0)}</span>
-                                        <span style={{ fontSize: 12, color: '#666' }}>Loại: {item.category}</span>
+                                    <div className="itemActions"> 
+                                        {item.status === 'pending' && (
+                                            <>
+                                                <button onClick={() => handleApprove(item.id)} className="btn-base" style={{background:'#2ecc71', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Duyệt</button>
+                                                <button onClick={() => handleReject(item.id)} className="btn-base" style={{background:'#f39c12', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Từ chối</button>
+                                            </>
+                                        )} 
+                                        <button onClick={() => handleEditItem(item)} className="btn-base" style={{fontSize:12, padding:"4px 10px", borderRadius:999,background:"#c8e6faff", color:"#2090daff", border:"1px solid #8dc7ebff"}} disabled={isSaving}>Sửa</button>
+                                        <button onClick={() => handleDeleteItem(item)} className="btn-base" style={{fontSize:12, padding:"4px 10px", borderRadius:999,background:"#ffe6e6ff", color:"#d40606ff", border:"1px solid #ff8f8fff"}} disabled={isSaving}>Xóa</button>
                                     </div>
-                                </div>
-                                <div style={styles.itemActions}>
-                                    {item.status === 'pending' && (
-                                        <>
-                                            <button onClick={() => handleApprove(item.id)} style={{...buttonStyle, background:'#2ecc71', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Duyệt</button>
-                                            <button onClick={() => handleReject(item.id)} style={{...buttonStyle, background:'#f39c12', fontSize: 12, padding: '5px 8px'}} disabled={isSaving}>Từ chối</button>
-                                        </>
-                                    )} 
-                                    <button onClick={() => handleEditItem(item)} style={{...buttonStyle, fontSize:12, padding:"4px 10px", borderRadius:999,background:"#c8e6faff", color:"#2090daff", border:"1px solid #8dc7ebff"}} disabled={isSaving}>Sửa</button>
-                                    <button onClick={() => handleDeleteItem(item)} style={{...buttonStyle, fontSize:12, padding:"4px 10px", borderRadius:999,background:"#ffe6e6ff", color:"#d40606ff", border:"1px solid #ff8f8fff"}} disabled={isSaving}>Xóa</button>
-                                </div>
-                            </div>  
-                        );  
-                    })}  
-                </div>  
-            )}  
-
+                                </div>  
+                            );  
+                        })}  
+                    </div>  
+                )}
             {/* 💡 --- GIAO DIỆN PHÂN TRANG MỚI --- */}
             {/* Chỉ hiển thị phân trang nếu có nhiều hơn 1 trang */}
             {totalPages > 1 && (
@@ -506,10 +510,11 @@ export default function RestaurantMenuManager() {
                         // nhưng nếu cần, bạn sẽ gọi API 'updateSettings' ở đây.
                         toast.show('Đã cập nhật danh mục (PoC)', 'success');
                     }}
-                />
-            )}
-        </div>  
-    );  
+                    />
+                )}
+            </div>
+        </div>
+    );
 }
 
 // --- Styles (Nội tuyến) ---
@@ -599,7 +604,7 @@ const styles = {
     addButton: { background: '#3498db' },
     filterContainer: { display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '20px' },
     filterButton: { background: '#f0f0f0', color: '#555', border: '1px solid #ddd' },
-    filterActive: { background: '#3498db', color: '#fff', border: '1px solid #2980b9', fontWeight: 'bold' },
+    filterActive: { background: '#ff7a59', color: '#fff', border: '1px solid #ff5722', fontWeight: 'bold' },
     paginationContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '30px', padding: '20px 0', borderTop: '1px solid #eee' },
     paginationText: { fontWeight: '600', fontSize: '14px', color: '#555' },
     pageButton: { background: '#f9f9f9', color: '#444', border: '1px solid #ddd' },
@@ -607,7 +612,6 @@ const styles = {
     //     fontSize: 11,
     //     fontWeight: 600,
     //     padding: '3px 8px',
-    //     borderRadius: 999,
     //     marginRight: '8px',
     //     border: '1px solid currentColor', // Viền theo màu chữ 
     // },
@@ -623,3 +627,108 @@ const fieldGroupStyle = { marginBottom: 15 };
 const labelStyle = { display: 'block', fontWeight: 600, marginBottom: 5, color: '#555' };
 const inputStyle = { width: '100%', padding: '10px 12px', border: '1px solid #ccc', borderRadius: 8, fontSize: 14 };
 const buttonStyle = { padding: '8px 15px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14, transition: 'background-color 0.2s' };
+
+// 💡 SỬA 5: THÊM MEDIA QUERY CHO MODAL VÀO CUỐI CSS STRING
+const cssString = `
+    /* --- GENERAL SETUP --- */
+    .wrap { width: 100%; max-width: 900px; margin: 0 auto; padding: 15px 10px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .header > div:last-child { 
+        display: flex; gap: 8px; margin-top: 10px; 
+        flex: 1 1 100%; justify-content: flex-end; 
+    }
+    
+    /* --- FILTER BUTTONS (Horizontal Scroll) --- */
+    .filterContainer { 
+        display: flex; gap: 8px; margin-bottom: 15px; 
+        border-bottom: 1px solid #eee; padding-bottom: 15px;
+        overflow-x: auto; /* Cho phép cuộn ngang */
+        flex-wrap: nowrap; /* Buộc các nút ở cùng 1 hàng */
+    }
+    .filterButton { 
+        flex-shrink: 0; padding: 8px 12px; background: #f0f0f0; 
+        color: #555; border: 1px solid #ddd; border-radius: 8px;
+        cursor: pointer; transition: all 0.2s; font-size: 13px;
+    }
+    .filterActive { 
+        background: #ff7a59; color: #fff; 
+        border-color: #ff5722; font-weight: bold; 
+    }
+    
+    /* --- LIST & CARD LAYOUT --- */
+    .list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 50px; }
+    .itemCard { 
+        display: flex; gap: 10px; padding: 10px; background: #fff; 
+        border: 1px solid #eee; border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    }
+    .itemImage { 
+        width: 70px; height: 70px; object-fit: cover; border-radius: 6px; background: #f0f0f0;
+    }
+    .itemInfo { 
+        flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; min-width: 150px; 
+    }
+    .itemRow { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+    .itemDesc { font-size: 12px; color: #666; margin: 3px 0; flex-grow: 1 }
+    
+    /* 💡 ACTION BUTTONS (Column layout) */
+    .itemActions {  
+        display: flex;
+        flex-direction: column;
+        gap: 6px; /* Giảm gap cho mobile */
+        align-items: flex-end;
+        justify-content: center; /* Đặt nút vào giữa */
+        min-width: 80px; 
+    }
+
+    /* --- STATUS PILLS --- */
+    .itemStatus { 
+        font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 999px; 
+        white-space: nowrap; /* Ngăn trạng thái bị xuống dòng */
+    }
+    .status-pending { background: #fffbe6; color: #b45309; border: 1px solid #fde68a;}
+    .status-approved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0 }
+    .status-rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca }
+
+    /* --- PAGINATION --- */
+    .paginationContainer { 
+        display: flex; justify-content: center; align-items: center; gap: 15px; 
+        margin-top: 30px; padding: 20px 0; border-top: 1px solid #eee; 
+    }
+    .paginationText { font-weight: 600; font-size: 14px; color: #555; }
+    .pageButton { 
+        background: #f9f9f9; color: #444; border: 1px solid #ddd; padding: 8px 15px; 
+        border-radius: 8px; cursor: pointer;
+    }
+    
+    /* --- MODAL BASE STYLES --- */
+    .modal-content { 
+        background: #fff; padding: 25px; border-radius: 12px; width: 100%; 
+        max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+    }
+    /* Các classes input base cần được định nghĩa lại */
+    .input-base { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+    .btn-base { padding: 8px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; transition: background-color 0.2s; }
+    .ghost-btn { background: #fff; color: #333; border: 1px solid #e6e6ea; }
+
+
+    /* 💡 MEDIA QUERY: Tối ưu hóa cho Mobile (Fix lỗi modal) */
+    @media (max-width: 600px) {
+        .wrap { padding: 10px 5px; }
+        
+        /* 1. Modals (Mở rộng cho full màn hình hẹp) */
+        .modal-content {
+            padding: 15px;
+            margin: 10px;
+            width: 95vw; /* Tăng chiều rộng trên mobile */
+            max-width: 95vw;
+        }
+
+        /* 2. Item Card (Cải thiện hiển thị) */
+        .itemCard {
+            padding: 8px;
+            gap: 8px;
+        }
+    }
+`;
