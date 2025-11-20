@@ -39,6 +39,9 @@ import AdminServerDashboard from './pages/AdminServerDashboard.jsx';
 import AdminServerRestaurant from './pages/AdminServerRestaurant.jsx';
 import AdminUsers from './admin/AdminUsers.jsx';
 import AdminMerchantDetail from './pages/AdminMerchantDetail.jsx';
+import ServerManagerDrone from './pages/ServerManagerDrone.jsx';
+import AdminServerOrders from './pages/AdminServerOrders.jsx';
+
 
 // --- Guards ---
 import { 
@@ -153,10 +156,11 @@ export default function App() {
       >
         <Route index element={<Navigate to="dashboard" replace />} /> 
         <Route path="dashboard" element={<AdminServerDashboard />} />
-        <Route path="merchants" element={<AdminServerRestaurant />} />
+        <Route path="merchants" element={<AdminServerRestaurant />} /> 
         <Route path="merchants/:merchantId" element={<AdminMerchantDetail />} />
         <Route path="users" element={<AdminUsers />} />
-        <Route path="drone" element={<DroneOrders />} />
+        <Route path="order" element={<AdminServerOrders />} />  
+        <Route path="dronemanager" element={<ServerManagerDrone />} />
         <Route path="drone/:id" element={<DroneTracker />} />
       </Route>
 

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAllOrders } from "../utils/orderAPI";
-import {
-  listUsers, upsertUser, setRole, setActive,
-} from "../utils/usersStore";
+import { listUsers, upsertUser, setActive} from "../utils/usersStore"; // usersStore phải có hàm upsert/setRole
 
-const ROLES = ["user", "restaurant", "admin"]; // FE-only; có thể chặn 'admin' nếu muốn
+// 💡 SỬA: Vai trò nghiệp vụ
+const ROLES = ["Customer", "Merchant", "SuperAdmin"]; 
 
+// ... (Sk function giữ nguyên)
 function Sk({ h=16, w='100%', style={} }){
   return (
     <div style={{
-      height: h, width: w, borderRadius: 8,
+      height: h, w: w, borderRadius: 8,
       background: 'linear-gradient(90deg,#eee,#f7f7f7,#eee)',
       backgroundSize: '200% 100%',
       animation: 'u-sk 1s linear infinite',
@@ -30,6 +30,8 @@ export default function AdminUsers(){
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  
+  const [tempMerchantId, setTempMerchantId] = useState({}); 
 
   const css = `
     .u-wrap{padding:16px 0}
@@ -43,8 +45,11 @@ export default function AdminUsers(){
     th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
     th{font-size:12px;text-transform:uppercase;color:#666}
     .avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#ff7a59;color:#fff;font-weight:900}
-    .role{height:30px;border:1px solid #ddd;border-radius:8px;padding:0 8px}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;border:1px solid #e8e8e8}
+    
+    /* 💡 TỐI ƯU MOBILE: Giảm padding cho select */
+    .role{height:30px;border:1px solid #ddd;border-radius:8px;padding:0 4px; font-size: 13px; max-width: 130px; }
+    
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;border:1px solid #e8e8e8; font-size: 12px;}
     .pill.ok{background:#eaf7ea;color:#2a7e2a;border-color:#cce9cc}
     .pill.off{background:#fde8e8;color:#b80d0d;border-color:#f9c7c7}
     .act{display:flex;gap:6px}
@@ -54,30 +59,46 @@ export default function AdminUsers(){
     .dark td,.dark th{border-color:#333}
     .dark .inp,.dark .sel,.dark .role{background:#111;color:#eee;border-color:#333}
     .dark .btn.ghost{background:#111;color:#eee;border-color:#333}
+    
+    /* 💡 CSS CHO CỘT VAI TRÒ/MERCHANT ID */
+    .role-cell { display: flex; flex-direction: column; gap: 5px; min-width: 140px; }
+    .role-input { height: 24px; font-size: 12px; }
+    .merchant-id-tag { font-size: 10px; color: #ff7a59; font-weight: 600; }
+
+    /* 💡 MEDIA QUERY CHO MOBILE */
+    @media (max-width: 600px) {
+        .u-wrap { padding: 10px 5px; }
+        .top { justify-content: center; }
+        .tools { justify-content: center; width: 100%; }
+        .inp, .sel { flex-grow: 1; }
+        .grid { overflow-x: auto; }
+        table { min-width: 900px; } /* Đảm bảo bảng không vỡ */
+    }
   `;
 
   // hợp nhất: users (localStorage) + emails từ orders
   async function load() {
     setLoading(true);
     try {
-      const base = listUsers(); // {email,name,phone,role,active}
+      const base = listUsers(); 
       const orders = await getAllOrders().catch(()=>[]);
+      
       const byEmail = new Map(base.map(u => [u.email, { ...u, orders: 0 }]));
-      // gộp từ orders
+      
       (orders || []).forEach(o => {
         const email = (o.userEmail || "").trim();
         if (!email) return;
         const prev = byEmail.get(email) || {
-          email, name: email.split("@")[0], phone: o.phone || "",
-          role: "user", active: true, orders: 0
+          email, name: o.customerName || email.split("@")[0], phone: o.phone || "",
+          role: "Customer", active: true, orders: 0, // 💡 MẶC ĐỊNH LÀ Customer
+          merchantId: o.merchantId || null, 
+          id: o.userId || null, 
         };
         prev.orders = (prev.orders || 0) + 1;
-        // update phone nếu trống
         if (!prev.phone && o.phone) prev.phone = o.phone;
         byEmail.set(email, prev);
       });
 
-      // lên mảng
       const arr = Array.from(byEmail.values())
         .sort((a,b)=> (b.orders||0)-(a.orders||0) || a.email.localeCompare(b.email));
       setRows(arr);
@@ -88,7 +109,7 @@ export default function AdminUsers(){
 
   useEffect(() => { load(); }, []);
 
-  // filter + pagination
+  // filter + pagination (giữ nguyên)
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
     return !t ? rows :
@@ -105,14 +126,50 @@ export default function AdminUsers(){
 
   // actions
   const onRole = (email, role) => {
-    setRole(email, role);
-    setRows(prev => prev.map(u => u.email===email ? { ...u, role } : u));
+    const u = rows.find(r => r.email === email);
+    if (!u) return;
+    
+    // 💡 NGHIỆP VỤ ADMIN SERVER: HẠN CHẾ CHỈNH SỬA VAI TRÒ SUPERADMIN
+    if (u.role === 'SuperAdmin' && role !== 'SuperAdmin') {
+        alert("Không thể hạ cấp SuperAdmin. Hãy vô hiệu hoá tài khoản nếu cần.");
+        // Giữ nguyên vai trò cũ
+        return; 
+    }
+
+    const newMerchantId = role === 'Merchant' ? (tempMerchantId[email] || u.merchantId || '') : null;
+    
+    const updatedUser = {
+        ...u,
+        role: role,
+        merchantId: newMerchantId || null,
+        id: u.id || `u_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` 
+    };
+
+    upsertUser(updatedUser); 
+    
+    setRows(prev => prev.map(r => r.email === email ? updatedUser : r));
+    
+    if (role !== 'Merchant') {
+      setTempMerchantId(prev => { delete prev[email]; return { ...prev }; });
+    }
   };
+  
   const onToggleActive = (email) => {
     const u = rows.find(r => r.email===email);
     if (!u) return;
+    
+    // 💡 NGHIỆP VỤ: Không vô hiệu hoá SuperAdmin/Admin Server
+    if (u.role === 'SuperAdmin' && !u.active) {
+        alert("Không thể vô hiệu hoá SuperAdmin/Admin Server.");
+        return;
+    }
+    
     setActive(email, !u.active);
     setRows(prev => prev.map(r => r.email===email ? { ...r, active: !u.active } : r));
+  };
+  
+  const handleTempMerchantIdChange = (email, value) => {
+      setTempMerchantId(prev => ({ ...prev, [email]: value }));
   };
 
   return (
@@ -153,7 +210,7 @@ export default function AdminUsers(){
                   <th>Người dùng</th>
                   <th>Email</th>
                   <th>SĐT</th>
-                  <th>Vai trò</th>
+                  <th>Vai trò / Merchant ID</th> 
                   <th>Trạng thái</th>
                   <th>Đơn</th>
                   <th>Hành động</th>
@@ -162,37 +219,63 @@ export default function AdminUsers(){
               <tbody>
                 {pageRows.map(u => {
                   const first = (u.name||u.email||"?").slice(0,1).toUpperCase();
+                  const isMerchant = u.role === 'Merchant';
+                  const isSuperAdmin = u.role === 'SuperAdmin'; // 💡 Lấy trạng thái SuperAdmin
+                  const currentMerchantId = tempMerchantId[u.email] || u.merchantId;
+                  const canEditRole = !isSuperAdmin; // 💡 Hạn chế SuperAdmin chỉnh SuperAdmin khác
+                  
                   return (
                     <tr key={u.email}>
                       <td style={{display:'flex',alignItems:'center',gap:8}}>
                         <div className="avatar">{first}</div>
                         <div style={{minWidth:0}}>
                           <div style={{fontWeight:800}}>{u.name || '—'}</div>
-                          <div style={{fontSize:12,opacity:.75}}>#{u.email.split("@")[0]}</div>
+                          <div style={{fontSize:12,opacity:.75}}>ID: {u.id || '—'}</div>
                         </div>
                       </td>
                       <td>{u.email}</td>
                       <td>{u.phone || '—'}</td>
-                      <td>
+                      
+                      {/* CỘT VAI TRÒ/MERCHANT ID */}
+                      <td className="role-cell">
                         <select
                           className="role"
-                          value={u.role || 'user'}
+                          value={u.role || 'Customer'}
                           onChange={e=>onRole(u.email, e.target.value)}
+                          disabled={!canEditRole} // 💡 KHÔNG CHO CHỈNH SUPERADMIN
                         >
                           {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
+                        {isMerchant && (
+                            <input
+                                className="inp role-input"
+                                placeholder="Merchant ID (vd: m001)"
+                                value={currentMerchantId || ''}
+                                onChange={e => handleTempMerchantIdChange(u.email, e.target.value)}
+                                onBlur={() => onRole(u.email, 'Merchant')} // Lưu khi focus out
+                                title="Nhập Merchant ID và nhấn Enter hoặc click ra ngoài"
+                            />
+                        )}
+                        {u.merchantId && (
+                           <span className="merchant-id-tag">Đã gán: {u.merchantId}</span>
+                        )}
                       </td>
+                      
                       <td>
                         <span className={`pill ${u.active!==false ? 'ok':'off'}`}>
-                          {u.active!==false ? 'Hoạt động' : 'Đã vô hiệu'}
+                          {u.active!==false ? 'Hoạt động' : 'Vô hiệu'}
                         </span>
                       </td>
                       <td>{u.orders || 0}</td>
                       <td className="act">
-                        <button className="btn ghost" onClick={()=>onToggleActive(u.email)}>
+                        <button 
+                            className="btn ghost" 
+                            onClick={()=>onToggleActive(u.email)}
+                            disabled={isSuperAdmin} // 💡 Không cho vô hiệu hoá Admin Server
+                        >
                           {u.active!==false ? 'Vô hiệu hoá' : 'Kích hoạt'}
                         </button>
-                        <a className="btn" href="/admin/orders" title="Xem đơn người này">Xem đơn</a>
+                        <a className="btn" href={`/admin/orders?q=${u.email}`} title="Xem đơn người này">Xem đơn</a>
                       </td>
                     </tr>
                   );

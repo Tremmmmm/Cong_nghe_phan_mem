@@ -1,39 +1,5 @@
 {
-  "orders": [
-    {
-      "id": "865b",
-      "customerName": "Chi Vo",
-      "phone": "0936455952",
-      "address": "Ho Chi Minh city",
-      "items": [
-        {
-          "id": "1",
-          "qty": 4,
-          "name": "Menu Combo 1",
-          "price": 69000
-        },
-        {
-          "id": "3",
-          "qty": 4,
-          "name": "Menu Combo 3",
-          "price": 99000
-        },
-        {
-          "id": "5",
-          "qty": 3,
-          "name": "Menu Combo 5",
-          "price": 129000
-        }
-      ],
-      "total": 1059000,
-      "createdAt": 1758035452628,
-      "status": "cancelled",
-      "cancelReason": "out_of_stock",
-      "cancelBy": "merchant",
-      "cancelNote": null,
-      "cancelledAt": "2025-11-16T15:07:41.348Z",
-      "updatedAt": "2025-11-16T15:07:41.348Z"
-    },
+  "orders": [ 
     {
       "id": "e7c6",
       "customerName": "aloo",
@@ -1102,56 +1068,7 @@
       "cancelNote": null,
       "cancelledAt": "2025-11-11T07:20:39.540Z",
       "updatedAt": "2025-11-11T07:20:39.540Z"
-    },
-    {
-      "id": "spqt",
-      "sessionId": "908e",
-      "userId": null,
-      "userEmail": "c01@gmail.com",
-      "customerName": "customer",
-      "phone": "0998989898",
-      "address": "Số 2 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
-      "addressObj": {
-        "street": "Số 2 Nguyễn Trãi",
-        "ward": "Phường Chợ Quán",
-        "city": "TP. Hồ Chí Minh"
-      },
-      "deliveryMode": "DRONE",
-      "items": [
-        {
-          "id": "2921",
-          "name": "Khoai tây nghiền chiên giòn",
-          "qty": 1,
-          "price": 29000,
-          "image": "https://cdn.tgdd.vn/2020/11/CookProduct/CheeseStuffedMashedPotatoBallsRecipe3-40screenshot-1200x676.jpg"
-        }
-      ],
-      "total": 29000,
-      "discount": 0,
-      "shippingFee": 20000,
-      "shippingDiscount": 0,
-      "finalTotal": 49000,
-      "couponCode": "",
-      "createdAt": 1763017096589,
-      "restaurantLocation": {
-        "lat": 10.776889,
-        "lng": 106.700806
-      },
-      "customerLocation": {
-        "lat": 10.778601279903084,
-        "lng": 106.68953175412491
-      },
-      "status": "completed",
-      "payment": "MOMO",
-      "payment_status": "paid",
-      "payment_txn_id": "MOCK-1763017122073",
-      "updatedAt": "2025-11-13T13:17:11.468Z",
-      "acceptedAt": "2025-11-13T13:16:54.026Z",
-      "readyAt": "2025-11-13T13:16:55.934Z",
-      "droneMissionId": "0a4b",
-      "pickedAt": "2025-11-13T13:17:04.589Z",
-      "deliveredAt": "2025-11-13T13:17:11.468Z"
-    },
+    }, 
     {
       "id": "nxvr",
       "sessionId": "908e",
@@ -1828,7 +1745,7 @@
       "merchantId": "m001",
       "customerId": "u003",
       "startTime": "2025-10-17T01:29:13.178Z",
-      "status": "flying",
+      "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 2,
@@ -1984,7 +1901,7 @@
       "merchantId": "m001",
       "customerId": "u003",
       "startTime": "2025-11-06T08:38:19.379Z",
-      "status": "waiting_pickup",
+      "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 4,
@@ -2052,7 +1969,7 @@
       "merchantId": "m001",
       "customerId": "u003",
       "startTime": "2025-11-13T14:01:57.131Z",
-      "status": "flying",
+      "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 2,
@@ -2118,7 +2035,7 @@
       "merchantId": "m001",
       "customerId": "7efa",
       "startTime": "2025-11-19T08:31:53.078Z",
-      "status": "in_progress",
+      "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 0,
@@ -2139,7 +2056,7 @@
       "orderId": "m0vb",
       "customerId": "u003",
       "startTime": "2025-11-19T09:48:09.481Z",
-      "status": "in_progress",
+      "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 2,
@@ -5269,6 +5186,14 @@
       "name": "Admin (Cửa hàng Mới #9733)",
       "role": "Merchant",
       "merchantId": "m_1763630429733"
+    },
+    {
+      "id": "u_1763639498562",
+      "username": "new.1@example.com",
+      "password": "123",
+      "name": "Admin (Cửa hàng Mới (từ Admin) #8562)",
+      "role": "Merchant",
+      "merchantId": "m_1763639498562"
     }
   ],
   "merchants": [
@@ -5357,7 +5282,14 @@
     {
       "id": "m_1763630429733",
       "owner": "new.owner@example.com",
-      "status": "Pending",
+      "status": "Active",
+      "ordersToday": 0
+    },
+    {
+      "id": "m_1763639498562",
+      "owner": "new.1@example.com",
+      "name": "Cửa hàng Mới (từ Admin) #8562",
+      "status": "Active",
       "ordersToday": 0
     }
   ],
@@ -5475,6 +5407,44 @@
         }
       },
       "id": "m_1763630429733"
+    },
+    {
+      "storeName": "Hotdog KK",
+      "address": "123 Đường Hùng Vương, Phường An Lạc, TP. Hồ Chí Minh",
+      "phone": "0907654321",
+      "logo": "https://img.freepik.com/premium-vector/hot-dogs-logo-design-food-vector_954821-140.jpg?semt=ais_incoming&w=740&q=80",
+      "isManuallyClosed": false,
+      "operatingHours": {
+        "mon": {
+          "open": 1,
+          "close": 22
+        },
+        "tue": {
+          "open": 1,
+          "close": 22
+        },
+        "wed": {
+          "open": 1,
+          "close": 22
+        },
+        "thu": {
+          "open": 1,
+          "close": 22
+        },
+        "fri": {
+          "open": 1,
+          "close": 22
+        },
+        "sun": {
+          "open": 1,
+          "close": 22
+        },
+        "sat": {
+          "open": 1,
+          "close": 22
+        }
+      },
+      "id": "m_1763639498562"
     }
   ],
   "menuItems": [
@@ -5754,6 +5724,11 @@
       "id": "ff_cart_v2:uid:u_1763630429733",
       "merchantId": null,
       "items": []
+    },
+    {
+      "id": "ff_cart_v2:uid:u_1763639498562",
+      "merchantId": null,
+      "items": []
     }
   ],
   "favorites": [
@@ -5819,6 +5794,10 @@
     },
     {
       "id": "ff_fav_v1:uid:u_1763630429733",
+      "ids": []
+    },
+    {
+      "id": "ff_fav_v1:uid:u_1763639498562",
       "ids": []
     }
   ]

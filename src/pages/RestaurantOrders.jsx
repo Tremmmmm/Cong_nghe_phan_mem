@@ -1,10 +1,9 @@
 // src/pages/RestaurantOrders.jsx
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../utils/orderAPI.js";
+import { api, myOrders, patchOrder } from "../utils/orderAPI.js";
 import { formatVND } from "../utils/format";
 import OrderEditModal from "../components/OrderEditModal";
-import CancelOrderModal from "../components/CancelOrderModal";
-import { patchOrder } from "../utils/orderAPI.js";
+import CancelOrderModal from "../components/CancelOrderModal"; 
 import { useAuth } from '../context/AuthContext.jsx';
 
 const VND = (n) => formatVND(n);
@@ -443,12 +442,29 @@ export default function RestaurantOrders() {
   }
 
   async function fetchOrders() {
-    if (!merchantId) return;
+    if (!merchantId) { 
+      setLoading(false);
+      // Merchant không có ID thì không tải gì
+      return; 
+    } 
     setLoading(true);
     try {
-      const { data } = await api.get(`/orders?merchantId=${merchantId}`, { params: { _: Date.now() } });
-      const list = (Array.isArray(data) ? data : []).slice().sort((a, b) => toTs(b.createdAt) - toTs(a.createdAt));
-      setOrders(list);
+      // 💡 GỌI myOrders, truyền merchantId để lọc ở phía server/mock
+      const res = await myOrders({
+        page: 1, limit: 10000, status: 'all',
+        merchantId: merchantId // ⬅️ Lọc theo cửa hàng đang đăng nhập
+      }); 
+
+      const data = res?.rows || res?.data || [];
+      
+      // 💡 Lọc an toàn (frontend) để loại bỏ đơn hàng không nhất quán
+      const filteredList = data.filter(o => o.merchantId === merchantId)
+                                .slice()
+                                .sort((a, b) => toTs(b.createdAt) - toTs(a.createdAt));
+      
+      setOrders(filteredList);
+    } catch (e) {
+      console.error("fetchOrders error:", e);
     } finally {
       setLoading(false);
     }
@@ -473,7 +489,7 @@ export default function RestaurantOrders() {
       const etaMin = Math.ceil((haversineKm(origin, dest) / speedKmh) * 60);
 
       const payload = {
-        orderId: String(ord.id),// 💡 Bổ sung thêm 2 trường này khi tạo mission mới
+        orderId: String(ord.id),
         merchantId: ord.merchantId, 
         customerId: ord.userId,
         startTime: new Date().toISOString(),
@@ -557,7 +573,7 @@ export default function RestaurantOrders() {
     }
   }
 
-  // === Edit/Cancel for Drawer ===
+  // === Edit/Cancel for Drawer (giữ nguyên) ===
   function onEdit(order) {
     if (!canEditOrder(order)) return;
     setEditOrder(order);
@@ -606,7 +622,7 @@ export default function RestaurantOrders() {
     return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
-  // Tự hoàn thành đơn khi DroneTracker bắn event "order:statusChanged"
+  // Tự hoàn thành đơn khi DroneTracker bắn event "order:statusChanged" (giữ nguyên)
 useEffect(() => {
   function onAutoDone(e) {
     const { id, status } = e.detail || {};
@@ -654,7 +670,7 @@ useEffect(() => {
     moveStatus(dragged, targetStatus);
   }
 
-  // ==== Helpers render 1 cột (có cắt theo trang tổng) ====
+  // ==== Helpers render 1 cột (giữ nguyên) ====
   const renderColumn = (col) => {
     const items = grouped[col] || [];
     const start = (page - 1) * PAGE_SIZE;
@@ -690,7 +706,7 @@ useEffect(() => {
     );
   };
 
-  // ==== Global Pager ====
+  // ==== Global Pager (giữ nguyên) ====
   const GlobalPager = () => (
     <div className="pager">
       <button className="pager-btn" onClick={() => setPage(1)} disabled={page <= 1}>«</button>

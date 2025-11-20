@@ -103,27 +103,33 @@ function PieChartBreakdown({ data, totalRevenue }) {
         </div>
     );
 }
-
 export default function AdminDashboard(){
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user } = useAuth();
-  const merchantId = user?.merchantId;
+  const merchantId = user?.merchantId; // Lấy ID của Merchant đang đăng nhập
 
   const load = async () => {
-    // 💡 SỬA 2: Dùng API myOrders để lọc theo merchantId ngay từ đầu
-    if (!merchantId) return setLoading(false); 
+    if (!merchantId) { 
+        if (user?.role === 'Merchant') setError('Merchant ID không xác định.');
+        return setLoading(false); 
+    } 
+    
     try {
       setLoading(true); setError('');
-      // GỌI API myOrders ĐỂ LỌC THEO MERCHANTID
+      
       const res = await myOrders({
         page: 1, limit: 10000, status: 'all', q: '',
         merchantId: merchantId 
       });
       
       const data = Array.isArray(res) ? res : (res?.rows || res?.data || []);
-      setOrders(data);
+      
+      // 💡 BƯỚC LỌC AN TOÀN BỔ SUNG: Chỉ giữ lại đơn hàng khớp Merchant ID
+      const filteredData = data.filter(o => o.merchantId === merchantId);
+      
+      setOrders(filteredData); // ⬅️ Dùng dữ liệu đã lọc an toàn
 
     } catch (e) {
       console.error(e);
@@ -133,8 +139,9 @@ export default function AdminDashboard(){
     }
   };
 
-  useEffect(()=>{ load(); }, [merchantId]);
+  useEffect(()=>{ load(); }, [merchantId]); // Theo dõi merchantId
 
+  // ... (Phần summary giữ nguyên)
   const summary = useMemo(() => {
     const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
     const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0);
@@ -204,6 +211,11 @@ export default function AdminDashboard(){
     };
   }, [orders, merchantId]);
 
+
+  if (!merchantId && !user?.isSuperAdmin) return <div className="adb-wrap">Bạn không có quyền truy cập Dashboard này.</div>
+
+  if (error) return <div className="card" style={{borderColor:'#f9c7c7', background:'#fde8e8', color:'#b80d0d', padding: 20, maxWidth: 600, margin: '20px auto'}}>❌ {error}</div>
+
   const styles = `
     .adb-wrap{padding:20px 16px; max-width: 1200px; margin: 0 auto;}
     
@@ -258,7 +270,6 @@ export default function AdminDashboard(){
   `;
 
   if (!merchantId && loading) return <div className="adb-wrap">Đang tải thông tin...</div>;
-  
   return (
     <section className="ff-container adb-wrap">
       <style>{styles}</style>
@@ -275,8 +286,6 @@ export default function AdminDashboard(){
         <div className="grid">
           {[1,2,3,4].map(i => <div key={i} className="card"><Sk h={20} w="40%" style={{marginBottom:10}} /><Sk h={32} w="70%" /></div>)}
         </div>
-      ) : error ? (
-        <div className="card" style={{borderColor:'#f9c7c7', background:'#fde8e8', color:'#b80d0d', padding: 20}}>❌ {error}</div>
       ) : (
         <>
           {/* Cards summary */}

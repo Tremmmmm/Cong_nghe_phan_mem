@@ -296,7 +296,7 @@ const handleCancelDelete = () => setMerchantToDelete(null); // Hàm helper
                     onClick={handleCreateMerchant}
                     disabled={loading}
                 >
-                    {loading ? 'Đang tạo...' : '➕ Tạo cửa hàng Merchant'}
+                    {loading ? 'Đang tạo...' : '➕ Duyệt đơn đăng ký Merchant'}
                 </button>
             </div>
 

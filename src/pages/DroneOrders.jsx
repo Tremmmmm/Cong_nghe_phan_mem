@@ -143,8 +143,8 @@ export default function DroneOrders() {
     
     /* Header */
     .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px; flex-wrap: wrap;}
-    .topbar h2 { font-size: 24px; color: #333; }
-    .btn{height:36px;border:none;border-radius:8px;background:#111;color:#fff;padding:0 16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:600; font-size: 14px; transition: opacity 0.2s;}
+    .topbar h2 { font-size: 24px; color: #333333ff; }
+    .btn{height:36px;border:none;border-radius:8px;background:#AB3A20;color:#fff;padding:0 16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-weight:600; font-size: 14px; transition: opacity 0.2s;}
     .btn:hover{opacity: 0.9;}
     .btn:disabled{background:#d1d5db;color:#6b7280; cursor: not-allowed}
 
@@ -200,14 +200,21 @@ export default function DroneOrders() {
   `;
 
   const load = async () => {
+    if (isMerchant && !merchantId) return setLoading(false);
+
     setLoading(true);
     try {
       const res = await myOrders({ 
           page: 1, limit: 10000, status: "all", q: "", sort: "createdAt", order: "desc",
-          merchantId: merchantId 
+          merchantId: isMerchant ? merchantId : null 
       });
+      
       const arr = Array.isArray(res) ? res : res?.rows || res?.data || [];
-      const drones = arr.filter((o) => {
+      
+      // 💡 BƯỚC LỌC AN TOÀN BỔ SUNG: Chỉ giữ lại đơn hàng khớp Merchant ID (nếu là Merchant)
+      const safeOrders = isMerchant ? arr.filter(o => o.merchantId === merchantId) : arr;
+      
+      const drones = safeOrders.filter((o) => { // ⬅️ Lọc trên safeOrders
         const s = String(o.status || "").toLowerCase();
         const isDelivering = s.includes("deliver");
         const isDone = ["completed", "done", "delivered"].includes(s);

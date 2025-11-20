@@ -135,7 +135,7 @@ export default function AdminLayout(){
               Quản lý cửa hàng
             </NavLink>
 
-            <NavLink to="/admin/drone" className={({isActive})=>`a-link ${isActive?'active':''}`}>
+            <NavLink to="/admin/dronemanager" className={({isActive})=>`a-link ${isActive?'active':''}`}>
               Drone (theo dõi)
             </NavLink>
 
