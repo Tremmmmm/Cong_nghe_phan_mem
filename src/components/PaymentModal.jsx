@@ -103,8 +103,8 @@ export default function PaymentModal({
 
   // Mô tả mặc định nếu chưa truyền
   const defaultDesc =
-    `Khách hàng: ${customerName || '—'}\n` +
-    `Nội dung: abc` 
+    `Khách hàng: ${customerName || '—'}\n` + 
+    `Nội dung: abc`   
 
   const descText = (description || defaultDesc).trim()
 
