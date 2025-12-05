@@ -13,8 +13,8 @@ export default defineConfig({
         description: 'Đặt món ăn nhanh chóng và tiện lợi',
         theme_color: '#ffffff',
         background_color: '#ffffff',
-        
-        // 👇 QUAN TRỌNG NHẤT: Dòng này giúp ẩn thanh địa chỉ
+         
+        //Dòng này giúp ẩn thanh địa chỉ
         display: 'standalone', 
         
         // Khóa xoay màn hình (chỉ hiện dọc giống app thường - Tuỳ chọn)
