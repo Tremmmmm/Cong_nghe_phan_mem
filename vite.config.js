@@ -12,8 +12,8 @@ export default defineConfig({
         short_name: 'FastFood',
         description: 'Đặt món ăn nhanh chóng và tiện lợi',
         theme_color: '#ffffff',
-        background_color: '#ffffff',
-         
+        background_color: '#ffffff', 
+        
         //Dòng này giúp ẩn thanh địa chỉ
         display: 'standalone', 
         
