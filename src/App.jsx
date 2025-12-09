@@ -19,6 +19,7 @@ import DroneTracker from './pages/DroneTracker.jsx';
 // --- Pages (Auth) ---
 import SignIn from './pages/SignIn.jsx'; 
 import SignUp from './pages/SignUp.jsx';
+import RegisterMerchant from './components/RegisterMerchant.jsx';
 
 // --- Pages (Customer - Cần Đăng nhập) ---
 import Profile from './pages/Profile.jsx';
@@ -116,6 +117,7 @@ export default function App() {
         {/* --- Auth --- */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/register-merchant" element={<RegisterMerchant />} />
         <Route path="/admin/login" element={<SignIn />} /> 
         <Route path="/restaurant/login" element={<SignIn />} />
 

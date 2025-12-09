@@ -175,7 +175,7 @@ export default function Home() {
       )}
       
       <div className="home-hero">
-        <h1>FoodFast</h1>
+        <h1>FastFood</h1>
         <p>Giao đồ ăn thần tốc - Món ngon tận cửa</p>
       </div>
 

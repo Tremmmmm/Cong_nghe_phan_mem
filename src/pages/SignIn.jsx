@@ -144,26 +144,46 @@ export default function SignIn() {
   };
 
   return (
-    <section className="auth-hero">
-      <div className="auth-card">
-        <h1 className="auth-title">Đăng Nhập</h1>
-        <div className="zigzag" />
-        <form className="form" onSubmit={submit}>
-          <input className="input" placeholder="Username hoặc Email" value={username} onChange={(e) => setUsername(e.target.value)} name="username" />
-          <input className="input" type="password" placeholder="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} name="password" />
-          <button className="btn" type="submit" disabled={loading}>
-            {loading ? "Đang xử lý..." : "Đăng nhập"}
-          </button>
-        </form>
+  <section className="auth-hero">
+    <div className="auth-card">
+      <h1 className="auth-title">Đăng Nhập</h1>
+      <div className="zigzag" />
+      <form className="form" onSubmit={submit}>
+        <input className="input" placeholder="Username hoặc Email" value={username} onChange={(e) => setUsername(e.target.value)} name="username" />
+        <input className="input" type="password" placeholder="Mật khẩu" value={password} onChange={(e) => setPassword(e.target.value)} name="password" />
+        <button className="btn" type="submit" disabled={loading}>
+          {loading ? "Đang xử lý..." : "Đăng nhập"}
+        </button>
+      </form>
 
-        <div className="links">
-          Chưa có tài khoản? <Link to="/signup">Đăng ký ngay</Link>
-        </div>
-        
-        <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#999" }}>
-          (Demo: <b>svadmin</b>/123, <b>resadmin</b>/123)
-        </div>
+      <div className="links">
+        Chưa có tài khoản? <Link to="/signup">Đăng ký khách hàng</Link>
       </div>
-    </section>
-  );
+
+      <div style={{ 
+          marginTop: '20px', 
+          paddingTop: '15px', 
+          borderTop: '1px dashed #eee', 
+          textAlign: 'center',
+          fontSize: '14px' 
+      }}>
+        <span style={{ color: '#666' }}>Bạn muốn mở quán trên hệ thống? </span>
+        <br/>
+        <Link to="/register-merchant" style={{ 
+            color: '#ee4d2d', 
+            fontWeight: 'bold', 
+            textDecoration: 'none',
+            display: 'inline-block',
+            marginTop: '5px'
+        }}>
+           Đăng ký Đối tác ngay &rarr;
+        </Link>
+      </div> 
+      
+      <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#999" }}>
+        (Demo: <b>customer</b>/123,<b>svadmin</b>/123, <b>resadmin</b>/123)
+      </div>
+    </div>
+  </section>
+);
 }

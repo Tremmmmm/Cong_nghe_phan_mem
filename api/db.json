@@ -3882,8 +3882,22 @@
   ],
   "carts": [
     {
-      "merchantId": null,
-      "items": [],
+      "merchantId": "m001",
+      "items": [
+        {
+          "id": "8b7a",
+          "name": "Bánh Crepe chuối",
+          "desc": "Trái cây kết hợp lớp bánh crepe tạo vị ngon mới lạ",
+          "price": 35000,
+          "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg",
+          "category": "single",
+          "status": "approved",
+          "isAvailable": true,
+          "merchantId": "m001",
+          "merchantName": "Burger King Fast Food",
+          "qty": 1
+        }
+      ],
       "id": "ff_cart_v2:ue:c001@gmail.com"
     },
     {

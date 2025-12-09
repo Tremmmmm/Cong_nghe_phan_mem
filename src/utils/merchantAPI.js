@@ -218,3 +218,97 @@ export async function deleteMerchant(merchantId) {
         throw error;
     }
 }
+
+// --------------------------------------------------------
+// LOGIC ĐĂNG KÝ MỚI (Dành cho trang RegisterMerchant.jsx)
+// --------------------------------------------------------
+export async function registerMerchant(formData) {
+    const newMerchantId = `m_${Date.now()}`;
+    const newUserId = `u_${Date.now()}`;
+    
+    // Giờ mở cửa mặc định
+    const defaultHours = {
+        mon: { open: 7, close: 22 },
+        tue: { open: 7, close: 22 },
+        wed: { open: 7, close: 22 },
+        thu: { open: 7, close: 22 },
+        fri: { open: 7, close: 22 },
+        sat: { open: 7, close: 22 },
+        sun: { open: 7, close: 22 }
+    };
+
+    // 1. Chuẩn bị data cho Merchants (Hợp đồng)
+    const merchantPayload = {
+        id: newMerchantId,
+        name: formData.storeName,
+        status: "Active", 
+        ordersToday: 0,
+        owner: formData.email, 
+        phone: formData.phone,
+        address: `${formData.address}, ${formData.city}`,
+        contract: `${new Date().toISOString().split('T')[0]} / 2030-12-31`,
+        operatingHours: defaultHours,
+        logo: "https://placehold.co/200x200?text=New+Store"
+    };
+
+    // 2. Chuẩn bị data cho RestaurantSettings (Hiển thị)
+    const settingsPayload = {
+        id: newMerchantId,
+        storeName: formData.storeName,
+        address: `${formData.address}, ${formData.city}`,
+        phone: formData.phone,
+        logo: "https://placehold.co/200x200?text=New+Store",
+        isManuallyClosed: false,
+        operatingHours: defaultHours
+    };
+
+    // 3. Chuẩn bị data cho Users (Tài khoản đăng nhập)
+    const userPayload = {
+        id: newUserId,
+        username: formData.email, // Dùng email làm username đăng nhập
+        password: formData.password, // ⚠️ Quan trọng: Lấy password thật từ form
+        name: formData.ownerName,
+        role: 'Merchant',
+        merchantId: newMerchantId,
+        email: formData.email,
+        phone: formData.phone
+    };
+
+    try {
+        // Kiểm tra email tồn tại trước (Optional)
+        const checkUser = await fetch(`${API_URL_USERS}?email=${formData.email}`);
+        const existingUsers = await checkUser.json();
+        if (existingUsers.length > 0) {
+            throw new Error('Email này đã được đăng ký!');
+        }
+
+        // Gọi 3 API cùng lúc
+        const [merchantRes, settingsRes, userRes] = await Promise.all([
+            fetch(API_URL_MERCHANTS, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(merchantPayload),
+            }),
+            fetch(API_URL_SETTINGS, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settingsPayload)
+            }),
+            fetch(API_URL_USERS, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userPayload)
+            })
+        ]);
+
+        if (!merchantRes.ok || !settingsRes.ok || !userRes.ok) {
+            throw new Error('Lỗi hệ thống: Không thể tạo đầy đủ dữ liệu quán.');
+        }
+
+        return { success: true };
+
+    } catch (error) {
+        console.error("Error registering merchant:", error);
+        throw error;
+    }
+}
