@@ -104,7 +104,7 @@ export default function PaymentModal({
   // Mô tả mặc định nếu chưa truyền
   const defaultDesc =
     `Khách hàng: ${customerName || '—'}\n` +
-    `Nội dung: abc' 
+    `Nội dung: Thanh toán đơn hàng trên FastFood\n`
 
   const descText = (description || defaultDesc).trim()
 
@@ -169,8 +169,7 @@ export default function PaymentModal({
       
       .qr-frame { padding: 12px; } /* Giảm padding QR frame */
       .qr-inner svg { width: 180px !important; height: 180px !important; } /* Thu nhỏ QR chút */
-  }
-  `
+  }`
 
   return (
     <div className="pm-backdrop" role="dialog" aria-modal="true">
