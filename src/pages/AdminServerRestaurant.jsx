@@ -16,7 +16,17 @@ export default function AdminServerRestaurant() {
     const [merchants, setMerchants] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [merchantToDelete, setMerchantToDelete] = useState(null);
-    
+    const [showApproveModal, setShowApproveModal] = useState(false);
+
+// Chỉ lấy các quán mới đăng ký (Pending hoặc chưa có status)
+const pendingMerchants = useMemo(
+  () =>
+    merchants.filter((m) => {
+      if (!m.status) return true;
+      return m.status === "Pending";
+    }),
+  [merchants]
+);
     const navigate = useNavigate();  
     const { currentUser } = useAuth();
     const toast = useToast();
@@ -174,16 +184,54 @@ export default function AdminServerRestaurant() {
 
 
     // Hành động thay đổi trạng thái (GỌI API PUT/PATCH)
-    const handleApproveMerchant = (merchantId) => {
-        updateMerchant(merchantId, { status: 'Active' }) // GỌI API PATCH
-            .then(updatedMerchant => {
-                setMerchants(prev => prev.map(m =>
-                    m.id === merchantId ? updatedMerchant : m
-                ));
-                toast.show(`✅ Đã DUYỆT Merchant ID: ${merchantId}.`, 'success');
-            })
-            .catch(() => toast.show('Lỗi duyệt Merchant.', 'error'));
+    const handleApproveMerchant = async (merchant) => {
+  try {
+    setLoading(true);
+
+    // 1. Cập nhật trạng thái hợp đồng Merchant
+    const updatedContract = await updateMerchant(merchant.id, {
+      status: "Active",
+    });
+
+    // 2. Mở cửa bên restaurantSettings
+    const resSettings = await fetch(
+      `${API_BASE_URL}/restaurantSettings/${merchant.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isManuallyClosed: false }),
+      }
+    );
+
+    let updatedSettings = {};
+    if (resSettings.ok) {
+      updatedSettings = await resSettings.json();
+    }
+
+    // 3. Merge lại vào state
+    const mergedUpdated = {
+      ...merchant,
+      ...updatedContract,
+      ...updatedSettings,
+      status: "Active",
+      isManuallyClosed: false,
     };
+
+    setMerchants((prev) =>
+      prev.map((m) => (m.id === merchant.id ? mergedUpdated : m))
+    );
+
+    toast.show(
+      `✅ Đã duyệt cửa hàng "${merchant.storeName || merchant.name}". Cửa hàng đã được phép hoạt động.`,
+      "success"
+    );
+  } catch (e) {
+    console.error(e);
+    toast.show("Lỗi duyệt Merchant. Vui lòng thử lại.", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
 
 const handleRejectMerchant = (merchantId) => {
@@ -204,23 +252,45 @@ const handleCancelDelete = () => setMerchantToDelete(null); // Hàm helper
 
 
     // 💡 SỬA LẠI: Logic "Khóa/Mở" cửa hàng (dùng isManuallyClosed)
-    const handleToggleLock = (merchantId, isCurrentlyClosed) => {
-        const newClosedState = !isCurrentlyClosed; 
-        
-        updateMerchant(merchantId, { isManuallyClosed: newClosedState })
-            .then(updatedMerchantSettings => {
-                // Cập nhật lại state với dữ liệu setting mới
-                setMerchants(prev => prev.map(m =>
-                    m.id === merchantId ? { ...m, ...updatedMerchantSettings } : m
-                ));
-                if (newClosedState) {
-                    toast.show(`❌ Đã TẠM KHÓA Merchant ID: ${merchantId}.`, 'warning');
-                } else {
-                    toast.show(`✅ Đã MỞ KHÓA Merchant ID: ${merchantId}.`, 'success');
-                }
-            })
-            .catch(() => toast.show(`Lỗi cập nhật trạng thái. Vui lòng thử lại.`, 'error'));
-    };
+    const handleToggleLock = async (merchant) => {
+  const newClosedState = !merchant.isManuallyClosed;
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/restaurantSettings/${merchant.id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isManuallyClosed: newClosedState }),
+      }
+    );
+
+    if (!res.ok) throw new Error("Không cập nhật được trạng thái cửa hàng");
+
+    const updatedSettings = await res.json();
+
+    setMerchants((prev) =>
+      prev.map((m) =>
+        m.id === merchant.id ? { ...m, ...updatedSettings } : m
+      )
+    );
+
+    if (newClosedState) {
+      toast.show(
+        `❌ Đã tạm khóa cửa hàng "${merchant.storeName || merchant.name}".`,
+        "warning"
+      );
+    } else {
+      toast.show(
+        `✅ Đã mở lại cửa hàng "${merchant.storeName || merchant.name}".`,
+        "success"
+      );
+    }
+  } catch (e) {
+    console.error(e);
+    toast.show("Lỗi cập nhật trạng thái cửa hàng.", "error");
+  }
+};
 
 
     // 💡 SỬA LẠI: Card hiển thị đúng thông tin
@@ -251,22 +321,26 @@ const handleCancelDelete = () => setMerchantToDelete(null); // Hàm helper
                 {/* 💡 STATS-COL: Chứa các nút bấm */}
                 <div className="stats-col">
                     {/* 💡 NÚT KHÓA/MỞ */}
-                    <button 
-                        className="btn ghost"
-                        onClick={() => handleToggleLock(merchant.id, merchant.isManuallyClosed)}
-                        disabled={loading}
-                        style={isLocked ? {borderColor: '#e74c3c', color: '#e74c3c'} : {borderColor: '#2ecc77', color: '#2ecc77'}}
+                    <button
+                    className="btn ghost"
+                    onClick={() => handleToggleLock(merchant)}
+                    disabled={loading}
+                    style={
+                        isLocked
+                        ? { borderColor: "#e74c3c", color: "#e74c3c" }
+                        : { borderColor: "#2ecc77", color: "#2ecc77" }
+                    }
                     >
-                        {isLocked ? 'Mở khóa' : 'Tạm khóa'}
+                    {isLocked ? "Mở khóa" : "Tạm khóa"}
                     </button>
                     
-                    <button 
+                    {/* <button 
                         className="btn ghost"
                         onClick={() => handleConfirmDelete(merchant)} 
                         disabled={loading}
                     >
                         Xóa
-                    </button>
+                    </button> */}
                     <button 
                         className="btn"
                         onClick={() => handleViewMerchant(merchant)}
@@ -293,11 +367,11 @@ const handleCancelDelete = () => setMerchantToDelete(null); // Hàm helper
                     </div>
                 <button 
                     className="btn" 
-                    onClick={handleCreateMerchant}
+                    onClick={() => setShowApproveModal(true)}
                     disabled={loading}
-                >
-                    {loading ? 'Đang tạo...' : '➕ Duyệt đơn đăng ký Merchant'}
-                </button>
+                    >
+                    Duyệt đơn cửa hàng
+                    </button>
             </div>
 
             <div className="list-grid">
@@ -337,6 +411,67 @@ const handleCancelDelete = () => setMerchantToDelete(null); // Hàm helper
                 </div>
             </div>
         )}
+        {/* POPUP Duyệt đơn cửa hàng */}
+            {showApproveModal && (
+            <div style={modalOverlayStyle}>
+                <div className="modal-content">
+                <h3 style={{ marginTop: 0 }}>Cửa hàng đăng ký mới</h3>
+
+                {pendingMerchants.length === 0 ? (
+                    <p>Hiện không có cửa hàng nào đang chờ duyệt.</p>
+                ) : (
+                    <div style={{ maxHeight: 400, overflowY: "auto" }}>
+                    {pendingMerchants.map((m) => (
+                        <div
+                        key={m.id}
+                        style={{
+                            padding: "8px 0",
+                            borderBottom: "1px solid #eee",
+                            marginBottom: 8,
+                        }}
+                        >
+                        <div>
+                            <b>{m.storeName || m.name}</b>
+                        </div>
+                        <div style={{ fontSize: 13, color: "#666" }}>
+                            Chủ quán: {m.owner || "N/A"} – SĐT: {m.phone || "N/A"}
+                        </div>
+                        <div style={{ fontSize: 13, color: "#666" }}>
+                            Địa chỉ: {m.address || "Chưa cập nhật"}
+                        </div>
+
+                        <div style={{ marginTop: 6, display: "flex", gap: 8 }}>
+                            <button
+                            className="btn"
+                            onClick={() => handleApproveMerchant(m)}
+                            disabled={loading}
+                            >
+                            Duyệt
+                            </button>
+                            <button
+                            className="btn ghost"
+                            onClick={() => handleRejectMerchant(m.id)}
+                            disabled={loading}
+                            >
+                            Từ chối
+                            </button>
+                        </div>
+                        </div>
+                    ))}
+                    </div>
+                )}
+
+                <div style={{ textAlign: "right", marginTop: 12 }}>
+                    <button
+                    className="btn ghost"
+                    onClick={() => setShowApproveModal(false)}
+                    >
+                    Đóng
+                    </button>
+                </div>
+                </div>
+            </div>
+            )}
         </>
     );
 }

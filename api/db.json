@@ -686,6 +686,56 @@
       "cancelBy": "merchant",
       "cancelNote": null,
       "cancelledAt": "2025-11-20T17:39:23.922Z"
+    },
+    {
+      "id": "lh0j",
+      "merchantId": "m001",
+      "sessionId": "908e",
+      "userId": "u003",
+      "userEmail": "C001@gmail.com",
+      "customerName": "An",
+      "phone": "0989898989",
+      "address": "Số 3 Nguyễn Trãi, Phường Chợ Quán, TP. Hồ Chí Minh",
+      "addressObj": {
+        "street": "Số 3 Nguyễn Trãi",
+        "ward": "Phường Chợ Quán",
+        "city": "TP. Hồ Chí Minh"
+      },
+      "deliveryMode": "DRONE",
+      "items": [
+        {
+          "id": "8b7a",
+          "name": "Bánh Crepe chuối",
+          "qty": 1,
+          "price": 35000,
+          "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg"
+        }
+      ],
+      "total": 35000,
+      "discount": 0,
+      "shippingFee": 20000,
+      "shippingDiscount": 0,
+      "finalTotal": 55000,
+      "couponCode": "",
+      "createdAt": 1765479645266,
+      "restaurantLocation": {
+        "lat": 10.776889,
+        "lng": 106.700806
+      },
+      "customerLocation": {
+        "lat": 10.775211231110823,
+        "lng": 106.68631617395397
+      },
+      "status": "completed",
+      "payment": "MOMO",
+      "payment_status": "paid",
+      "payment_txn_id": "MOCK-1765479671137",
+      "updatedAt": "2025-12-11T19:01:30.505Z",
+      "acceptedAt": "2025-12-11T19:01:27.899Z",
+      "readyAt": "2025-12-11T19:01:28.569Z",
+      "droneMissionId": "6ecf",
+      "pickedAt": "2025-12-11T19:01:28.987Z",
+      "deliveredAt": "2025-12-11T19:01:30.505Z"
     }
   ],
   "sessions": [
@@ -803,31 +853,54 @@
       "updatedAt": "2025-09-30T03:41:42.904Z"
     }
   ],
+  "drones": [
+    {
+      "id": "DR-001",
+      "model": "DJI Matrice 300",
+      "status": "IDLE",
+      "totalFlights": 3
+    },
+    {
+      "id": "DR-002",
+      "model": "DJI Mavic 3",
+      "status": "BUSY",
+      "totalFlights": 2,
+      "currentMissionId": "0a23"
+    },
+    {
+      "id": "DR-003",
+      "model": "DJI Matrice 300",
+      "status": "MAINTENANCE",
+      "totalFlights": 12
+    },
+    {
+      "id": "DR-004",
+      "model": "Autel Evo II",
+      "status": "IDLE",
+      "totalFlights": 5
+    },
+    {
+      "id": "DR-005",
+      "model": "DJI Mavic 3",
+      "status": "BUSY",
+      "totalFlights": 1,
+      "currentMissionId": "9e46"
+    }
+  ],
   "droneMissions": [
     {
       "id": "DM-001",
+      "droneId": "DR-001",
       "orderId": "w6hv",
       "status": "delivered",
       "startTime": "2025-10-15T12:13:20.430Z",
       "endTime": "2025-10-16T16:11:37.080Z",
       "droneMissionId": "DM-001",
-      "path": [
-        {
-          "lat": 10.776,
-          "lng": 106.7
-        },
-        {
-          "lat": 10.777,
-          "lng": 106.702
-        },
-        {
-          "lat": 10.778,
-          "lng": 106.705
-        }
-      ]
+      "path": []
     },
     {
       "id": "d321",
+      "droneId": "DR-001",
       "orderId": "yklp",
       "merchantId": "m001",
       "customerId": "u003",
@@ -836,21 +909,11 @@
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 4,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.784,
-          106.684
-        ]
-      ],
-      "currentIndex": 0,
       "endTime": "2025-10-26T16:20:04.662Z"
     },
     {
       "id": "b32a",
+      "droneId": "DR-003",
       "orderId": "7ehy",
       "merchantId": "m001",
       "customerId": "u003",
@@ -859,21 +922,11 @@
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 4,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.784,
-          106.684
-        ]
-      ],
-      "currentIndex": 0,
       "endTime": "2025-11-11T07:21:36.867Z"
     },
     {
       "id": "af57",
+      "droneId": "DR-003",
       "orderId": "we81",
       "merchantId": "m001",
       "customerId": "u003",
@@ -882,21 +935,11 @@
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 3,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.781742092979162,
-          106.685756926954
-        ]
-      ],
-      "currentIndex": 0,
       "endTime": "2025-11-11T07:21:36.104Z"
     },
     {
       "id": "451e",
+      "droneId": "DR-004",
       "orderId": "70xj",
       "merchantId": "m001",
       "customerId": "u003",
@@ -904,21 +947,11 @@
       "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
-      "eta": 2,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.777561067831371,
-          106.69280745830257
-        ]
-      ],
-      "currentIndex": 0
+      "eta": 2
     },
     {
       "id": "3e64",
+      "droneId": "DR-004",
       "orderId": "fb97",
       "merchantId": "m001",
       "customerId": "u003",
@@ -926,64 +959,11 @@
       "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
-      "eta": 0,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.776889,
-          106.700806
-        ]
-      ],
-      "currentIndex": 0
-    },
-    {
-      "id": "5093",
-      "orderId": "cfbb",
-      "merchantId": "m001",
-      "customerId": "7efa",
-      "startTime": "2025-11-19T08:31:53.078Z",
-      "status": "delivered",
-      "vehicle": "drone",
-      "speedKmh": 35,
-      "eta": 0,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.776889,
-          106.700806
-        ]
-      ],
-      "currentIndex": 0
-    },
-    {
-      "id": "113f",
-      "orderId": "m0vb",
-      "customerId": "u003",
-      "startTime": "2025-11-19T09:48:09.481Z",
-      "status": "delivered",
-      "vehicle": "drone",
-      "speedKmh": 35,
-      "eta": 2,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.779226667603755,
-          106.69490915066102
-        ]
-      ],
-      "currentIndex": 0
+      "eta": 0
     },
     {
       "id": "9e46",
+      "droneId": "DR-005",
       "orderId": "1rp4",
       "merchantId": "m002",
       "customerId": "u003",
@@ -992,47 +972,29 @@
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 3,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.782329133085359,
-          106.68980825876879
-        ]
-      ],
-      "currentIndex": 0
-    },
-    {
-      "id": "0b51",
-      "orderId": "5ckz",
-      "merchantId": "m001",
-      "customerId": "u003",
-      "startTime": "2025-11-20T17:28:52.504Z",
-      "status": "delivered",
-      "vehicle": "drone",
-      "speedKmh": 35,
-      "eta": 4,
-      "path": [
-        [
-          10.776889,
-          106.700806
-        ],
-        [
-          10.783103480887185,
-          106.68592585682308
-        ]
-      ],
-      "currentIndex": 0
+      "path": []
     },
     {
       "id": "0a23",
+      "droneId": "DR-002",
       "orderId": "wizb",
       "merchantId": "m_1763630429733",
       "customerId": "u003",
       "startTime": "2025-11-20T17:38:35.450Z",
-      "status": "in_progress",
+      "status": "delivered",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 3,
+      "path": []
+    },
+    {
+      "id": "6ecf",
+      "droneId": "DR-004",
+      "orderId": "lh0j",
+      "merchantId": "m001",
+      "customerId": "u003",
+      "startTime": "2025-12-11T19:01:28.987Z",
+      "status": "delivered",
       "vehicle": "drone",
       "speedKmh": 35,
       "eta": 3,
@@ -1042,11 +1004,44 @@
           106.700806
         ],
         [
-          10.781503121031998,
-          106.68721038755788
+          10.775211231110823,
+          106.68631617395397
         ]
       ],
       "currentIndex": 0
+    }, 
+    {
+      "id": "his_m0vb",
+      "droneId": "DR-001",
+      "orderId": "m0vb",
+      "status": "delivered",
+      "startTime": 1763545635302,
+      "endTime": "2025-11-20T05:03:59.443Z",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 0
+    }, 
+    {
+      "id": "his_cfbb",
+      "droneId": "DR-001",
+      "orderId": "cfbb",
+      "status": "delivered",
+      "startTime": 1763085963809,
+      "endTime": "2025-11-19T08:33:11.708Z",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 0
+    }, 
+    {
+      "id": "his_5ckz",
+      "droneId": "DR-001",
+      "orderId": "5ckz",
+      "status": "delivered",
+      "startTime": 1763659657864,
+      "endTime": "2025-11-20T17:29:09.225Z",
+      "vehicle": "drone",
+      "speedKmh": 35,
+      "eta": 0
     }
   ],
   "dronePositions": [
@@ -3371,6 +3366,15 @@
       "speed": 0,
       "heading": 0,
       "timestamp": 1763660315472
+    },
+    {
+      "id": "989c",
+      "missionId": "6ecf",
+      "lat": 10.776889,
+      "lng": 106.700806,
+      "speed": 0,
+      "heading": 0,
+      "timestamp": 1765479689010
     }
   ],
   "users": [
@@ -3882,22 +3886,8 @@
   ],
   "carts": [
     {
-      "merchantId": "m001",
-      "items": [
-        {
-          "id": "8b7a",
-          "name": "Bánh Crepe chuối",
-          "desc": "Trái cây kết hợp lớp bánh crepe tạo vị ngon mới lạ",
-          "price": 35000,
-          "image": "https://daylambanh.edu.vn/wp-content/uploads/2018/08/banh-crepe-chuoi-socola.jpg",
-          "category": "single",
-          "status": "approved",
-          "isAvailable": true,
-          "merchantId": "m001",
-          "merchantName": "Burger King Fast Food",
-          "qty": 1
-        }
-      ],
+      "merchantId": null,
+      "items": [],
       "id": "ff_cart_v2:ue:c001@gmail.com"
     },
     {

@@ -11,7 +11,7 @@ import Favorites from './pages/Favorites.jsx'
 import Cart from './pages/Cart.jsx'
 import SearchResults from './pages/SearchResults.jsx'
 import Confirmation from './pages/Confirmation.jsx'
-import DetailsHistory from './pages/DetailsHistory.jsx'
+import OrderHistory from './pages/OrderHistory.jsx'
 import Profile from './pages/Profile.jsx'
 import ConfirmCloseSession from './pages/ConfirmCloseSession.jsx'
 
@@ -65,7 +65,7 @@ export default function AppAdmin() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/confirmation" element={<Confirmation />} />
-        <Route path="/history" element={<DetailsHistory />} />
+        <Route path="/history" element={<OrderHistory />} />
         <Route path="/profile" element={<Profile />} />
         <Route
           path="/checkout/confirm"

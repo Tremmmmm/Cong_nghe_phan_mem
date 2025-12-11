@@ -1,4 +1,4 @@
-// src/pages/DetailsHistory.jsx
+// src/pages/OrderHistory.jsx
 import { useEffect, useMemo, useState } from 'react'
 import { myOrders } from '../utils/orderAPI.js'
 // 💡 IMPORT TỪ MENU API, BỎ menuData.js
@@ -41,7 +41,7 @@ function StatusBadge({ s }) {
   )
 }
 
-export default function DetailsHistory(){
+export default function OrderHistory(){
   const { user } = useAuth();
   const cartCtx = useCart?.() || {};
   const navigate = useNavigate();

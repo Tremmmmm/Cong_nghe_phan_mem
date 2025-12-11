@@ -83,20 +83,16 @@ export async function fetchMenuItems() {
     }
 }
 
-export async function updateMerchant(merchantId, updates) {
-    try {
-        const response = await fetch(`${API_URL_SETTINGS}/${merchantId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates), 
-        });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-    } catch (error) {
-        console.error(`Error updating merchant ${merchantId}:`, error);
-        throw error;
+export async function updateMerchant(id, payload) {
+    const res = await fetch(`${API_URL_MERCHANTS}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error("Không cập nhật được Merchant");
+    return res.json();
     }
-}
 
 // --------------------------------------------------------
 // LOGIC CREATE/DELETE (Đã sửa lỗi quan trọng ở phần tạo User)
@@ -223,40 +219,54 @@ export async function deleteMerchant(merchantId) {
 // --------------------------------------------------------
 export async function registerMerchant(form) {
   // Chuẩn hoá email
-    const email = String(form.email || "").trim().toLowerCase();
+  const email = String(form.email || "").trim().toLowerCase();
 
-    // 1. Kiểm tra email đã tồn tại user nào chưa
-    const checkRes = await fetch(`${API_URL_USERS}?email=${encodeURIComponent(email)}`);
-    const existing = await checkRes.json();
-    if (existing.length > 0) {
-        throw new Error("Email này đã được đăng ký!");
+  // 1. Kiểm tra email đã tồn tại user nào chưa
+  let existing = [];
+  try {
+    const checkRes = await fetch(
+      `${API_URL_USERS}?email=${encodeURIComponent(email)}`
+    );
+    if (checkRes.ok) {
+      const raw = await checkRes.json();
+      // Lọc lại cho chắc: so sánh lowercase
+      existing = raw.filter(
+        (u) => String(u.email || "").trim().toLowerCase() === email
+      );
     }
+  } catch (e) {
+    console.error("Không kiểm tra được email trùng, bỏ qua bước check.", e);
+  }
 
-    // 2. Tạo ID mới
-    const merchantId = `m_${Date.now()}`;
-    const userId = `u_${Date.now()}`;
+  if (existing.length > 0) {
+    // Thực sự đã có user dùng email này
+    throw new Error("Email này đã được đăng ký!");
+  }
 
-    // Form RegisterMerchant sau khi handleSubmit đã ghép sẵn:
-    // fullAddress => form.address
-    const fullAddress = form.address || "";
+  // 2. Tạo ID mới
+  const merchantId = `m_${Date.now()}`;
+  const userId = `u_${Date.now()}`;
 
-    // 3. Merchant contract (bảng /merchants) – MẶC ĐỊNH CHƯA ACTIVE
-    const merchantPayload = {
-        id: merchantId,
-        name: form.storeName,
-        owner: form.ownerName,
-        phone: form.phone,
-        address: fullAddress,
-        city: form.city,
-        ward: form.ward,
-        street: form.street,
-        status: "Pending",      // ❗ mới đăng ký -> chờ duyệt, KHÔNG Active ngay
-        ordersToday: 0,
-        contract: "",           // có thể để trống, sau Admin cập nhật
-    };
+  // 3. Ghép địa chỉ
+  const fullAddress = form.address || "";
 
-    // 4. Cài đặt cửa hàng (bảng /restaurantSettings)
-    const defaultHours = {
+  // 4. Merchant contract (bảng /merchants) – MẶC ĐỊNH CHỜ DUYỆT
+  const merchantPayload = {
+    id: merchantId,
+    name: form.storeName,
+    owner: form.ownerName,
+    phone: form.phone,
+    address: fullAddress,
+    city: form.city,
+    ward: form.ward,
+    street: form.street,
+    status: "Pending",   // ⬅️ mới đăng ký -> chờ duyệt
+    ordersToday: 0,
+    contract: "",
+  };
+
+  // 5. Cài đặt cửa hàng (bảng /restaurantSettings)
+  const defaultHours = {
     mon: { open: 7, close: 22 },
     tue: { open: 7, close: 22 },
     wed: { open: 7, close: 22 },
@@ -264,54 +274,54 @@ export async function registerMerchant(form) {
     fri: { open: 7, close: 22 },
     sat: { open: 7, close: 22 },
     sun: { open: 7, close: 22 },
-    };
+  };
 
-    const settingsPayload = {
-        id: merchantId,
-        storeName: form.storeName,
-        address: fullAddress,
-        phone: form.phone,
-        logo: "",
-        isManuallyClosed: true,   // ❗ MẶC ĐỊNH ĐANG ĐÓNG → KHÔNG lên trang bán hàng
-        operatingHours: defaultHours,
-    };
+  const settingsPayload = {
+    id: merchantId,
+    storeName: form.storeName,
+    address: fullAddress,
+    phone: form.phone,
+    logo: "",
+    isManuallyClosed: true,   // ⬅️ MẶC ĐỊNH ĐANG ĐÓNG
+    operatingHours: defaultHours,
+  };
 
-    // 5. Tài khoản Restaurant Admin (bảng /users)
-    const userPayload = {
-        id: userId,
-        username: email,          // đăng nhập bằng email
-        email,
-        password: form.password,
-        name: form.ownerName,
-        phone: form.phone,
-        role: "Merchant",         // ❗ KHÔNG phải SuperAdmin
-        merchantId: merchantId,
-    };
+  // 6. Tài khoản Restaurant Admin (bảng /users)
+  const userPayload = {
+    id: userId,
+    username: email,        // đăng nhập bằng email
+    email,
+    password: form.password,
+    name: form.ownerName,
+    phone: form.phone,
+    role: "Merchant",
+    merchantId: merchantId,
+  };
 
-    // 6. Gửi 3 request song song
-    const [resUser, resMerchant, resSettings] = await Promise.all([
-        fetch(API_URL_USERS, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userPayload),
-        }),
-        fetch(API_URL_MERCHANTS, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(merchantPayload),
-        }),
-        fetch(API_URL_SETTINGS, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settingsPayload),
-        }),
-    ]);
+  // 7. Gửi 3 request song song
+  const [resUser, resMerchant, resSettings] = await Promise.all([
+    fetch(API_URL_USERS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userPayload),
+    }),
+    fetch(API_URL_MERCHANTS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(merchantPayload),
+    }),
+    fetch(API_URL_SETTINGS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settingsPayload),
+    }),
+  ]);
 
-    if (!resUser.ok || !resMerchant.ok || !resSettings.ok) {
-        console.error("registerMerchant error", { resUser, resMerchant, resSettings });
-        throw new Error("Không thể đăng ký cửa hàng. Vui lòng thử lại.");
-    }
+  if (!resUser.ok || !resMerchant.ok || !resSettings.ok) {
+    console.error("registerMerchant error", { resUser, resMerchant, resSettings });
+    throw new Error("Không thể đăng ký cửa hàng. Vui lòng thử lại.");
+  }
 
-    const createdMerchant = await resMerchant.json();
-    return createdMerchant;
-    }
+  const createdMerchant = await resMerchant.json();
+  return createdMerchant;
+}
