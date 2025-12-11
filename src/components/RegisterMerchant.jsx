@@ -147,7 +147,7 @@
 
         // --- 2. LOGIC GHÉP ĐỊA CHỈ ---
         // Format: "Số 3 Trương Định, Phường Chợ Quán, Quận 3, TP. Hồ Chí Minh"
-        const fullAddress = `${formData.street}, ${formData.ward}, ${formData.district}, ${formData.city}`;
+        const fullAddress = `${formData.street}, ${formData.ward}, ${formData.city}`;
 
         // Tạo object dữ liệu chuẩn để gửi đi
         const dataToSubmit = {
@@ -251,14 +251,6 @@
                 </div>
 
                 <div className="form-group">
-                <label className="form-label">Quận / Huyện</label>
-                <input 
-                    required name="district" className="form-input" 
-                    placeholder="Ví dụ: Quận 5" onChange={handleChange} 
-                />
-                </div>
-
-                <div className="form-group full-width">
                 <label className="form-label">Thành phố</label>
                 <select name="city" className="form-select" onChange={handleChange}>
                     <option value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</option>

@@ -2,12 +2,56 @@ import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { formatVND } from "../utils/format";
-
+import { fetchSettings } from "../utils/settingsAPI";
 const STYLE_ID = "cart-inline-style-orange";
 
 export default function Cart() {
   const { items, add, dec, remove, clear, total, merchantId } = useCart();
   const navigate = useNavigate();
+  const handleCheckout = async () => {
+        if (!items.length) return;
+
+        // Nếu giỏ chưa gắn merchant (trường hợp đặc biệt) thì cho đi luôn
+        if (!merchantId) {
+          navigate("/checkout");
+          return;
+        }
+
+    try {
+      const settings = await fetchSettings(merchantId);
+
+      // Nếu chưa có cấu hình -> coi như chưa mở bán công khai => chặn
+      if (!settings) {
+        alert("Cửa hàng chưa được cấu hình, vui lòng chọn cửa hàng khác.");
+        return;
+      }
+
+      // 1. Kiểm tra cờ đóng/mở thủ công
+      if (settings.isManuallyClosed) {
+        alert("Cửa hàng hiện đang đóng cửa. Vui lòng chọn cửa hàng khác hoặc quay lại sau.");
+        return;
+      }
+
+      // 2. Kiểm tra giờ mở cửa trong ngày
+      const now = new Date();
+      const dayKey = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][now.getDay()];
+      const hours = settings.operatingHours?.[dayKey];
+
+      if (hours) {
+        const currentHour = now.getHours() + now.getMinutes() / 60;
+        if (currentHour < hours.open || currentHour >= hours.close) {
+          alert("Cửa hàng hiện chưa hoạt động. Vui lòng quay lại sau.");
+          return;
+        }
+      }
+
+      // Tất cả OK -> cho qua trang thanh toán
+      navigate("/checkout");
+    } catch (error) {
+      console.error("Error checking store status:", error);
+      alert("Không kiểm tra được trạng thái cửa hàng. Vui lòng thử lại sau.");
+    }
+  };
 
   // --- Styles (ĐÃ SỬA: Thêm tiền tố cart-) ---
   const styles = useMemo(() => `
@@ -118,7 +162,7 @@ export default function Cart() {
       s.id = STYLE_ID;
       s.textContent = styles;
       document.head.appendChild(s);
-    }
+    } 
 
     return () => {
         const cleanupTag = document.getElementById(STYLE_ID);
@@ -172,9 +216,14 @@ export default function Cart() {
               </div>
               <div className="cart-row-end">
                 <button className="cart-btn cart-btn-clear" onClick={clear}>Xoá hết</button>
-                <button className="cart-btn cart-btn-checkout" onClick={() => navigate("/checkout")} disabled={items.length === 0}>
-                  Thanh toán
+                <button
+                            className="cart-btn cart-btn-checkout"
+                            onClick={handleCheckout}
+                            disabled={items.length === 0}
+                          >
+                            Đặt hàng
                 </button>
+
               </div>
           </div>
         </>

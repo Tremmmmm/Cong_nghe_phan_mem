@@ -41,13 +41,20 @@ export function AuthProvider({ children }) {
       let response = await fetch(`${API_URL}?username=${email}&password=${password}`);
       let users = await response.json();
 
+      // Fallback: Nếu tìm bằng username không thấy thì tìm bằng email
       if (users.length === 0) {
          response = await fetch(`${API_URL}?email=${email}&password=${password}`);
          users = await response.json();
       }
 
       if (users.length > 0) {
-        const userDat = users[0];
+        const userDat = users[0]; 
+        // Nếu active === false thì chặn luôn, báo lỗi
+        if (userDat.active === false) {
+            throw new Error('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.');
+        }
+        // -------------------------------------------------------------
+
         const finalUser = {
             ...userDat,
             isAdmin: userDat.role === 'SuperAdmin' || userDat.role === 'Merchant',
@@ -57,7 +64,7 @@ export function AuthProvider({ children }) {
 
         setUser(finalUser);
         
-        // 💡 LƯU SESSION KÈM THỜI GIAN HẾT HẠN
+        // Lưu session
         const sessionData = {
             user: finalUser,
             expiry: new Date().getTime() + SESSION_DURATION
@@ -81,7 +88,11 @@ export function AuthProvider({ children }) {
           const existing = await checkRes.json();
           if (existing.length > 0) throw new Error('Tên đăng nhập/Email đã tồn tại');
 
-          const newUser = { ...userData, username: userData.email, role: 'Customer' };
+          const newUser = { 
+              username: userData.email,  
+              ...userData,              
+              role: 'customer' 
+          };
           const response = await fetch(API_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

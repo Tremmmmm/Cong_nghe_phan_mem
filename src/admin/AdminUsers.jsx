@@ -1,131 +1,112 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom"; // Dùng Link thay vì thẻ a để không load lại trang
 import { getAllOrders } from "../utils/orderAPI";
-import { listUsers, upsertUser, setActive} from "../utils/usersStore"; // usersStore phải có hàm upsert/setRole
 
-// 💡 SỬA: Vai trò nghiệp vụ
-const ROLES = ["Customer", "Merchant", "SuperAdmin"]; 
+const API_URL = "http://localhost:5181/users";
 
-// ... (Sk function giữ nguyên)
-function Sk({ h=16, w='100%', style={} }){
-  return (
-    <div style={{
-      height: h, w: w, borderRadius: 8,
-      background: 'linear-gradient(90deg,#eee,#f7f7f7,#eee)',
-      backgroundSize: '200% 100%',
-      animation: 'u-sk 1s linear infinite',
-      ...style
-    }}/>
-  );
-}
-if (typeof document !== 'undefined' && !document.getElementById('u-sk-style')) {
-  const s = document.createElement('style');
-  s.id = 'u-sk-style';
-  s.innerHTML = `@keyframes u-sk{0%{background-position:200% 0}100%{background-position:-200% 0}}`;
-  document.head.appendChild(s);
-}
+// --- CSS NẰM TRONG FILE NHƯNG ĐƯỢC XỬ LÝ ĐỂ KHÔNG BỊ LỖI GIAO DIỆN ---
+const STYLES = `
+  .u-wrap { max-width: 1200px; margin: 0 auto; padding: 16px 10px; font-family: 'Segoe UI', sans-serif; }
+  .top { display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; }
+  .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .inp { height: 38px; border: 1px solid #ddd; border-radius: 8px; padding: 0 12px; outline: none; transition: 0.2s; }
+  .inp:focus { border-color: #ff7a59; box-shadow: 0 0 0 3px rgba(255,122,89,0.1); }
+  .sel { height: 38px; border: 1px solid #ddd; border-radius: 8px; padding: 0 8px; outline: none; }
+  .btn { height: 38px; border: none; border-radius: 8px; background: #ff7a59; color: #fff; padding: 0 16px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .btn:hover { background: #e06040; }
+  .btn:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
+  
+  /* GRID & TABLE */
+  .grid { overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  th { background: #f9f9f9; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; color: #888; padding: 16px; text-align: left; font-weight: 700; border-bottom: 1px solid #eee; }
+  td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; color: #444; font-size: 14px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
 
-export default function AdminUsers(){
+  /* COMPONENTS */
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #ff9f43, #ff6b6b); color: #fff; font-weight: 700; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  
+  .role-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
+  .role-badge.superadmin { background: #ffe2e6; color: #ff3e4e; border-color: #ffccd2; }
+  .role-badge.merchant { background: #fff4e6; color: #fd7e14; border-color: #ffe0b2; }
+  .role-badge.customer { background: #e6f7ff; color: #0099ff; border-color: #bce6ff; }
+
+  .status-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+  .status-pill.ok { background: #e3fcef; color: #00a854; }
+  .status-pill.off { background: #ffe8e6; color: #f03e3e; }
+  
+  /* ACTIONS */
+  .act { display: flex; gap: 8px; }
+  .btn.ghost { background: #fff; color: #555; border: 1px solid #ddd; }
+  .btn.ghost:hover { border-color: #999; color: #333; background: #f5f5f5; }
+  .btn.sm { height: 32px; font-size: 12px; padding: 0 12px; }
+
+  /* SKELETON */
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .sk { height: 20px; background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+
+  /* MOBILE */
+  .mobile-list { display: none; gap: 16px; margin-top: 20px; }
+  .m-card { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .m-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+  .m-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 12px; }
+  .m-label { color: #888; font-size: 11px; margin-bottom: 2px; }
+  
+  @media (max-width: 900px) {
+    .grid table { display: none; }
+    .mobile-list { display: flex; flex-direction: column; }
+    .tools { width: 100%; }
+    .inp { flex: 1; }
+  }
+`;
+
+function Sk({ w = '100%' }) { return <div className="sk" style={{ width: w }} />; }
+
+export default function AdminUsers() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  
-  const [tempMerchantId, setTempMerchantId] = useState({}); 
 
-  const css = `
-    .u-wrap{max-width:1200px; margin:0 auto; padding:16px 10px}
-    .top{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
-    .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .inp{height:34px;border:1px solid #ddd;border-radius:8px;padding:0 10px}
-    .sel{height:34px;border:1px solid #ddd;border-radius:8px;padding:0 8px}
-    .btn{height:34px;border:none;border-radius:8px;background:#ff7a59;color:#fff;padding:0 12px;cursor:pointer}
-    .grid{overflow:auto}
-    
-    /* --- TABLE STYLE (Desktop) --- */
-    table{width:100%;border-collapse:separate;border-spacing:0; min-width: 900px;} 
-    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;white-space:nowrap}
-    th{font-size:12px;text-transform:uppercase;color:#666}
-    .avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#ff7a59;color:#fff;font-weight:900}
-    
-    /* Display/Input Styles */
-    .role-display{
-        display: inline-block; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 13px; background: #f0f0f0; border: 1px solid #ddd;
-    }
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;border:1px solid #e8e8e8; font-size: 12px;}
-    .pill.ok{background:#eaf7ea;color:#2a7e2a;border-color:#cce9cc}
-    .pill.off{background:#fde8e8;color:#b80d0d;border-color:#f9c7c7}
-    .act{display:flex;gap:6px}
-    .btn.ghost{background:#fff;color:#333;border:1px solid #ddd}
-    .pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
-    .pager button{height:32px;border:none;border-radius:8px;padding:0 10px;background:#f0f0f0;cursor:pointer}
-    
-    /* 💡 Merchant ID Input */
-    .role-cell { display: flex; flex-direction: column; gap: 5px; min-width: 140px; }
-    .role-input { height: 24px; font-size: 12px; padding: 0 5px;}
-    .merchant-id-tag { font-size: 10px; color: #ff7a59; font-weight: 600; }
+  // --- 1. KHẮC PHỤC FOUC: Chèn CSS vào head trước khi render ---
+  useLayoutEffect(() => {
+    const styleTag = document.createElement("style");
+    styleTag.innerHTML = STYLES;
+    document.head.appendChild(styleTag);
+    return () => document.head.removeChild(styleTag);
+  }, []);
 
-
-    /* --- MOBILE CARD VIEW --- */
-    .mobile-list { display: none; margin-top: 16px; gap: 12px; }
-    .mobile-card { 
-        background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 12px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    .m-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px; }
-    .m-name-role { display: flex; align-items: center; gap: 8px; font-weight: 800; }
-    .m-body { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
-    .m-field { font-weight: 600; }
-    .m-label { color: #888; font-size: 11px; margin-bottom: 2px; }
-    .m-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
-    .m-actions .btn { height: 30px; font-size: 12px; }
-
-
-    /* 💡 MEDIA QUERY: SWITCH TO CARD VIEW */
-    @media (max-width: 900px) {
-        .grid table { display: none; } /* Ẩn bảng */
-        .mobile-list { display: flex; flex-direction: column; } /* Hiện thẻ */
-        .u-wrap { padding: 10px 5px; }
-        .top { justify-content: space-between; }
-        .tools { justify-content: flex-start; }
-        .inp, .sel { min-width: 120px; } /* Đảm bảo input tìm kiếm rộng hơn */
-    }
-  `;
-
-  // hợp nhất: users (localStorage) + emails từ orders
- async function load() {
+  async function load() {
     setLoading(true);
     try {
-      const base = listUsers(); 
-      const orders = await getAllOrders().catch(()=>[]);
-      
-      const byEmail = new Map(base.map(u => [u.email, { ...u, orders: 0 }]));
-      (orders || []).forEach(o => {
+      const [usersRes, ordersRes] = await Promise.all([
+        fetch(API_URL),
+        getAllOrders().catch(() => [])
+      ]);
+      const usersData = await usersRes.json();
+      const ordersData = ordersRes || [];
+
+      // Đếm đơn
+      const counts = {};
+      ordersData.forEach(o => {
         const email = (o.userEmail || "").trim();
-        if (!email) return;
-        const prev = byEmail.get(email) || {
-          email, name: o.customerName || email.split("@")[0], phone: o.phone || "",
-          role: "Customer", active: true, orders: 0,
-          merchantId: o.merchantId || null, 
-          id: o.userId || null, 
-        };
-        prev.orders = (prev.orders || 0) + 1;
-        if (!prev.phone && o.phone) prev.phone = o.phone;
-        byEmail.set(email, prev);
+        if (email) counts[email] = (counts[email] || 0) + 1;
       });
 
-      const arr = Array.from(byEmail.values())
-        .map(u => {
-             // LOGIC CỐ ĐỊNH VAI TRÒ DỰA TRÊN MERCHANT ID:
-              if (u.merchantId && u.role !== 'SuperAdmin' && u.role !== 'Merchant') {
-                  u.role = 'Merchant';
-              }
-              if (!u.role) u.role = 'Customer';
-              return u;
-        })
-        .sort((a,b)=> (b.orders||0)-(a.orders||0) || a.email.localeCompare(b.email));
-      
-      setRows(arr);
+      // Merge data
+      const final = usersData.map(u => ({
+        ...u,
+        orders: counts[u.email] || 0,
+        active: u.active !== undefined ? u.active : true
+      }));
+
+      // Sort: Mới nhất lên đầu
+      final.sort((a, b) => (b.id > a.id ? 1 : -1));
+      setRows(final);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -133,263 +114,190 @@ export default function AdminUsers(){
 
   useEffect(() => { load(); }, []);
 
-  // filter + pagination (giữ nguyên)
+  // Filter & Pagination
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return !t ? rows :
-      rows.filter(u =>
-        (u.email||"").toLowerCase().includes(t) ||
-        (u.name||"").toLowerCase().includes(t) ||
-        (u.phone||"").toLowerCase().includes(t)
-      );
+    return !t ? rows : rows.filter(u =>
+      (u.email || "").toLowerCase().includes(t) ||
+      (u.name || "").toLowerCase().includes(t) ||
+      (u.username || "").toLowerCase().includes(t) ||
+      (u.phone || "").toLowerCase().includes(t)
+    );
   }, [rows, q]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / limit));
   const safePage = Math.min(page, pageCount);
-  const pageRows = filtered.slice((safePage-1)*limit, (safePage-1)*limit + limit);
+  const pageRows = filtered.slice((safePage - 1) * limit, safePage * limit);
 
-  // actions
-  const onRole = (email, role) => {
-    const u = rows.find(r => r.email === email);
-    if (!u) return;
-    
-    if (u.role === 'SuperAdmin' && role !== 'SuperAdmin') {
-        alert("Không thể hạ cấp SuperAdmin. Hãy vô hiệu hoá tài khoản nếu cần.");
-        return; 
-    }
-    let finalMerchantId = null;
-    if (role === 'Merchant') {
-        finalMerchantId = tempMerchantId[u.email] || u.merchantId || null;
-    }
-    
-    const updatedUser = {
-        ...u,
-        role: role,
-        merchantId: finalMerchantId, 
-        id: u.id || `u_${Date.now()}_${Math.random().toString(36).slice(2, 6)}` 
-    };
+  // Toggle Active
+  const onToggleActive = async (user) => {
+    // Logic chặn sẽ được xử lý ở UI (disabled), đây là chặn logic ngầm
+    if (user.role === 'SuperAdmin' || user.role === 'Merchant') return;
 
-    upsertUser(updatedUser); 
-    
-    setRows(prev => prev.map(r => r.email === email ? updatedUser : r));
-    
-    if (role !== 'Merchant') {
-      setTempMerchantId(prev => { delete prev[email]; return { ...prev }; });
-    } else {
-        if (finalMerchantId) {
-            setTempMerchantId(prev => ({ ...prev, [email]: finalMerchantId }));
-        }
+    const newStatus = !user.active;
+    setRows(prev => prev.map(r => r.id === user.id ? { ...r, active: newStatus } : r));
+    try {
+      await fetch(`${API_URL}/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: newStatus })
+      });
+    } catch (e) {
+      load(); // Revert
     }
   };
 
-  
-  const onToggleActive = (email) => {
-    const u = rows.find(r => r.email===email);
-    if (!u) return;
+  // --- UI RENDER ROW (Dùng chung cho Desktop & Mobile để đỡ lặp code logic) ---
+  const renderActionButtons = (u) => {
+    const isSuperAdmin = u.role === 'SuperAdmin';
+    const isMerchant = u.role === 'Merchant';
     
-    // 💡 NGHIỆP VỤ: Không vô hiệu hoá SuperAdmin/Admin Server
-    if (u.role === 'SuperAdmin' && !u.active) {
-        alert("Không thể vô hiệu hoá SuperAdmin/Admin Server.");
-        return;
+    // Nút 1: Khóa / Mở (Disable nếu là Merchant hoặc SuperAdmin)
+    const canToggle = !isSuperAdmin && !isMerchant;
+    
+    // Nút 2: Xem đơn / Xem cửa hàng / Ẩn
+    let secondBtn = null;
+    if (isMerchant) {
+        // Nếu là Merchant -> Xem cửa hàng
+        secondBtn = (
+            <Link className="btn sm" to={`/admin/merchants/${u.merchantId}`} title="Xem thông tin quán">
+                Cửa hàng
+            </Link>
+        );
+    } else if (!isSuperAdmin) {
+        // Nếu là Customer -> Xem đơn
+        secondBtn = (
+            <Link className="btn sm ghost" to={`/admin/orders?q=${u.email}`} title="Lịch sử mua hàng">
+                Xem Đơn
+            </Link>
+        );
     }
-    
-    setActive(email, !u.active);
-    setRows(prev => prev.map(r => r.email===email ? { ...r, active: !u.active } : r));
-  };
-  
-  const handleTempMerchantIdChange = (email, value) => {
-      setTempMerchantId(prev => ({ ...prev, [email]: value }));
+    // Nếu là SuperAdmin -> Không hiện nút thứ 2 (secondBtn = null)
+
+    return (
+      <div className="act">
+        <button
+          className="btn sm ghost"
+          onClick={() => onToggleActive(u)}
+          disabled={!canToggle}
+          style={{ opacity: canToggle ? 1 : 0.5, cursor: canToggle ? 'pointer' : 'not-allowed' }}
+        >
+          {u.active ? 'Khóa' : 'Mở'}
+        </button>
+        {secondBtn}
+      </div>
+    );
   };
 
   return (
     <section className="u-wrap">
-      <style>{css}</style>
-
+      {/* Header Tools */}
       <div className="top">
-        <h2 style={{margin:0}}>Người dùng</h2>
+        <h2 style={{ margin: 0, color: '#333' }}>Quản lý Người dùng</h2>
         <div className="tools">
-          <input className="inp" placeholder="Tìm theo email / tên / SĐT…" value={q} onChange={e=>{setQ(e.target.value); setPage(1);}} />
-          <select className="sel" value={limit} onChange={e=>{setLimit(Number(e.target.value)); setPage(1);}}>
-            {[10,20,50].map(n=><option key={n} value={n}>{n}/trang</option>)}
-          </select>
+          <input className="inp" placeholder="Tìm kiếm..." value={q} onChange={e => { setQ(e.target.value); setPage(1); }} />
           <button className="btn" onClick={load}>Làm mới</button>
         </div>
       </div>
 
       {loading ? (
-        <div className="grid">
-          <table><tbody>
-            {Array.from({length:8}).map((_,i)=>(
-              <tr key={i}>
-                <td><Sk w="160px"/></td>
-                <td><Sk w="220px"/></td>
-                <td><Sk w="120px"/></td>
-                <td><Sk w="90px"/></td>
-                <td><Sk w="120px"/></td>
-              </tr>
-            ))}
-          </tbody></table>
+        <div className="grid" style={{ padding: 20 }}>
+          <Sk w="100%" /> <br /><Sk w="80%" /> <br /><Sk w="90%" />
         </div>
       ) : (
-        <> 
-          {/* --- DESKTOP TABLE (grid) --- */}
+        <>
+          {/* --- DESKTOP TABLE --- */}
           <div className="grid">
             <table>
               <thead>
                 <tr>
                   <th>Người dùng</th>
-                  <th>Email</th>
-                  <th>SĐT</th>
-                  {/* <th>Vai trò / Merchant ID</th>  */}
+                  <th>Liên hệ</th>
+                  <th>Vai trò</th>
                   <th>Trạng thái</th>
-                  <th>Đơn</th>
-                  <th>Hành động</th>
+                  <th>Thống kê</th>
+                  <th style={{ textAlign: 'right' }}>Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 {pageRows.map(u => {
-                  const first = (u.name||u.email||"?").slice(0,1).toUpperCase();
-                  const isMerchant = u.role === 'Merchant';
-                  const isSuperAdmin = u.role === 'SuperAdmin';
-                  const currentMerchantId = tempMerchantId[u.email] || u.merchantId;
-                  
+                  const roleClass = (u.role || 'customer').toLowerCase();
                   return (
-                    <tr key={u.email}>
-                      <td style={{display:'flex',alignItems:'center',gap:8}}>
-                        <div className="avatar">{first}</div>
-                        <div style={{minWidth:0}}>
-                          <div style={{fontWeight:800}}>{u.name || '—'}</div>
-                          <div style={{fontSize:12,opacity:.75}}>ID: {u.id || '—'}</div>
+                    <tr key={u.id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div className="avatar">{(u.name?.[0] || u.username?.[0] || '?').toUpperCase()}</div>
+                          <div>
+                            <div style={{ fontWeight: 700, color: '#333' }}>{u.name || u.username}</div>
+                            <div style={{ fontSize: 11, color: '#999' }}>ID: {u.id}</div>
+                          </div>
                         </div>
                       </td>
-                      <td>{u.email}</td>
-                      <td>{u.phone || '—'}</td>
-                      
-                      {/* CỘT VAI TRÒ/MERCHANT ID */}
-                      {/* <td className="role-cell">
-                        <span className="role-display">{u.role || 'Customer'}</span>
-                        
-                        {isMerchant && (
-                            <input
-                                className="inp role-input"
-                                placeholder="Merchant ID (vd: m001)"
-                                value={currentMerchantId || ''}
-                                onChange={e => handleTempMerchantIdChange(u.email, e.target.value)}
-                                onBlur={() => onRole(u.email, 'Merchant')} 
-                                title="Nhập Merchant ID và nhấn Enter hoặc click ra ngoài"
-                            />
-                        )}
-                        {u.merchantId && !isMerchant && (
-                            <span className="merchant-id-tag">Đã gán: {u.merchantId}</span>
-                        )}
-                      </td> */}
-                      
                       <td>
-                        <span className={`pill ${u.active!==false ? 'ok':'off'}`}>
-                          {u.active!==false ? 'Hoạt động' : 'Vô hiệu'}
+                        <div style={{ fontWeight: 500 }}>{u.email}</div>
+                        <div style={{ fontSize: 12, color: '#777' }}>{u.phone || '---'}</div>
+                      </td>
+                      <td>
+                        <span className={`role-badge ${roleClass}`}>
+                          {u.role} {u.role === 'Merchant' && u.merchantId ? `(#${u.merchantId})` : ''}
                         </span>
                       </td>
-                      <td>{u.orders || 0}</td>
-                      <td className="act">
-                        <button 
-                            className="btn ghost" 
-                            onClick={()=>onToggleActive(u.email)}
-                            disabled={isSuperAdmin}
-                        >
-                          {u.active!==false ? 'Vô hiệu hoá' : 'Kích hoạt'}
-                        </button>
-                        <a className="btn" href={`/admin/orders?q=${u.email}`} title="Xem đơn người này">Xem đơn</a>
+                      <td>
+                        <span className={`status-pill ${u.active ? 'ok' : 'off'}`}>
+                          {u.active ? 'Hoạt động' : 'Đã khóa'}
+                        </span>
+                      </td>
+                      <td>
+                         {/* Merchant/Admin không mua hàng nên không hiện số đơn để tránh nhầm lẫn */}
+                         {u.role === 'customer' ? `${u.orders} đơn` : '---'}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ justifyContent: 'flex-end', display: 'flex' }}>
+                            {renderActionButtons(u)}
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
-                {!pageRows.length && (
-                  <tr><td colSpan={7} style={{padding:20,opacity:.75}}>Không có người dùng phù hợp.</td></tr>
-                )}
               </tbody>
             </table>
           </div>
 
-          {/* --- MOBILE CARD LIST --- */}
+          {/* --- MOBILE LIST --- */}
           <div className="mobile-list">
-              {pageRows.map(u => {
-                  const first = (u.name||u.email||"?").slice(0,1).toUpperCase();
-                  const isMerchant = u.role === 'Merchant';
-                  const isSuperAdmin = u.role === 'SuperAdmin';
-                  const currentMerchantId = tempMerchantId[u.email] || u.merchantId;
-                  
-                  return (
-                      <div key={u.email} className="mobile-card">
-                          <div className="m-header">
-                              <div className="m-name-role">
-                                  <div className="avatar" style={{width:32, height:32}}>{first}</div>
-                                  <div>
-                                      <div style={{lineHeight:1.1}}>{u.name || '—'}</div>
-                                      <div className="merchant-id-tag" style={{marginTop:2}}>
-                                          {u.role} {u.merchantId ? `(${u.merchantId})` : ''}
-                                      </div>
-                                  </div>
-                              </div>
-                              <span className={`pill ${u.active!==false ? 'ok':'off'}`}>
-                                  {u.active!==false ? 'Hoạt động' : 'Vô hiệu'}
-                              </span>
-                          </div>
-
-                          <div className="m-body">
-                              <div>
-                                  <div className="m-label">Email</div>
-                                  <div className="m-field">{u.email}</div>
-                              </div>
-                              <div>
-                                  <div className="m-label">SĐT</div>
-                                  <div className="m-field">{u.phone || '—'}</div>
-                              </div>
-                              <div>
-                                  <div className="m-label">ID Người dùng</div>
-                                  <div className="m-field">{u.id || '—'}</div>
-                              </div>
-                              <div>
-                                  <div className="m-label">Đơn hàng đã đặt</div>
-                                  <div className="m-field">{u.orders || 0}</div>
-                              </div>
-                          </div>
-                          
-                          {/* Input Merchant ID trên Mobile */}
-                          {/* {isMerchant && (
-                              <div style={{marginTop:12}}>
-                                  <div className="m-label">Chỉnh sửa Merchant ID</div>
-                                  <input
-                                      className="inp role-input"
-                                      placeholder="Merchant ID (vd: m001)"
-                                      value={currentMerchantId || ''}
-                                      onChange={e => handleTempMerchantIdChange(u.email, e.target.value)}
-                                      onBlur={() => onRole(u.email, 'Merchant')} 
-                                      style={{width:'100%', height:34, padding: '0 8px'}}
-                                  />
-                              </div>
-                          )} */}
-
-                          <div className="m-actions">
-                              <button 
-                                  className="btn ghost" 
-                                  onClick={()=>onToggleActive(u.email)}
-                                  disabled={isSuperAdmin}
-                              >
-                                  {u.active!==false ? 'Vô hiệu hoá' : 'Kích hoạt'}
-                              </button>
-                              <a className="btn" href={`/admin/orders?q=${u.email}`} title="Xem đơn người này">
-                                  Xem đơn
-                              </a>
-                          </div>
-                      </div>
-                  );
-              })}
+            {pageRows.map(u => (
+              <div key={u.id} className="m-card">
+                <div className="m-head">
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <div className="avatar">{(u.name?.[0] || '?').toUpperCase()}</div>
+                    <div>
+                        <div style={{ fontWeight: 700 }}>{u.name}</div>
+                        <span className={`role-badge ${(u.role||'').toLowerCase()}`} style={{fontSize:10, padding:'2px 6px'}}>
+                            {u.role}
+                        </span>
+                    </div>
+                  </div>
+                  <span className={`status-pill ${u.active ? 'ok' : 'off'}`}>{u.active ? 'Active' : 'Locked'}</span>
+                </div>
+                <div className="m-row">
+                  <div><div className="m-label">Email</div><div>{u.email}</div></div>
+                  <div><div className="m-label">Phone</div><div>{u.phone || '-'}</div></div>
+                  {u.role === 'customer' && (
+                      <div><div className="m-label">Đơn hàng</div><div>{u.orders}</div></div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  {renderActionButtons(u)}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="pager">
-            <button disabled={safePage<=1} onClick={()=>setPage(p=>Math.max(1,p-1))}>‹ Trước</button>
-            <span>Trang {safePage} / {pageCount}</span>
-            <button disabled={safePage>=pageCount} onClick={()=>setPage(p=>Math.min(pageCount,p+1))}>Sau ›</button>
+          {/* Pager */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+            <button className="btn ghost sm" disabled={safePage <= 1} onClick={() => setPage(p => p - 1)}>Trước</button>
+            <span style={{ lineHeight: '32px', fontSize: 13, fontWeight: 600 }}>Trang {safePage}/{pageCount}</span>
+            <button className="btn ghost sm" disabled={safePage >= pageCount} onClick={() => setPage(p => p + 1)}>Sau</button>
           </div>
         </>
       )}
