@@ -116,57 +116,61 @@ const StackedStatusBar = ({ byStatus, total }) => {
     );
 };
 
-// Component Biểu đồ Tròn cho GMV Merchant
-const MerchantGMVDoughnut = ({ topMerchants, timeRange }) => {
+// Component Biểu đồ Cột cho GMV Merchant
+const MerchantGMVBarChart = ({ topMerchants, timeRange }) => {
+    if (!topMerchants.length) return <div className="adb-empty-note">Chưa có GMV trong phạm vi đã chọn.</div>;
+    
     const totalGMV = topMerchants.reduce((sum, m) => sum + m.gmv, 0);
-    if (totalGMV === 0) return <div className="adb-empty-note">Chưa có GMV trong phạm vi đã chọn.</div>;
+    const maxGMV = Math.max(...topMerchants.map(m => m.gmv), 0);
+    const colors = ['#69deffff', '#ffa556ff', '#4dff97ff', '#f1c40f', '#e74c3c', '#9b59b6'];
     
-    let currentAngle = 0;
-    const colors = ['#69deffff', '#ffa556ff', '#4dff97ff', '#f1c40f', '#e74c3c', '#9b59b6']; // Thêm nhiều màu
-    
-    const segments = topMerchants.map((m, index) => {
-      const percentage = (m.gmv / totalGMV) * 100;
-      const angle = (percentage / 100) * 360;
-      const startAngle = currentAngle;
-      currentAngle += angle;
-      return { 
-        name: m.name, 
-        percentage: percentage.toFixed(1), 
-        gmv: VND(m.gmv), 
-        startAngle, 
-        endAngle: currentAngle,
-        color: colors[index % colors.length]
-      };
-    });
-
     return (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
-            {/* Chart Holder (CSS Doughnut) */}
-            <div 
-                className="adb-doughnut-chart"
-                style={{
-                    background: `conic-gradient(
-                        ${segments.map(s => `${s.color} ${s.endAngle}deg`).join(', ')}
-                    )`,
-                }}
-            >
-                <div className="adb-doughnut-hole">
-                    <div className="adb-doughnut-center">{VND(totalGMV)}</div>
-                    <div className="adb-doughnut-sub-text">Tổng GMV</div>
-                </div>
+        <div style={{ marginTop: '12px' }}>
+            {/* Bars */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', height: '280px', paddingBottom: '10px', borderBottom: '2px solid #ddd' }}>
+                {topMerchants.map((m, idx) => {
+                    const percentage = (m.gmv / maxGMV) * 100;
+                    const barHeight = (m.gmv / maxGMV) * 250; // 250px max height
+                    return (
+                        <div key={m.merchantId} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                            {/* Giá trị trên cùng */}
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#ff7a59', minHeight: '16px' }}>
+                                {VND(m.gmv)}
+                            </div>
+                            {/* Thanh bar */}
+                            <div
+                                style={{
+                                    width: '100%',
+                                    height: `${barHeight}px`,
+                                    background: colors[idx % colors.length],
+                                    borderRadius: '6px 6px 0 0',
+                                    transition: 'height 0.3s ease',
+                                }}
+                                title={`${m.name}: ${VND(m.gmv)}`}
+                            />
+                            {/* Tên merchant */}
+                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#333', textAlign: 'center', marginTop: '4px', wordBreak: 'break-word' }}>
+                                {m.name}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Legend */}
-            <ul className="adb-legend-list">
-                {segments.map(s => (
-                    <li key={s.name} className="adb-legend-item">
-                        <span className="adb-legend-color" style={{ backgroundColor: s.color }}></span>
-                        <span className="adb-legend-label">
-                            {s.name}: 
-                            <strong> {s.percentage}%</strong> ({s.gmv})
-                        </span>
-                    </li>
-                ))}
+            {/* Legend / Chi tiết */}
+            <ul className="adb-legend-list" style={{ marginTop: '16px' }}>
+                {topMerchants.map((m, idx) => {
+                    const percentage = ((m.gmv / totalGMV) * 100).toFixed(1);
+                    return (
+                        <li key={m.merchantId} className="adb-legend-item">
+                            <span className="adb-legend-color" style={{ backgroundColor: colors[idx % colors.length] }}></span>
+                            <span className="adb-legend-label">
+                                {m.name}: 
+                                <strong> {percentage}%</strong> ({VND(m.gmv)})
+                            </span>
+                        </li>
+                    );
+                })}
             </ul>
         </div>
     );
@@ -955,8 +959,8 @@ export default function AdminServerDashboard() {
                         ))}
                     </select>
                 </h2>
-                {totalCurrentOrders > 0 ? (
-                    <MerchantGMVDoughnut topMerchants={topMerchants} timeRange={merchantTimeRange} />
+                {topMerchants && topMerchants.length > 0 ? (
+                    <MerchantGMVBarChart topMerchants={topMerchants} timeRange={merchantTimeRange} />
                 ) : (
                     <div className="empty-note">Chưa có GMV để phân tích.</div>
                 )}
